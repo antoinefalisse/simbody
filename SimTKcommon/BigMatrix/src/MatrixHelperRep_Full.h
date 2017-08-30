@@ -249,10 +249,10 @@ public:
         p->allocateData(this->nelt());
         if (hasContiguousData_())
             std::copy(this->m_data, this->m_data + 
-                      Base::nelt()*this->m_eltSize, p->m_data);
+                      Base::nelt()*this->m_eltSize, stdext::checked_array_iterator<S*>(p->m_data, Base::nelt()*this->m_eltSize));
         else for (int j=0; j < this->ncol(); ++j)
             std::copy(getElt_(0,j), getElt_(0,j) + 
-                      this->nrow()*this->m_eltSize, p->updElt_(0,j));
+                      this->nrow()*this->m_eltSize, stdext::checked_array_iterator<S*>(p->updElt_(0,j), this->nrow()*this->m_eltSize));
         return p;
     }
 
@@ -273,7 +273,7 @@ public:
         for (int j=0; j < colsToCopy; ++j) {
             S*       const dest = newData + (ptrdiff_t)j*newLeadingDim;
             const S* const src  = this->m_data + (ptrdiff_t)j*this->m_leadingDim;
-            std::copy(src, src+rowsToCopy*this->m_eltSize, dest);
+            std::copy(src, src+rowsToCopy*this->m_eltSize, stdext::checked_array_iterator<S*>(dest, rowsToCopy*this->m_eltSize));
         }
         this->clearData();
         this->setData(newData);
@@ -368,10 +368,10 @@ public:
         p->allocateData(this->nelt());
         if (hasContiguousData_())
             std::copy(this->m_data, this->m_data + 
-                      this->nelt()*this->m_eltSize, p->m_data);
+                      this->nelt()*this->m_eltSize, stdext::checked_array_iterator<S*>(p->m_data, this->nelt()*this->m_eltSize));
         else for (int i=0; i < this->nrow(); ++i)
             std::copy(this->getElt_(i,0), this->getElt_(i,0) + 
-                      this->ncol()*this->m_eltSize, p->updElt_(i,0));
+                      this->ncol()*this->m_eltSize, stdext::checked_array_iterator<S*>(p->updElt_(i,0), this->ncol()*this->m_eltSize));
         return p;
     }
 
@@ -390,7 +390,7 @@ public:
         for (int i=0; i < rowsToCopy; ++i) {
             S*       const dest = newData + (ptrdiff_t)i*newLeadingDim;
             const S* const src  = this->m_data + (ptrdiff_t)i*this->m_leadingDim;
-            std::copy(src, src+colsToCopy*this->m_eltSize, dest);
+            std::copy(src, src+colsToCopy*this->m_eltSize, stdext::checked_array_iterator<S*>(dest, colsToCopy*this->m_eltSize));
         }
         this->clearData();
         this->setData(newData);

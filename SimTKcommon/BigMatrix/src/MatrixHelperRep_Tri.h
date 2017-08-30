@@ -247,7 +247,7 @@ public:
             // skip 0-length row or col if diag is known
             for (ptrdiff_t j=known; j < nToCopy; ++j, lengthElt += eltSize) {
                 std::copy(src+j*this->m_leadingDim, src+j*this->m_leadingDim +
-                          lengthElt, dest+j*p->m_leadingDim);
+                          lengthElt, stdext::checked_array_iterator<S*>(dest+j*p->m_leadingDim, lengthElt));
             }
         } else { // longFirst
             // column or row begins at (j+k,j), length m-j-k
@@ -256,7 +256,7 @@ public:
             for (ptrdiff_t j=0; j < nToCopy-known; ++j) {
                 std::copy(src+j*m_leadingDim + startInScalars,
                           src+j*m_leadingDim + startInScalars + lengthElt,
-                          dest+j*p->m_leadingDim + startInScalars);
+                          stdext::checked_array_iterator<S*>(dest+j*p->m_leadingDim + startInScalars, lengthElt));
                 startInScalars += this->m_eltSize;
                 lengthElt -= eltSize;
             }
@@ -303,7 +303,7 @@ public:
             // skip 0-length row or col if diag is known
             for (ptrdiff_t j=known; j < nToCopy; ++j, lengthElt += eltSize) {
                 std::copy(src+j*this->m_leadingDim, src+j*this->m_leadingDim +
-                          lengthElt, dest+j*newLeadingDim);
+                          lengthElt, stdext::checked_array_iterator<S*>(dest+j*newLeadingDim, lengthElt));
             }
         } else { // longFirst
             // column or row begins at (j+k,j), length m-j-k
@@ -312,7 +312,7 @@ public:
             for (ptrdiff_t j=0; j < nToCopy-known; ++j) {
                 std::copy(src+j*this->m_leadingDim + startInScalars,
                           src+j*this->m_leadingDim + startInScalars + lengthElt,
-                          dest+j*newLeadingDim + startInScalars);
+                          stdext::checked_array_iterator<S*>(dest+j*newLeadingDim + startInScalars, lengthElt));
                 startInScalars += this->m_eltSize;
                 lengthElt -= eltSize;
             }
