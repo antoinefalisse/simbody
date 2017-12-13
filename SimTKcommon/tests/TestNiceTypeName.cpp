@@ -59,13 +59,13 @@ public:
     SmallIx() : ix(0xff) {}
     explicit SmallIx(unsigned char i) : ix(i) {}
 
-    SmallIx& operator++() 
+    SmallIx& operator++()
     {   assert(ix<max_size()); ++ix; return *this;}
-    SmallIx operator++(int) 
+    SmallIx operator++(int)
     {   assert(ix<max_size()); const SmallIx x=*this; ++ix; return x;}
-    SmallIx& operator--() 
+    SmallIx& operator--()
     {   assert(ix>0); --ix; return *this;}
-    SmallIx operator--(int) 
+    SmallIx operator--(int)
     {   assert(ix>0); const SmallIx x=*this; ++ix; return x;}
 
     // These are required for any class to be used an index type.
@@ -92,7 +92,7 @@ private:
 inline std::ostream&
 operator<<(std::ostream& o, const Counter& c) {
     return o << (int)c;
-} 
+}
 
 // This class is a T but augmented with counters that track the number
 // of calls to constructors, assignment, and the destructor.
@@ -126,7 +126,7 @@ struct Count {
         cout << endl;
     }
 
-    static bool isReset() 
+    static bool isReset()
     {   return !(defCtor||initCtor||copyCtor||initAssign||copyAssign||dtor); }
 
     T val;
@@ -142,7 +142,7 @@ struct Count {
 template <class T> inline std::ostream&
 operator<<(std::ostream& o, const Count<T>& c) {
     return o << c.val;
-} 
+}
 template <class T> Counter Count<T>::defCtor;
 template <class T> Counter Count<T>::initCtor;
 template <class T> Counter Count<T>::copyCtor;
@@ -179,31 +179,31 @@ void testBuiltins() {
     SimTK_TEST(NiceTypeName<long>::namestr() == "long");
     SimTK_TEST(NiceTypeName<unsigned long>::namestr() == "unsigned long");
     SimTK_TEST(NiceTypeName<long long>::namestr() == "long long");
-    SimTK_TEST(NiceTypeName<unsigned long long>::namestr() 
+    SimTK_TEST(NiceTypeName<unsigned long long>::namestr()
                == "unsigned long long");
     SimTK_TEST(NiceTypeName<float>::namestr() == "float");
     SimTK_TEST(NiceTypeName<double>::namestr() == "double");
     SimTK_TEST(NiceTypeName<long double>::namestr() == "long double");
-    SimTK_TEST(NiceTypeName<std::complex<float>>::namestr() 
+    SimTK_TEST(NiceTypeName<std::complex<float>>::namestr()
                == "std::complex<float>");
-    SimTK_TEST(NiceTypeName<std::complex<double>>::namestr() 
+    SimTK_TEST(NiceTypeName<std::complex<double>>::namestr()
                == "std::complex<double>");
-    SimTK_TEST(NiceTypeName<std::complex<long double>>::namestr() 
+    SimTK_TEST(NiceTypeName<std::complex<long double>>::namestr()
                == "std::complex<long double>");
 
     // xmlstr should be the same as namestr for non-templatized types
-    SimTK_TEST(NiceTypeName<bool>::xmlstr() == NiceTypeName<bool>::namestr()); 
-    SimTK_TEST(NiceTypeName<unsigned int>::xmlstr() 
+    SimTK_TEST(NiceTypeName<bool>::xmlstr() == NiceTypeName<bool>::namestr());
+    SimTK_TEST(NiceTypeName<unsigned int>::xmlstr()
                == NiceTypeName<unsigned int>::namestr());
-    SimTK_TEST(NiceTypeName<long long>::xmlstr() 
+    SimTK_TEST(NiceTypeName<long long>::xmlstr()
                == NiceTypeName<long long>::namestr());
 
     // xmlstr should replace the brackets for templatized types
-    SimTK_TEST(NiceTypeName<std::complex<float>>::xmlstr() 
+    SimTK_TEST(NiceTypeName<std::complex<float>>::xmlstr()
                == "std::complex{float}");
-    SimTK_TEST(NiceTypeName<std::complex<double>>::xmlstr() 
+    SimTK_TEST(NiceTypeName<std::complex<double>>::xmlstr()
                == "std::complex{double}");
-    SimTK_TEST(NiceTypeName<std::complex<long double>>::xmlstr() 
+    SimTK_TEST(NiceTypeName<std::complex<long double>>::xmlstr()
                == "std::complex{long double}");
 
 }
@@ -217,13 +217,13 @@ void testEnums() {
     using namespace LocalNS;
 
     SimTK_TEST(NiceTypeName<MyEnum>::namestr() == "LocalNS::MyEnum");
-    SimTK_TEST(NiceTypeName<YourEnumClass>::namestr() 
+    SimTK_TEST(NiceTypeName<YourEnumClass>::namestr()
                == "LocalNS::YourEnumClass");
 
     SimTK_TEST(NiceTypeName<Count<double>>::namestr() == "Count<double>");
-    SimTK_TEST(NiceTypeName<Count<double>::Color>::namestr() 
+    SimTK_TEST(NiceTypeName<Count<double>::Color>::namestr()
                == "Count<double>::Color");
-    SimTK_TEST(NiceTypeName<Count<double>::Letter>::namestr() 
+    SimTK_TEST(NiceTypeName<Count<double>::Letter>::namestr()
                == "Count<double>::Letter");
 }
 
@@ -231,19 +231,19 @@ void testEnums() {
 namespace SimTK {
 template <> struct NiceTypeName<SmallIx> {
     static const char* name() {return "CustomSmallIxName";}
-    static const std::string& namestr() 
+    static const std::string& namestr()
     {   static const std::string ns(name()); return ns; }
     static const std::string& xmlstr() {return namestr();}
 };
 
-template <class T> 
+template <class T>
 struct NiceTypeName<OtherArray_<T>> {
     static const char* name() {return typeid(OtherArray_<T>).name();}
-    static const std::string& namestr() 
+    static const std::string& namestr()
     {   static const std::string ns
             ("OtherArray_<" + NiceTypeName<T>::namestr() + ">");
         return ns; }
-    static const std::string& xmlstr() 
+    static const std::string& xmlstr()
     {   static const std::string xs = encodeTypeNameForXML(namestr());
         return xs; }
 };
@@ -263,7 +263,7 @@ void testArrayNames() {
     SimTK_TEST((NiceTypeName<Array_< Count<int> > >::xmlstr()
                 == "SimTK::Array_{Count{int},unsigned}"));
     SimTK_TEST((NiceTypeName<SmallIx>::namestr()
-                == "CustomSmallIxName")); 
+                == "CustomSmallIxName"));
     SimTK_TEST((NiceTypeName<OtherArray_<int>>::namestr()
                 == "OtherArray_<int>"));
     SimTK_TEST((NiceTypeName<OtherArray_<SmallIx>>::namestr()
@@ -286,19 +286,19 @@ public: explicit SubTestIx(int ix) : TestIx(ix) {}
 };
 }
 
-// Output for anonymous or function-local type won't necessarily be platform 
-// independent (and may be ugly), so we'll just write them out here for 
+// Output for anonymous or function-local type won't necessarily be platform
+// independent (and may be ugly), so we'll just write them out here for
 // inspection.
 void testAnonymous() {
     cout << "These won't be nice:\n";
-    cout << "(1) anonymous::SubTestIx gives " 
+    cout << "(1) anonymous::SubTestIx gives "
          << NiceTypeName<SubTestIx>::namestr() << endl;
 
     struct MyLocalType {
         int i;
     };
 
-    cout << "(2) function local::MyLocalType gives " 
+    cout << "(2) function local::MyLocalType gives "
          << NiceTypeName<MyLocalType>::namestr() << endl;
 }
 

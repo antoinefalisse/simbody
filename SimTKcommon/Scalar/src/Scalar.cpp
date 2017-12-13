@@ -35,38 +35,38 @@ namespace SimTK {
 // These constants are global external symbols exported by the library. See
 // the Scalar.h header file for information.
 
-const Real NaN               = NTraits<Real>::getNaN(); 
+const Real NaN               = NTraits<Real>::getNaN();
 const Real Infinity          = NTraits<Real>::getInfinity();
 const Real Eps               = NTraits<Real>::getEps();
 const Real SqrtEps           = NTraits<Real>::getSqrtEps();
-const Real TinyReal          = NTraits<Real>::getTiny(); 
-const Real SignificantReal   = NTraits<Real>::getSignificant(); 
-const Real LeastPositiveReal = NTraits<Real>::getLeastPositive(); 
-const Real MostPositiveReal  = NTraits<Real>::getMostPositive();  
+const Real TinyReal          = NTraits<Real>::getTiny();
+const Real SignificantReal   = NTraits<Real>::getSignificant();
+const Real LeastPositiveReal = NTraits<Real>::getLeastPositive();
+const Real MostPositiveReal  = NTraits<Real>::getMostPositive();
 const Real LeastNegativeReal = NTraits<Real>::getLeastNegative();
 const Real MostNegativeReal  = NTraits<Real>::getMostNegative();
 
-const int NumDigitsReal = NTraits<Real>::getNumDigits(); 
+const int NumDigitsReal = NTraits<Real>::getNumDigits();
 const int LosslessNumDigitsReal = NTraits<Real>::getLosslessNumDigits();
 
 const Real Zero         = NTraits<Real>::getZero();
-const Real One          = NTraits<Real>::getOne(); 
+const Real One          = NTraits<Real>::getOne();
 const Real MinusOne     = NTraits<Real>::getMinusOne();
-const Real Two          = NTraits<Real>::getTwo(); 
-const Real Three        = NTraits<Real>::getThree(); 
+const Real Two          = NTraits<Real>::getTwo();
+const Real Three        = NTraits<Real>::getThree();
 
-const Real OneHalf      = NTraits<Real>::getOneHalf();   
-const Real OneThird     = NTraits<Real>::getOneThird();  
-const Real OneFourth    = NTraits<Real>::getOneFourth(); 
-const Real OneFifth     = NTraits<Real>::getOneFifth();  
-const Real OneSixth     = NTraits<Real>::getOneSixth();  
+const Real OneHalf      = NTraits<Real>::getOneHalf();
+const Real OneThird     = NTraits<Real>::getOneThird();
+const Real OneFourth    = NTraits<Real>::getOneFourth();
+const Real OneFifth     = NTraits<Real>::getOneFifth();
+const Real OneSixth     = NTraits<Real>::getOneSixth();
 const Real OneSeventh   = NTraits<Real>::getOneSeventh();
-const Real OneEighth    = NTraits<Real>::getOneEighth(); 
-const Real OneNinth     = NTraits<Real>::getOneNinth();  
-const Real Pi           = NTraits<Real>::getPi();        
-const Real OneOverPi    = NTraits<Real>::getOneOverPi(); 
-const Real E            = NTraits<Real>::getE(); 
-const Real Log2E        = NTraits<Real>::getLog2E(); 
+const Real OneEighth    = NTraits<Real>::getOneEighth();
+const Real OneNinth     = NTraits<Real>::getOneNinth();
+const Real Pi           = NTraits<Real>::getPi();
+const Real OneOverPi    = NTraits<Real>::getOneOverPi();
+const Real E            = NTraits<Real>::getE();
+const Real Log2E        = NTraits<Real>::getLog2E();
 const Real Log10E       = NTraits<Real>::getLog10E();
 const Real Sqrt2        = NTraits<Real>::getSqrt2();
 const Real OneOverSqrt2 = NTraits<Real>::getOneOverSqrt2();
@@ -86,68 +86,52 @@ const Complex I = NTraits<Complex>::getI();
 
 template class negator<float>;
 template class negator<double>;
-template class negator<long double>;
 
 template class negator< complex<float> >;
 template class negator< complex<double> >;
-template class negator< complex<long double> >;
 
 template class negator< conjugate<float> >;
 template class negator< conjugate<double> >;
-template class negator< conjugate<long double> >;
 
 template class CNT< negator<float> >;
 template class CNT< negator<double> >;
-template class CNT< negator<long double> >;
 
 template class CNT< complex<float> >;
 template class CNT< complex<double> >;
-template class CNT< complex<long double> >;
 
 template class CNT< negator< complex<float> > >;
 template class CNT< negator< complex<double> > >;
-template class CNT< negator< complex<long double> > >;
 
 template class CNT< conjugate<float> >;
 template class CNT< conjugate<double> >;
-template class CNT< conjugate<long double> >;
 
 template class CNT< negator< conjugate<float> > >;
 template class CNT< negator< conjugate<double> > >;
-template class CNT< negator< conjugate<long double> > >;
 
 
 #define INSTANTIATE_ALL_LEFT(T) \
 template bool isNumericallyEqual(const T&, const complex<float>&,           double tol); \
 template bool isNumericallyEqual(const T&, const complex<double>&,          double tol); \
-template bool isNumericallyEqual(const T&, const complex<long double>&,     double tol); \
 template bool isNumericallyEqual(const T&, const conjugate<float>&,         double tol); \
 template bool isNumericallyEqual(const T&, const conjugate<double>&,        double tol); \
-template bool isNumericallyEqual(const T&, const conjugate<long double>&,   double tol); \
 template bool isNumericallyEqual(const T&, const float&,                    double tol); \
 template bool isNumericallyEqual(const T&, const double&,                   double tol); \
-template bool isNumericallyEqual(const T&, const long double&,              double tol); \
 template bool isNumericallyEqual(const T&, int,                             double tol)
 
 INSTANTIATE_ALL_LEFT(complex<float>);
 INSTANTIATE_ALL_LEFT(complex<double>);
-INSTANTIATE_ALL_LEFT(complex<long double>);
 INSTANTIATE_ALL_LEFT(conjugate<float>);
 INSTANTIATE_ALL_LEFT(conjugate<double>);
-INSTANTIATE_ALL_LEFT(conjugate<long double>);
 
 // Don't duplicate anything instantiated with the previous macro.
 #define INSTANTIATE_ALL_RIGHT(T) \
 template bool isNumericallyEqual(const float&,                  const T&, double tol); \
 template bool isNumericallyEqual(const double&,                 const T&, double tol); \
-template bool isNumericallyEqual(const long double&,            const T&, double tol); \
 template bool isNumericallyEqual(int,                           const T&, double tol)
 
 INSTANTIATE_ALL_RIGHT(complex<float>);
 INSTANTIATE_ALL_RIGHT(complex<double>);
-INSTANTIATE_ALL_RIGHT(complex<long double>);
 INSTANTIATE_ALL_RIGHT(conjugate<float>);
 INSTANTIATE_ALL_RIGHT(conjugate<double>);
-INSTANTIATE_ALL_RIGHT(conjugate<long double>);
 
 }
