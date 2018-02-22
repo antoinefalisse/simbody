@@ -82,7 +82,15 @@ PeriodicEventReporter::~PeriodicEventReporter() {
 
 Real PeriodicEventReporter::getNextEventTime(const State& state, bool includeCurrentTime) const {
     Real currentTime = state.getTime();
-    long long count = (long long)std::floor(currentTime/impl->eventInterval);
+    /*long long count = (long long)std::floor(currentTime/impl->eventInterval);*/
+    /*long long count = NTraits<Real>::cast<long long>(NTraits<Real>::floor(currentTime / impl->eventInterval));*/
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        long long count =
+            (long long)std::floor(currentTime/impl->eventInterval);
+    #else
+        double count = NTraits<Real>::value(
+            NTraits<Real>::floor(currentTime/impl->eventInterval));
+    #endif
     Real eventTime = count*impl->eventInterval;
     while (eventTime < currentTime || (eventTime == currentTime && !includeCurrentTime)) {
         count++;
