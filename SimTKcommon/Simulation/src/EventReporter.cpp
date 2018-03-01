@@ -84,10 +84,10 @@ Real PeriodicEventReporter::getNextEventTime(const State& state, bool includeCur
     Real currentTime = state.getTime();
     long long count = NTraits<Real>::cast<long long>(NTraits<Real>::floor(
         currentTime/impl->eventInterval));
-    Real eventTime = (Real)count*impl->eventInterval;
+    Real eventTime = count*impl->eventInterval;
     while (eventTime < currentTime || (eventTime == currentTime && !includeCurrentTime)) {
         count++;
-        eventTime = (Real)count*impl->eventInterval;
+        eventTime = count*impl->eventInterval;
     }
     return eventTime;
 }
