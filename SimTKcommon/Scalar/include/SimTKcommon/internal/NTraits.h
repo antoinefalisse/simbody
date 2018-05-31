@@ -231,19 +231,19 @@ public:
         /// should be careful when using getDefaultTolerance() while taping.
         static double getDefaultTolerance() {return getSignificant().value();}
     };
-    /*template <> class RTraits<adub> {
+    template <> class RTraits<adub> {
     public:
-        static const adub& getEps() {
-            static const adub c=std::numeric_limits<double>::epsilon();
+        static const adouble& getEps() {
+            static const adouble c=std::numeric_limits<double>::epsilon();
             return c;}
-        static const adub& getSignificant() {
-            static const adub c=pow(getEps(), 0.875); return c;}
+        static const adouble& getSignificant() {
+            static const adouble c=pow(getEps(), 0.875); return c;}
         /// The default numerical error tolerance is always a double even when
         /// using real as adouble. The rationale was to enable using the
         /// isNumericallyEqual() functions as they are specified. The user
         /// should be careful when using getDefaultTolerance() while taping.
         static double getDefaultTolerance() {return getSignificant().value();}
-    };*/
+    };
 #endif
 
 /**
