@@ -334,12 +334,17 @@ public:
                     if (x.size() < 4) n_q4_s = 0;
                     else n_q4_s = order-nq_1-n_q2-n_q3;
                     for (int n_q4 = 0; n_q4 < n_q4_s + 1; ++n_q4) {
-                        switch(derivComponents[0]) {
-                          case 0: value += (nq_1*std::pow(x[0],nq_1-1)*std::pow(x[1],n_q2)*std::pow(x[2],n_q3)*std::pow(x[3],n_q4))*coefficients[coeff_nr];
-                          case 1: value += (std::pow(x[0],nq_1)*n_q2*std::pow(x[1],n_q2-1)*std::pow(x[2],n_q3)*std::pow(x[3],n_q4))*coefficients[coeff_nr];
-                          case 2: value += (std::pow(x[0],nq_1)*std::pow(x[1],n_q2)*n_q3*std::pow(x[2],n_q3-1)*std::pow(x[3],n_q4))*coefficients[coeff_nr];
-                          case 3: value += (std::pow(x[0],nq_1)*std::pow(x[1],n_q2)*std::pow(x[2],n_q3)*n_q4*std::pow(x[3],n_q4-1))*coefficients[coeff_nr];
-                          default: assert(!"impossible derivOrder");
+                        if (derivComponents[0] == 0) {
+                            value += (nq_1*std::pow(x[0],nq_1-1)*std::pow(x[1],n_q2)*std::pow(x[2],n_q3)*std::pow(x[3],n_q4))*coefficients[coeff_nr];
+                        }
+                        else if (derivComponents[0] == 1) {
+                            value += (std::pow(x[0],nq_1)*n_q2*std::pow(x[1],n_q2-1)*std::pow(x[2],n_q3)*std::pow(x[3],n_q4))*coefficients[coeff_nr];
+                        }
+                        else if (derivComponents[0] == 2) {
+                            value += (std::pow(x[0],nq_1)*std::pow(x[1],n_q2)*n_q3*std::pow(x[2],n_q3-1)*std::pow(x[3],n_q4))*coefficients[coeff_nr];
+                        }
+                        else if (derivComponents[0] == 3) {
+                            value += (std::pow(x[0],nq_1)*std::pow(x[1],n_q2)*std::pow(x[2],n_q3)*n_q4*std::pow(x[3],n_q4-1))*coefficients[coeff_nr];
                         }
                         ++coeff_nr;
                     }

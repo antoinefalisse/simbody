@@ -207,10 +207,11 @@ void testPolynomialMultiDimensional() {
 
     assertEqual(369,f.calcValue(x));
     std::vector<int> derivComponents(1);
-    std::cout << f.calcDerivative(derivComponents,x) << std::endl;
-
-
-
+    derivComponents[0] = 0;
+    assertEqual(91,f.calcDerivative(derivComponents,x));
+    std::vector<int> derivComponents2(1);
+    derivComponents2[0] = 1;
+    assertEqual(67,f.calcDerivative(derivComponents2,x));
 }
 
 int main () {
