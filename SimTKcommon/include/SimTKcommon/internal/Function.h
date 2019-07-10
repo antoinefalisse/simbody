@@ -34,17 +34,17 @@
 namespace SimTK {
 
 /**
- * This abstract class represents a mathematical function that calculates a 
- * value of arbitrary type based on M real arguments.  The output type is set 
- * as a template argument, while the number of input components may be 
+ * This abstract class represents a mathematical function that calculates a
+ * value of arbitrary type based on M real arguments.  The output type is set
+ * as a template argument, while the number of input components may be
  * determined at runtime.  The name "Function" (with no trailing _) may be
  * used as a synonym for Function_<Real>.
- * 
- * Subclasses define particular mathematical functions.  Predefined subclasses 
- * are provided for several common function types: Function_<T>::Constant, 
+ *
+ * Subclasses define particular mathematical functions.  Predefined subclasses
+ * are provided for several common function types: Function_<T>::Constant,
  * Function_<T>::Linear, Function_<T>::Polynomial, and Function_<T>::Step.
- * You can define your own subclasses for other function types.  The 
- * Spline_ class also provides a convenient way to create various types of 
+ * You can define your own subclasses for other function types.  The
+ * Spline_ class also provides a convenient way to create various types of
  * Functions.
  */
 template <class T>
@@ -53,42 +53,43 @@ public:
     class Constant;
     class Linear;
     class Polynomial;
+    class PolynomialMultiDimensional;
     class Sinusoid;
     class Step;
     virtual ~Function_() {
     }
     /**
      * Calculate the value of this function at a particular point.
-     * 
-     * @param x     the Vector of input arguments. Its size must equal the 
+     *
+     * @param x     the Vector of input arguments. Its size must equal the
      *              value returned by getArgumentSize().
      */
     virtual T calcValue(const Vector& x) const = 0;
     /**
-     * Calculate a partial derivative of this function at a particular point.  
-     * Which derivative to take is specified by listing the input components 
-     * with which to take it. For example, if derivComponents=={0}, that 
-     * indicates a first derivative with respective to component 0. If 
-     * derivComponents=={0, 0, 0}, that indicates a third derivative with 
-     * respective to component 0.  If derivComponents=={4, 7}, that indicates a 
+     * Calculate a partial derivative of this function at a particular point.
+     * Which derivative to take is specified by listing the input components
+     * with which to take it. For example, if derivComponents=={0}, that
+     * indicates a first derivative with respective to component 0. If
+     * derivComponents=={0, 0, 0}, that indicates a third derivative with
+     * respective to component 0.  If derivComponents=={4, 7}, that indicates a
      * partial second derivative with respect to components 4 and 7.
-     * 
-     * @param       derivComponents  
+     *
+     * @param       derivComponents
      *      The input components with respect to which the derivative should be
-     *      taken.  Its size must be less than or equal to the value returned 
+     *      taken.  Its size must be less than or equal to the value returned
      *      by getMaxDerivativeOrder().
-     * @param       x                
-     *      The Vector of input arguments. Its size must equal the value 
+     * @param       x
+     *      The Vector of input arguments. Its size must equal the value
      *      returned by getArgumentSize().
      * @return
      *      The value of the selected derivative, which is of type T.
      */
-    virtual T calcDerivative(const Array_<int>& derivComponents, 
+    virtual T calcDerivative(const Array_<int>& derivComponents,
                              const Vector&      x) const = 0;
 
-    /** This provides compatibility with std::vector without requiring any 
+    /** This provides compatibility with std::vector without requiring any
     copying. **/
-    T calcDerivative(const std::vector<int>& derivComponents, const Vector& x) const 
+    T calcDerivative(const std::vector<int>& derivComponents, const Vector& x) const
     {   return calcDerivative(ArrayViewConst_<int>(derivComponents),x); }
 
     /**
@@ -101,13 +102,13 @@ public:
     virtual int getMaxDerivativeOrder() const = 0;
 
     /**
-     * Create a new heap-allocated copy of this concrete %Function. 
+     * Create a new heap-allocated copy of this concrete %Function.
      * For backwards compatibility this is not pure virtual; it has a default
      * implementation that throws an exception if called. However, it should
      * always be implemented.
      */
     virtual Function_* clone() const {
-        SimTK_THROW2(Exception::UnimplementedVirtualMethod, "Function_", 
+        SimTK_THROW2(Exception::UnimplementedVirtualMethod, "Function_",
                      "clone");
     }
 };
@@ -127,19 +128,19 @@ class Function_<T>::Constant : public Function_<T> {
 public:
     /**
      * Create a Function_::Constant object.
-     * 
+     *
      * @param value        the value which should be returned by calcValue();
-     * @param argumentSize the value which should be returned by 
+     * @param argumentSize the value which should be returned by
      *                     getArgumentSize(), with a default of 1.
      */
-    explicit Constant(T value, int argumentSize=1) 
+    explicit Constant(T value, int argumentSize=1)
     :   argumentSize(argumentSize), value(value) {
     }
     T calcValue(const Vector& x) const override {
         assert(x.size() == argumentSize);
         return value;
     }
-    T calcDerivative(const Array_<int>& derivComponents, 
+    T calcDerivative(const Array_<int>& derivComponents,
                      const Vector& x) const override {
         return static_cast<T>(0);
     }
@@ -152,9 +153,9 @@ public:
 
     Constant* clone() const override {return new Constant(*this);}
 
-    /** This provides compatibility with std::vector without requiring any 
+    /** This provides compatibility with std::vector without requiring any
     copying. **/
-    T calcDerivative(const std::vector<int>& derivComponents, const Vector& x) const 
+    T calcDerivative(const std::vector<int>& derivComponents, const Vector& x) const
     {   return calcDerivative(ArrayViewConst_<int>(derivComponents),x); }
 
 private:
@@ -163,7 +164,7 @@ private:
 };
 
 /**
- * This is a Function_ subclass whose output value is a linear function of its 
+ * This is a Function_ subclass whose output value is a linear function of its
  * arguments: f(x, y, ...) = ax+by+...+c.
  */
 template <class T>
@@ -171,11 +172,11 @@ class Function_<T>::Linear : public Function_<T> {
 public:
     /**
      * Create a Function_::Linear object.
-     * 
-     * @param coefficients  
-     *      The coefficients of the linear function. The number of arguments 
-     *      expected by the function is equal to coefficients.size()-1.  
-     *      coefficients[0] is the coefficient for the first argument, 
+     *
+     * @param coefficients
+     *      The coefficients of the linear function. The number of arguments
+     *      expected by the function is equal to coefficients.size()-1.
+     *      coefficients[0] is the coefficient for the first argument,
      *      coefficients[1] is the coefficient for the second argument, etc.
      *      The final element of coefficients contains the constant term.
      */
@@ -189,7 +190,7 @@ public:
         value += coefficients[x.size()];
         return value;
     }
-    T calcDerivative(const Array_<int>& derivComponents, 
+    T calcDerivative(const Array_<int>& derivComponents,
                      const Vector& x) const override {
         assert(x.size() == coefficients.size()-1);
         assert(derivComponents.size() > 0);
@@ -206,9 +207,9 @@ public:
 
     Linear* clone() const override {return new Linear(*this);}
 
-    /** This provides compatibility with std::vector without requiring any 
+    /** This provides compatibility with std::vector without requiring any
     copying. **/
-    T calcDerivative(const std::vector<int>& derivComponents, const Vector& x) const 
+    T calcDerivative(const std::vector<int>& derivComponents, const Vector& x) const
     {   return calcDerivative(ArrayViewConst_<int>(derivComponents),x); }
 private:
     Vector_<T> coefficients;
@@ -216,7 +217,7 @@ private:
 
 
 /**
- * This is a Function_ subclass whose output value is a polynomial of its 
+ * This is a Function_ subclass whose output value is a polynomial of its
  * argument: f(x) = ax^n+bx^(n-1)+...+c.
  */
 template <class T>
@@ -224,8 +225,8 @@ class Function_<T>::Polynomial : public Function_<T> {
 public:
     /**
      * Create a Function_::Polynomial object.
-     * 
-     * @param coefficients the polynomial coefficients in order of decreasing 
+     *
+     * @param coefficients the polynomial coefficients in order of decreasing
      *        powers
      */
     Polynomial(const Vector_<T>& coefficients) : coefficients(coefficients) {
@@ -238,7 +239,7 @@ public:
             value = value*arg + coefficients[i];
         return value;
     }
-    T calcDerivative(const Array_<int>& derivComponents, 
+    T calcDerivative(const Array_<int>& derivComponents,
                      const Vector& x) const override {
         assert(x.size() == 1);
         assert(derivComponents.size() > 0);
@@ -263,17 +264,111 @@ public:
 
     Polynomial* clone() const override {return new Polynomial(*this);}
 
-    /** This provides compatibility with std::vector without requiring any 
+    /** This provides compatibility with std::vector without requiring any
     copying. **/
-    T calcDerivative(const std::vector<int>& derivComponents, const Vector& x) const 
+    T calcDerivative(const std::vector<int>& derivComponents, const Vector& x) const
     {   return calcDerivative(ArrayViewConst_<int>(derivComponents),x); }
 private:
     Vector_<T> coefficients;
 };
 
+/////////////////////////////////////////////////////////////////////////////////
+//// IN PROGRESS, only support for order 4 for now
+//
+/**
+ * This is a Function_ subclass whose output value is a polynomial of its
+ * argument: f(x) = ax^n+bx^(n-1)+...+c.
+ */
+template <class T>
+class Function_<T>::PolynomialMultiDimensional : public Function_<T> {
+public:
+    /**
+     * Create a Function_::PolynomialMultiDimensional object.
+     *
+     * @param coefficients the polynomial coefficients
+     * @param order the order of the polynomial approximation
+     */
+    PolynomialMultiDimensional(const Vector_<T>& coefficients, const int&
+        order) : coefficients(coefficients), order(order) {
+    }
+        T calcValue(const Vector& x) const override {
+        T value = static_cast<T>(0);
+        int coeff_nr = 0;
+        for (int nq_1 = 0; nq_1 < order+1; ++nq_1) {
+            int n_q2_s;
+            if (x.size() < 2) n_q2_s = 0;
+            else n_q2_s = order-nq_1;
+            for (int n_q2 = 0; n_q2 < n_q2_s + 1; ++n_q2) {
+                int n_q3_s;
+                if (x.size() < 3) n_q3_s = 0;
+                else n_q3_s = order-nq_1-n_q2;
+                for (int n_q3 = 0; n_q3 < n_q3_s + 1; ++n_q3) {
+                    int n_q4_s;
+                    if (x.size() < 4) n_q4_s = 0;
+                    else n_q4_s = order-nq_1-n_q2-n_q3;
+                    for (int n_q4 = 0; n_q4 < n_q4_s + 1; ++n_q4) {
+                        value += (std::pow(x[0],nq_1)*std::pow(x[1],n_q2)*
+                            std::pow(x[2],n_q3)*std::pow(x[3],n_q4))*
+                            coefficients[coeff_nr];
+                        ++coeff_nr;
+                    }
+                }
+            }
+        }
+        return value;
+    }
+    T calcDerivative(const Array_<int>& derivComponents,
+                     const Vector& x) const override {
+        T value = static_cast<T>(0);
+        int coeff_nr = 0;
+        for (int nq_1 = 0; nq_1 < order+1; ++nq_1) {
+            int n_q2_s;
+            if (x.size() < 2) n_q2_s = 0;
+            else n_q2_s = order-nq_1;
+            for (int n_q2 = 0; n_q2 < n_q2_s + 1; ++n_q2) {
+                int n_q3_s;
+                if (x.size() < 3) n_q3_s = 0;
+                else n_q3_s = order-nq_1-n_q2;
+                for (int n_q3 = 0; n_q3 < n_q3_s + 1; ++n_q3) {
+                    int n_q4_s;
+                    if (x.size() < 4) n_q4_s = 0;
+                    else n_q4_s = order-nq_1-n_q2-n_q3;
+                    for (int n_q4 = 0; n_q4 < n_q4_s + 1; ++n_q4) {
+                        switch(derivComponents[0]) {
+                          case 0: value += (nq_1*std::pow(x[0],nq_1-1)*std::pow(x[1],n_q2)*std::pow(x[2],n_q3)*std::pow(x[3],n_q4))*coefficients[coeff_nr];
+                          case 1: value += (std::pow(x[0],nq_1)*n_q2*std::pow(x[1],n_q2-1)*std::pow(x[2],n_q3)*std::pow(x[3],n_q4))*coefficients[coeff_nr];
+                          case 2: value += (std::pow(x[0],nq_1)*std::pow(x[1],n_q2)*n_q3*std::pow(x[2],n_q3-1)*std::pow(x[3],n_q4))*coefficients[coeff_nr];
+                          case 3: value += (std::pow(x[0],nq_1)*std::pow(x[1],n_q2)*std::pow(x[2],n_q3)*n_q4*std::pow(x[3],n_q4-1))*coefficients[coeff_nr];
+                          default: assert(!"impossible derivOrder");
+                        }
+                        ++coeff_nr;
+                    }
+                }
+            }
+        }
+        return value;
+    }
+    int getArgumentSize() const override {
+        return 1;
+    }
+    int getMaxDerivativeOrder() const override {
+        return std::numeric_limits<int>::max();
+    }
+
+    PolynomialMultiDimensional* clone() const override {return new PolynomialMultiDimensional(*this);}
+
+    /** This provides compatibility with std::vector without requiring any
+    copying. **/
+    T calcDerivative(const std::vector<int>& derivComponents, const Vector& x) const
+    {   return calcDerivative(ArrayViewConst_<int>(derivComponents),x); }
+private:
+    Vector_<T> coefficients;
+    int order;
+};
+
 
 /**
- * This is a Function_ subclass whose output value is a sinusoid of its 
+ * This is a Function_ subclass whose output value is a sinusoid of its
  * argument: f(x) = a*sin(w*x + p) where a is amplitude, w is frequency
  * in radians per unit of x, p is phase in radians.
  *
@@ -284,12 +379,12 @@ class Function_<Real>::Sinusoid : public Function_<Real> {
 public:
     /**
      * Create a Function::Sinusoid object, returning a*sin(w*x+p).
-     * 
+     *
      * @param[in] amplitude 'a' in the above formula
      * @param[in] frequency 'w' in the above formula
      * @param[in] phase     'p' in the above formula (default is zero)
      */
-    Sinusoid(Real amplitude, Real frequency, Real phase=0) 
+    Sinusoid(Real amplitude, Real frequency, Real phase=0)
     :   a(amplitude), w(frequency), p(phase) {}
 
     void setAmplitude(Real amplitude) {a=amplitude;}
@@ -335,10 +430,10 @@ public:
 
     Sinusoid* clone() const override {return new Sinusoid(*this);}
 
-    /** This provides compatibility with std::vector without requiring any 
+    /** This provides compatibility with std::vector without requiring any
     copying. **/
-    Real calcDerivative(const std::vector<int>& derivComponents, 
-                        const Vector& x) const 
+    Real calcDerivative(const std::vector<int>& derivComponents,
+                        const Vector& x) const
     {   return calcDerivative(ArrayViewConst_<int>(derivComponents),x); }
 private:
     Real a, w, p;
@@ -346,7 +441,7 @@ private:
 
 /**
  * This is a Function_ subclass whose output value y=f(x) is smoothly stepped
- * from y=y0 to y1 as its input argument goes from x=x0 to x1. This is 
+ * from y=y0 to y1 as its input argument goes from x=x0 to x1. This is
  * an S-shaped function with first and second derivatives y'(x0)=y'(x1)=0
  * and y''(x0)=y''(x1)==0. The third derivative y''' exists and is continuous
  * but we cannot guarantee anything about it at the end points.
@@ -357,7 +452,7 @@ public:
     /**
      * Create a Function_::Step object that smoothly interpolates its output
      * through a given range as its input moves through its range.
-     * 
+     *
      * @param y0    Output value when (x-x0)*sign(x1-x0) <= 0.
      * @param y1    Output value when (x-x1)*sign(x1-x0) >= 0.
      * @param x0    Start of switching interval.
@@ -371,21 +466,21 @@ public:
      * Note that the numerical values of x0 and x1 can be in either order
      * x0 < x1 or x0 > x1, but they cannot be equal.
      */
-    Step(const T& y0, const T& y1, Real x0, Real x1) 
+    Step(const T& y0, const T& y1, Real x0, Real x1)
     {   setParameters(y0,y1,x0,x1); }
 
-    /** Change the four parameters that define the step function; see 
+    /** Change the four parameters that define the step function; see
     constructor for documentation. **/
     void setParameters(const T& y0, const T& y1, Real x0, Real x1) {
         SimTK_ERRCHK1_ALWAYS(x0 != x1, "Function_<T>::Step::setParameters()",
         "A zero-length switching interval is illegal; both ends were %g.", x0);
         m_y0 = y0; m_y1 = y1; m_yr = y1-y0; m_zero = Real(0)*y0;
-        m_x0 = x0; m_x1 = x1; m_ooxr = 1/(x1-x0); m_sign = sign(m_ooxr); 
+        m_x0 = x0; m_x1 = x1; m_ooxr = 1/(x1-x0); m_sign = sign(m_ooxr);
     }
 
     T calcValue(const Vector& xin) const override {
         SimTK_ERRCHK1_ALWAYS(xin.size() == 1,
-            "Function_<T>::Step::calcValue()", 
+            "Function_<T>::Step::calcValue()",
             "Expected just one input argument but got %d.", xin.size());
 
         const Real x = xin[0];
@@ -396,10 +491,10 @@ public:
         return m_y0 + f*m_yr;
     }
 
-    T calcDerivative(const Array_<int>& derivComponents, 
+    T calcDerivative(const Array_<int>& derivComponents,
                      const Vector& xin) const override {
         SimTK_ERRCHK1_ALWAYS(xin.size() == 1,
-            "Function_<T>::Step::calcDerivative()", 
+            "Function_<T>::Step::calcDerivative()",
             "Expected just one input argument but got %d.", xin.size());
 
         const int derivOrder = (int)derivComponents.size();
@@ -424,9 +519,9 @@ public:
 
     Step* clone() const override {return new Step(*this);}
 
-    /** This provides compatibility with std::vector without requiring any 
+    /** This provides compatibility with std::vector without requiring any
     copying. **/
-    T calcDerivative(const std::vector<int>& derivComponents, const Vector& x) const 
+    T calcDerivative(const std::vector<int>& derivComponents, const Vector& x) const
     {   return calcDerivative(ArrayViewConst_<int>(derivComponents),x); }
 private:
     T    m_y0, m_y1, m_yr;   // precalculate yr=(y1-y0)

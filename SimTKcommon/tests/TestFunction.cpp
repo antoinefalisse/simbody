@@ -121,7 +121,7 @@ void testRealFunction() {
     assertEqual(0, f.calcDerivative(derivComponents2, Vector(Vec2(1, 0))));
 }
 
-void testSinusoid() { 
+void testSinusoid() {
     Real a=11.23, w=1.1, p=Pi/4;
     Vector t1(1,.23), t2(1,-3.2), t3(1,14.1);
     Function::Sinusoid s1(a,w,p);
@@ -187,13 +187,30 @@ void testStep() {
     const Real d2m=s2.calcDerivative(derivOrder2, Vector(1, x-dx));
     const Real d2p=s2.calcDerivative(derivOrder2, Vector(1, x+dx));
     const Real d3approx = (d2p-d2m)/(2*dx); // approx 10 digits
-    SimTK_TEST_EQ_TOL(s2.calcDerivative(derivOrder3, Vector(1,x)), 
+    SimTK_TEST_EQ_TOL(s2.calcDerivative(derivOrder3, Vector(1,x)),
                       d3approx, 1e-8);
 
     // Try interpolating a Vec3
     Function_<Vec3>::Step sv(Vec3(1,2,3), Vec3(4,5,6), 0, 1);
     SimTK_TEST(sv.calcValue(Vector(1,OneHalf)) == Vec3(2.5,3.5,4.5));
     SimTK_TEST(sv.calcDerivative(derivOrder2, Vector(1, -29.3)) == Vec3(0));
+}
+
+void testPolynomialMultiDimensional() {
+    double dofNumber[2] = {4,5};
+    Vector x(2,dofNumber,true);
+    int order = 2;
+    double coeffValues[6] = {2,3,4,5,6,7};
+    Vector coefficients = Vector(6,coeffValues,true);
+
+    Function_<Real>::PolynomialMultiDimensional f(coefficients,order);
+
+    assertEqual(369,f.calcValue(x));
+    std::vector<int> derivComponents(1);
+    std::cout << f.calcDerivative(derivComponents,x) << std::endl;
+
+
+
 }
 
 int main () {
@@ -205,6 +222,7 @@ int main () {
         SimTK_SUBTEST(testSinusoid);
         SimTK_SUBTEST(testRealFunction);
         SimTK_SUBTEST(testStep);
+        SimTK_SUBTEST(testPolynomialMultiDimensional);
 
     SimTK_END_TEST();
 }
