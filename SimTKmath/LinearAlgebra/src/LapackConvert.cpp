@@ -68,6 +68,11 @@ template void LapackConvert::convertMatrixToLapack( float*  lapackArray, const M
 template void LapackConvert::convertMatrixToLapack( double* lapackArray, const Matrix_<double>& mat );
 template void LapackConvert::convertMatrixToLapack( float*  lapackArray, const Matrix_<negator<float> >& mat );
 template void LapackConvert::convertMatrixToLapack( double* lapackArray, const Matrix_<negator<double> >& mat );
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template void LapackConvert::convertMatrixToLapack(Recorder* lapackArray, const Matrix_<Recorder>& mat);
+    template void LapackConvert::convertMatrixToLapack(Recorder* lapackArray, const Matrix_<negator<Recorder> >& mat);
+    template void LapackConvert::convertMatrixToLapack(Recorder* lapackArray, const Matrix_<negator<double> >& mat);
+#endif
 template void LapackConvert::convertMatrixToLapack( std::complex<float>*  lapackArray, const Matrix_<std::complex<float> >& mat );
 template void LapackConvert::convertMatrixToLapack( std::complex<double>* lapackArray, const Matrix_<std::complex<double> >& mat );
 template void LapackConvert::convertMatrixToLapack( std::complex<float>*  lapackArray, const Matrix_<negator<std::complex<float> > >& mat );

@@ -62,9 +62,10 @@ RBNodePlanar(const MassProperties&    mProps_B,
 
     // Implementations of virtual methods.
 
-// This has a default implementation but it rotates first then translates,
-// which works fine for the normal Planar joint but produces wrong behavior
-// when the mobilizer is reversed.
+#ifndef SimTK_REAL_IS_ADOUBLE
+ //This has a default implementation but it rotates first then translates,
+ //which works fine for the normal Planar joint but produces wrong behavior
+ //when the mobilizer is reversed.
 void setQToFitTransformImpl(const SBStateDigest& sbs, const Transform& X_FM, 
                             Vector& q) const override 
 {
@@ -85,7 +86,7 @@ void setQToFitRotationImpl(const SBStateDigest& sbs,
 }
 void setQToFitTranslationImpl(const SBStateDigest& sbs,
                               const Vec3&  p_FM, Vector& q) const override {
-    // Ignore translation in the z direction.
+//    // Ignore translation in the z direction.
     this->toQ(q)[1] = p_FM[0]; // x
     this->toQ(q)[2] = p_FM[1]; // y
 }
@@ -104,6 +105,7 @@ void setUToFitLinearVelocityImpl(const SBStateDigest& sbs,
     this->toU(u)[1] = v_FM[0]; // x
     this->toU(u)[2] = v_FM[1]; // y
 }
+#endif
 
 enum {PoolSize=2};
 enum {CosQ=0, SinQ=1};
@@ -118,8 +120,10 @@ void performQPrecalculations(const SBStateDigest& sbs,
                              Real* qErr,    int nQErr) const override
 {
     assert(q && nq==3 && qCache && nQCache==PoolSize && nQErr==0);
-    qCache[CosQ] = std::cos(q[0]);
-    qCache[SinQ] = std::sin(q[0]);
+    //qCache[CosQ] = NTraits<Real>::cos(q[0]);
+    //qCache[SinQ] = NTraits<Real>::sin(q[0]);
+    qCache[CosQ] = cos(q[0]);
+    qCache[SinQ] = sin(q[0]);
 }
 
 // This is nearly free since we already calculated sin/cos.

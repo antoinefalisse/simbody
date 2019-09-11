@@ -79,6 +79,7 @@ RBNodeLineOrientation(const MassProperties& mProps_B,
     this->updateSlots(nextUSlot,nextUSqSlot,nextQSlot);
 }
 
+#ifndef SimTK_REAL_IS_ADOUBLE
 void setQToFitRotationImpl(const SBStateDigest& sbs, const Rotation& R_FM,
                           Vector& q) const 
 {
@@ -116,6 +117,7 @@ void setUToFitLinearVelocityImpl
     // way to create a linear velocity by rotating. So the only linear velocity
     // we can represent is 0.
 }
+#endif
 
 // When we're using Euler angles, we're going to want to cache cos and sin for
 // each angle, and also 1/cos of the middle angle will be handy to have around.
@@ -135,11 +137,16 @@ void performQPrecalculations(const SBStateDigest& sbs,
 {
     if (this->getUseEulerAngles(sbs.getModelVars())) {
         assert(q && nq==3 && qCache && nQCache==AnglePoolSize && nQErr==0);
-        const Real cy = std::cos(q[1]);
+        //const Real cy = NTraits<Real>::cos(q[1]);
+        //Vec3::updAs(&qCache[AngleCosQ]) =
+        //    Vec3(NTraits<Real>::cos(q[0]), cy, NTraits<Real>::cos(q[2]));
+        //Vec3::updAs(&qCache[AngleSinQ]) =
+        //    Vec3(NTraits<Real>::sin(q[0]), NTraits<Real>::sin(q[1]), NTraits<Real>::sin(q[2]));
+        const Real cy = cos(q[1]);
         Vec3::updAs(&qCache[AngleCosQ]) =
-            Vec3(std::cos(q[0]), cy, std::cos(q[2]));
+            Vec3(cos(q[0]), cy, cos(q[2]));
         Vec3::updAs(&qCache[AngleSinQ]) =
-            Vec3(std::sin(q[0]), std::sin(q[1]), std::sin(q[2]));
+            Vec3(sin(q[0]), sin(q[1]), sin(q[2]));
         qCache[AngleOOCosQy] = 1/cy; // trouble at 90 degrees
     } else {
         assert(q && nq==4 && qCache && nQCache==QuatPoolSize && 

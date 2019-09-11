@@ -24,9 +24,9 @@
 
 #include "SimTKcommon/basics.h"
 #include "SimTKcommon/internal/Random.h"
+#include "SimTKcommon/internal/AtomicInteger.h"
 #include "SFMT.h"
 
-#include <atomic>
 #include <cassert>
 #include <cmath>
 
@@ -44,7 +44,7 @@ private:
     static const int bufferSize = 1024;
     mutable uint64_t buffer[bufferSize];
     mutable int nextIndex;
-    static std::atomic<int> nextSeed;
+    static AtomicInteger nextSeed;
 public:
     class UniformImpl;
     class GaussianImpl;
@@ -77,7 +77,11 @@ public:
     }
 
     int getInt(int max) {
-        return (int) floor(getValue()*max);
+    #ifndef SimTK_REAL_IS_ADOUBLE
+            return (int)floor(getValue()*max);
+    #else
+            return (int)floor(getValue()*max).value();
+    #endif
     }
 
     void fillArray(Real array[], int length) const {
@@ -86,7 +90,7 @@ public:
     }
 };
 
-std::atomic<int> Random::RandomImpl::nextSeed(0);
+AtomicInteger Random::RandomImpl::nextSeed = 0;
 
 /**
  * This is the private implementation class for uniform random numbers.
@@ -144,13 +148,13 @@ public:
         
         // Use the polar form of the Box-Muller transformation to generate two Gaussian random numbers.
         
-        Real x, y, r2;
+		Real x, y, r2;
         do {
             x = 2*getNextRandom()-1;
             y = 2*getNextRandom()-1;
             r2 = x*x + y*y;
         } while (r2 >= 1.0 || r2 == 0.0);
-        Real multiplier = std::sqrt((-2*std::log(r2))/r2);
+		Real multiplier = sqrt((-2 * log(r2)) / r2);
         nextGaussian = y*multiplier;
         nextGaussianIsValid = true;
         return mean+stddev*x*multiplier;
@@ -227,7 +231,11 @@ const Random::Uniform::UniformImpl& Random::Uniform::getConstImpl() const {
 }
 
 int Random::Uniform::getIntValue() {
-    return (int) std::floor(getImpl().getValue());
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        return (int)std::floor(getImpl().getValue());
+    #else
+        return (int)floor(getImpl().getValue().value());
+    #endif
 }
 
 Real Random::Uniform::getMin() const {

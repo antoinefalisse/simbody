@@ -23,6 +23,8 @@
 
 #include "SimTKmath.h"
 
+#ifndef SimTK_REAL_IS_ADOUBLE
+
 #include <iostream>
 using std::cout;
 using std::endl;
@@ -189,3 +191,9 @@ int main() {
 
     return( returnValue );
 }
+
+#else
+void main() {
+	std:cout << "IPOPT not supported with adouble" << std::endl;
+}
+#endif

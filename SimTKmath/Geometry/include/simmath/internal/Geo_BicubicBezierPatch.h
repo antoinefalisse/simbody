@@ -206,9 +206,15 @@ Cost is 180 flops, or 120 flops if u=1/2. **/
 void splitU(RealP u, BicubicBezierPatch_<P>& patch0, 
                      BicubicBezierPatch_<P>& patch1) const {
     const RealP tol = getDefaultTol<RealP>();
+	#ifdef SimTK_REAL_IS_ADOUBLE
     SimTK_ERRCHK1(tol <= u && u <= 1-tol, "Geo::BicubicBezierPatch::splitU()",
         "Can't split patch at parameter u=%g; it is either out of range or"
-        " too close to an edge.", (double)u);
+        " too close to an edge.", Recorder(u).getValue());
+	#else
+		SimTK_ERRCHK1(tol <= u && u <= 1 - tol, "Geo::BicubicBezierPatch::splitU()",
+			"Can't split patch at parameter u=%g; it is either out of range or"
+			" too close to an edge.", (double)u);
+	#endif
     CubicBezierCurve_<P> l,h;
     if (u==RealP(0.5)) // bisecting
         for (int i=0; i<4; ++i) {
@@ -241,9 +247,15 @@ Cost is 180 flops, or 120 flops if w=1/2. **/
 void splitW(RealP w, BicubicBezierPatch_<P>& patch0, 
                      BicubicBezierPatch_<P>& patch1) const {
     const RealP tol = getDefaultTol<RealP>();
-    SimTK_ERRCHK1(tol <= w && w <= 1-tol, "Geo::BicubicBezierPatch::splitW()",
-        "Can't split patch at parameter w=%g; it is either out of range or"
-        " too close to an edge.", (double)w);
+	#ifdef SimTK_REAL_IS_ADOUBLE
+		SimTK_ERRCHK1(tol <= w && w <= 1-tol, "Geo::BicubicBezierPatch::splitW()",
+			"Can't split patch at parameter w=%g; it is either out of range or"
+			" too close to an edge.", Recorder(w).getValue());
+	#else
+		SimTK_ERRCHK1(tol <= w && w <= 1 - tol, "Geo::BicubicBezierPatch::splitW()",
+			"Can't split patch at parameter w=%g; it is either out of range or"
+			" too close to an edge.", (double)w);
+	#endif
     CubicBezierCurve_<P> l,h;
     if (w==RealP(0.5)) // bisecting
         for (int i=0; i<4; ++i) {
@@ -280,10 +292,17 @@ void split(RealP u, RealP w, BicubicBezierPatch_<P>& patch00,
                              BicubicBezierPatch_<P>& patch10, 
                              BicubicBezierPatch_<P>& patch11) const {
     const RealP tol = getDefaultTol<RealP>();
-    SimTK_ERRCHK2((tol <= u && u <= 1-tol) && (tol <= w && w <= 1-tol), 
-        "Geo::BicubicBezierPatch::split()",
-        "Can't split patch at parametric point u,w=%g,%g; it is either out of"
-        " range or too close to an edge.", (double)u, (double)w);
+	#ifdef SimTK_REAL_IS_ADOUBLE
+		SimTK_ERRCHK2((tol <= u && u <= 1-tol) && (tol <= w && w <= 1-tol), 
+			"Geo::BicubicBezierPatch::split()",
+			"Can't split patch at parametric point u,w=%g,%g; it is either out of"
+			" range or too close to an edge.", Recorder(u).getValue(), Recorder(w).getValue());
+	#else
+		SimTK_ERRCHK2((tol <= u && u <= 1 - tol) && (tol <= w && w <= 1 - tol),
+			"Geo::BicubicBezierPatch::split()",
+			"Can't split patch at parametric point u,w=%g,%g; it is either out of"
+			" range or too close to an edge.", (double)u, (double)w);
+	#endif
 
     BicubicBezierPatch_<P> patch0, patch1; // results of the first split
 

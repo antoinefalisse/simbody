@@ -112,7 +112,7 @@ bool ContactGeometry::Cylinder::Impl::intersectsRay
         Real d = b*b - c;
         if (d < 0)
           return false;
-        Real root = std::sqrt(d);
+        Real root = NTraits<Real>::sqrt(d);
         xy_distance = b - root;
       }
     else {
@@ -121,7 +121,7 @@ bool ContactGeometry::Cylinder::Impl::intersectsRay
         Real d = b*b - c;
         if (d < 0)
           return false;
-        xy_distance = b + std::sqrt(d);
+        xy_distance = b + NTraits<Real>::sqrt(d);
       }
     distance = xy_distance/xy_vec_norm;
     normal = UnitVec3(xy_origin+xy_distance*xy_direction);
@@ -157,14 +157,14 @@ static void setGeodesicToHelicalArc(Real R, Real phiP, Real angle, Real m, Real 
     const Real tau   = m*kappa;         // Torsion (signed).
 
     // Arc length of the helix. Always
-    const Real L = R * sqrt1m2 * std::abs(angle);
+    const Real L = R * sqrt1m2 * fabs(angle);
 
     // Orientation of helix. 
     const Real orientation = angle < 0 ? Real(-1) : Real(1);
 
     // TODO: Make this generic, so long geodesics are sampled more than short ones.
     const int numGeodesicSamples = 12;
-    const Real deltaPhi = std::abs(angle / Real(numGeodesicSamples-1));
+    const Real deltaPhi = fabs(angle / Real(numGeodesicSamples-1));
 
     for (int i = 0; i < numGeodesicSamples; ++i)
     {

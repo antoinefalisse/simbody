@@ -34,7 +34,7 @@
 #include "IpWarmStartIterateInitializer.hpp"
 
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   void RegisterOptions_Algorithm(const SmartPtr<RegisteredOptions>& roptions)

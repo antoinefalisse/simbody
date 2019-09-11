@@ -12,7 +12,7 @@
 #include "IpUtils.hpp"
 #include "IpException.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
   DECLARE_STD_EXCEPTION(LAPACK_NOT_INCLUDED);
 

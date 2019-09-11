@@ -14,7 +14,7 @@
 #include "IpIpoptData.hpp"
 #include "IpIpoptCalculatedQuantities.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   /** @name Exceptions */

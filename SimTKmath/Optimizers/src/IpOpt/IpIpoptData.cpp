@@ -9,7 +9,7 @@
 #include "IpIpoptData.hpp"
 #include "IpIpoptNLP.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   IpoptData::IpoptData()

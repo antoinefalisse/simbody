@@ -38,7 +38,7 @@ public:
                       1e-10, // default PLUS convergence tol
                       20),   // default Newton iteration limit
         m_minSmoothness(SqrtEps), // sharpness of smoothed discontinuities
-        m_cosMaxSlidingDirChange(std::cos(Pi/6)) // 30 degrees
+        m_cosMaxSlidingDirChange(NTraits<Real>::cos(Pi/6)) // 30 degrees
     {}
 
     /** Solve with conditional constraints. **/

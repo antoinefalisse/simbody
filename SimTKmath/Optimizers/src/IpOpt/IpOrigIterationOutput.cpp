@@ -28,7 +28,7 @@
 
 
 
-namespace SimTKIpopt
+namespace Ipopt
 {
   OrigIterationOutput::OrigIterationOutput()
   {}

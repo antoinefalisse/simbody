@@ -290,7 +290,7 @@ PointContactImpl::PointContactImpl
    (ContactSurfaceIndex surf1, ContactSurfaceIndex surf2, 
     Vec3& location, Vec3& normal, Real radius1, Real radius2, Real depth)
 :   ContactImpl(surf1, surf2), location(location), normal(normal), 
-    radius1(radius1), radius2(radius2), effectiveRadius(std::sqrt(radius1*radius2)), depth(depth) {}
+    radius1(radius1), radius2(radius2), effectiveRadius(NTraits<Real>::sqrt(radius1*radius2)), depth(depth) {}
 
 PointContactImpl::PointContactImpl
    (ContactSurfaceIndex surf1, ContactSurfaceIndex surf2,

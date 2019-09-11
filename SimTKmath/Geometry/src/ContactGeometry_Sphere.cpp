@@ -95,7 +95,7 @@ bool ContactGeometry::Sphere::Impl::intersectsRay
         Real d = b*b - c;
         if (d < 0)
           return false;
-        Real root = std::sqrt(d);
+        Real root = NTraits<Real>::sqrt(d);
         distance = b - root;
       }
     else {
@@ -104,7 +104,7 @@ bool ContactGeometry::Sphere::Impl::intersectsRay
         Real d = b*b - c;
         if (d < 0)
           return false;
-        distance = b + std::sqrt(d);
+        distance = b + NTraits<Real>::sqrt(d);
       }
     normal = UnitVec3(origin+distance*direction);
     return true;
@@ -149,7 +149,7 @@ static void setGeodesicToArc(const UnitVec3& e1, const UnitVec3& e2,
                              Real R, Real angle, Geodesic& geod)
 {
     // Check if e1 and e2 are orthogonal.
-    assert(std::abs(~e1*e2) <= SignificantReal);
+    assert(fabs(~e1*e2) <= SignificantReal);
 
     // Clear current geodesic.
     geod.clear();
@@ -162,7 +162,7 @@ static void setGeodesicToArc(const UnitVec3& e1, const UnitVec3& e2,
     const Real L = R*angle*orientation;
 
     // Increment of phi in loop.
-    const Real deltaPhi = std::abs(angle / Real(numGeodesicSamples-1));
+    const Real deltaPhi = fabs(angle / Real(numGeodesicSamples-1));
 
     const Real k = 1/R; // curvature
     for (int i = 0; i < numGeodesicSamples; ++i){
@@ -289,17 +289,27 @@ void ContactGeometry::Sphere::Impl::shootGeodesicInDirectionUntilLengthReachedAn
 }
 
 void ContactGeometry::Sphere::Impl::shootGeodesicInDirectionUntilPlaneHitAnalytical(const Vec3& xP, const UnitVec3& tP,
-        const Plane& terminatingPlane, const GeodesicOptions& options,
-        Geodesic& geod) const {
+	const Plane& terminatingPlane, const GeodesicOptions& options,
+	Geodesic& geod) const {
 
-    UnitVec3 e_OP(xP);
+	UnitVec3 e_OP(xP);
 
-    // solve ~( e_OP * cos(t) + tP * sin(t) - pt_on_plane )*plane_normal = 0
-    // for sphere plane offset is zero, therefore pt_on_plane = 0
-    Real a = ~e_OP*terminatingPlane.getNormal();
-    Real b = ~tP*terminatingPlane.getNormal();
-    Real alpha = std::atan2(a,b);
-    Real angle = (alpha > 0 ? Pi-alpha : -alpha);
+	// solve ~( e_OP * cos(t) + tP * sin(t) - pt_on_plane )*plane_normal = 0
+	// for sphere plane offset is zero, therefore pt_on_plane = 0
+	Real a = ~e_OP*terminatingPlane.getNormal();
+	Real b = ~tP*terminatingPlane.getNormal();
+	Real alpha = atan2(a, b);
+	//Real angle = (alpha > 0 ? Pi - alpha : -alpha);
+	// Adapted for ADOL-C purpose
+	Real angle;
+	if(alpha > 0)
+	{
+		angle = Pi - alpha;
+	}
+	else
+	{
+		angle = - alpha;
+	}
 //    std::cout << "a=" << a << ", b=" << b << ", alpha = " << alpha << std::endl;
 
     setGeodesicToArc(e_OP, tP, radius, angle, geod);

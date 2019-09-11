@@ -21,9 +21,14 @@
  * limitations under the License.                                             *
  * -------------------------------------------------------------------------- */
 
-#include "SimTKmath.h"
 
+#include "SimTKmath.h"
 #include <iostream>
+#include <stdexcept>
+
+#ifndef SimTK_REAL_IS_ADOUBLE
+
+
 using std::cout;
 using std::endl;
 using SimTK::Vector;
@@ -254,3 +259,9 @@ int main() {
 
     return( returnValue );
 }
+
+#else
+	void main(){
+		std::cout << "IPOPT not implemented with adouble" << std::endl;
+	}
+#endif

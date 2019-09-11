@@ -56,7 +56,11 @@ void verifyUniformDistribution(Real min, Real max, Real value[], int length) {
     for (int i = 0; i < length; ++i) {
         ASSERT(value[i] >= min)
         ASSERT(value[i] < max)
-        int index = (int) ((value[i]-min)*10/(max-min));
+        #ifndef SimTK_REAL_IS_ADOUBLE
+            int index = (int)((value[i] - min) * 10 / (max - min));
+        #else
+            int index = (int) ((value[i].getValue()-min.getValue())*10/(max.getValue()-min.getValue()));
+        #endif
         found[index]++;
     }
     verifyDistribution(expected, found, 10);

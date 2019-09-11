@@ -150,7 +150,7 @@ inline SpatialVec findRelativeVelocity(const Transform&  X_FA,
                                        const Transform&  X_FB,
                                        const SpatialVec& V_FB)
 {
-    const Vec3 p_AB_F = X_FB.p() - X_FA.p();                    //  3 flops
+	const Vec3 p_AB_F = X_FB.p() - X_FA.p();                    //  3 flops
     return ~X_FA.R()*findRelativeVelocityInF(p_AB_F,V_FA,V_FB); // 48 flops
 }
 

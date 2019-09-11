@@ -112,12 +112,13 @@ public:
 /// directly; use one of the family SimTK_ERRCHK and SimTK_ERRCHK_ALWAYS macros.
 class ErrorCheck : public Base {
 public:
+    template <typename ...T>
     ErrorCheck(const char* fn, int ln, const char* assertion, 
            const char* whereChecked,    // e.g., ClassName::methodName()
-           const char* fmt ...) : Base(fn,ln)
+           const char* fmt, T... args) : Base(fn,ln)
     {
         char buf[1024];
-        va_list args;
+        /* TODOautodiff va_list args;
         va_start(args, fmt);
         vsprintf(buf, fmt, args);
 
@@ -126,6 +127,7 @@ public:
             + std::string(buf)
             + "\n  (Required condition '" + std::string(assertion) + "' was not met.)\n");
         va_end(args);
+        */
     }
     virtual ~ErrorCheck() throw() { }
 };
@@ -139,11 +141,13 @@ public:
 /// SimTK_APIARGCHECK_ALWAYS macros.
 class APIArgcheckFailed : public Base {
 public:
+    template <typename ...T>
     APIArgcheckFailed(const char* fn, int ln, const char* assertion,
                       const char* className, const char* methodName,
-                      const char* fmt ...) : Base(fn,ln)
+                      const char* fmt, T... args) : Base(fn,ln)
     {
         char buf[1024];
+        /* TODOautodiff
         va_list args;
         va_start(args, fmt);
         vsprintf(buf, fmt, args);
@@ -152,6 +156,7 @@ public:
                    + std::string(buf)
                    + "\n  (Required condition '" + std::string(assertion) + "' was not met.)");
         va_end(args);
+        */
     }
     virtual ~APIArgcheckFailed() throw() { }
 };

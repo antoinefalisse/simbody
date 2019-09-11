@@ -42,12 +42,10 @@ using namespace std;
     #include <process.h>
     #define READ _read
     #define WRITEFUNC _write
-    #define CLOSE _close
 #else
     #include <unistd.h>
     #define READ read
     #define WRITEFUNC write
-    #define CLOSE close
 #endif
 
 #ifdef _MSC_VER
@@ -166,39 +164,25 @@ static void spawnViz(const Array_<String>& searchPath, const String& appName,
     }
 }
 
-class ReadingInterrupted : public std::exception {};
-
-// This will hang until the expected number of bytes has been received.
-// Throws ReadingInterrupted if the srcPipe is closed.
 static void readDataFromPipe(int srcPipe, unsigned char* buffer, int bytes) {
     int totalRead = 0;
-    while (totalRead < bytes) {
-        auto retval = READ(srcPipe, buffer + totalRead, bytes - totalRead);
-        SimTK_ERRCHK4_ALWAYS(retval!=-1, "VisualizerProtocol",
-            "An attempt to read() %d bytes from pipe %d failed with errno=%d (%s).", 
-            bytes - totalRead, srcPipe, errno, strerror(errno));
-        // The pipe was closed, perhaps because simbody-visualizer was closed,
-        // or shutdownGUI() or ~VisualizerProtocol() was called.
-        // Without this check, we end up in an infinite loop if the user closes
-        // simbody-visualizer.
-        if (retval == 0) throw ReadingInterrupted();
-
-        totalRead += retval;
-    }
+    while (totalRead < bytes)
+        totalRead += READ(srcPipe, buffer+totalRead, bytes-totalRead);
 }
 
-// Throws ReadingInterrupted if inPipe is closed.
-static void readData(unsigned char* buffer, int bytes)
+static void readData(unsigned char* buffer, int bytes) 
 {
     readDataFromPipe(inPipe, buffer, bytes);
 }
 
-static void listenForVisualizerEvents(Visualizer& visualizer) {
+static void* listenForVisualizerEvents(void* arg) {
+    Visualizer& visualizer = *reinterpret_cast<Visualizer*>(arg);
     unsigned char buffer[256];
 
     try
   { while (true) {
         // Receive a user input event.
+
         readData(buffer, 1);
         switch (buffer[0]) {
         case KeyPressed: {
@@ -239,13 +223,12 @@ static void listenForVisualizerEvents(Visualizer& visualizer) {
                 (unsigned)buffer[0]);
         }
     }
-  } catch (const ReadingInterrupted&) {
-        // We were told (by the main thread) to stop listening, or
-        // simbody-visualizer closed.
   } catch (const std::exception& e) {
         std::cout << "Visualizer listenerThread: unrecoverable error:\n";
         std::cout << e.what() << std::endl;
+        return (void*)1;
     }
+    return (void*)0;
 }
 
 VisualizerProtocol::VisualizerProtocol
@@ -289,23 +272,6 @@ VisualizerProtocol::VisualizerProtocol
                     SIMBODY_VISUALIZER_REL_INSTALL_DIR));
     }
 
-    // Try using the location of SimTKsimbody combined with the path from the
-    // SimTKsimbody library to the simbody-visualizer install location (only
-    // available on non-Windows platforms). We must provide a function that
-    // resides in SimTKsimbody.
-    std::string SimTKsimbodyDir;
-    if (Pathname::getFunctionLibraryDirectory((void*)createPipeSim2Viz,
-                                              SimTKsimbodyDir)) {
-        // We have the path to SimTKsimbody; now we combine this with the path
-        // from SimTKsimbody to simbody-visualizer (this assumes the
-        // installation has not been reorganized from what CMake originally
-        // specified).
-        std::string absPathToVizDir =
-          Pathname::getAbsoluteDirectoryPathnameUsingSpecifiedWorkingDirectory(
-                  SimTKsimbodyDir, SIMBODY_PATH_FROM_LIBDIR_TO_VIZ_DIR);
-        actualSearchPath.push_back(absPathToVizDir);
-    }
-
     // Try the build-time install location:
     actualSearchPath.push_back(SIMBODY_VISUALIZER_INSTALL_DIR);
 
@@ -343,8 +309,10 @@ VisualizerProtocol::VisualizerProtocol
     shakeHandsWithGUI(outPipe, inPipe);
 
     // Spawn the thread to listen for events.
-    eventListenerThread = std::thread(listenForVisualizerEvents,
-            std::ref(visualizer));
+
+    pthread_mutex_init(&sceneLock, NULL);
+    pthread_t thread;
+    pthread_create(&thread, NULL, listenForVisualizerEvents, &visualizer);
 }
 
 // This is executed on the main thread at GUI startup and thus does not
@@ -400,60 +368,26 @@ void VisualizerProtocol::shakeHandsWithGUI(int toGUIPipe, int fromGUIPipe) {
 
 void VisualizerProtocol::shutdownGUI() {
     // Don't wait for scene completion; kill GUI now.
-    
-    // We no longer need to listen for events from the GUI. Stop the listener
-    // thread before writing to the out pipe, because attempting to write to
-    // the pipe may throw an exception. Shutting down the listener thread was
-    // added to solve an issue with OpenSim MATLAB bindings, wherein MATLAB
-    // would use more and more CPU each time a Visualizer was created.
-    stopListeningIfNecessary();
-    
     char command = Shutdown;
     WRITE(outPipe, &command, 1);
 }
 
-VisualizerProtocol::~VisualizerProtocol() {
-    // If shutdownGUI() was not called, then the listener thread is still
-    // running and we should kill it.
-    stopListeningIfNecessary();
-    int retval = CLOSE(outPipe); // TODO(chrisdembia) is this necessary?
-    if (retval == -1) {
-        std::cout << "Warning in Simbody VisualizerProtocol: "
-            << "An attempt to close() pipe " << outPipe
-            << " failed with errno=" << errno << " (" << strerror(errno) << ")."
-            << std::endl;
-    }
-}
-
-void VisualizerProtocol::stopListeningIfNecessary() {
-    if (eventListenerThread.joinable()) {
-        // Shut down the listener thread cleanly. Tell the GUI to tell the
-        // simulator's listener thread to stop listening, which will allow the
-        // the (simulator's) listener thread to die. WRITE throws an exception
-        // if it can't write to the pipe, which most likely means the GUI has
-        // been closed. If the GUI is closed, the listener thread has
-        // finished (though is still joinable), so we can ignore the exception.
-        try {
-            WRITE(outPipe, &StopCommunication, 1);
-        } catch (...) {}
-        eventListenerThread.join();
-    }
-}
-
 void VisualizerProtocol::beginScene(Real time) {
-    sceneLockBeginFinishScene.lock();
+    pthread_mutex_lock(&sceneLock);
     char command = StartOfScene;
     WRITE(outPipe, &command, 1);
-    float fTime = (float)time;
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        float fTime = (float)time;
+    #else
+        float fTime = (float)time.getValue();
+    #endif
     WRITE(outPipe, &fTime, sizeof(float));
-    // The sceneMutex is NOT unlocked at the end of this scope
-    // (sceneLockBeginFinishScene is a member variable); see finishScene().
 }
 
 void VisualizerProtocol::finishScene() {
     char command = EndOfScene;
     WRITE(outPipe, &command, 1);
-    sceneLockBeginFinishScene.unlock();
+    pthread_mutex_unlock(&sceneLock);
 }
 
 void VisualizerProtocol::drawBox(const Transform& X_GB, const Vec3& scale, const Vec4& color, int representation) {
@@ -489,9 +423,15 @@ void VisualizerProtocol::drawPolygonalMesh(const PolygonalMesh& mesh, const Tran
     vector<unsigned short> faces;
     for (int i = 0; i < mesh.getNumVertices(); i++) {
         Vec3 pos = mesh.getVertexPosition(i);
-        vertices.push_back((float) pos[0]);
-        vertices.push_back((float) pos[1]);
-        vertices.push_back((float) pos[2]);
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        vertices.push_back((float)pos[0]);
+        vertices.push_back((float)pos[1]);
+        vertices.push_back((float)pos[2]);
+    #else
+        vertices.push_back((float) pos[0].getValue());
+        vertices.push_back((float) pos[1].getValue());
+        vertices.push_back((float) pos[2].getValue());
+    #endif
     }
     for (int i = 0; i < mesh.getNumFaces(); i++) {
         int numVert = mesh.getNumVerticesForFace(i);
@@ -521,9 +461,15 @@ void VisualizerProtocol::drawPolygonalMesh(const PolygonalMesh& mesh, const Tran
                 center += pos;
             }
             center /= numVert;
-            vertices.push_back((float) center[0]);
-            vertices.push_back((float) center[1]);
-            vertices.push_back((float) center[2]);
+            #ifndef SimTK_REAL_IS_ADOUBLE
+                vertices.push_back((float)center[0]);
+                vertices.push_back((float)center[1]);
+                vertices.push_back((float)center[2]);
+            #else
+                vertices.push_back((float) center[0].getValue());
+                vertices.push_back((float) center[1].getValue());
+                vertices.push_back((float) center[2].getValue());
+            #endif
             const unsigned newIndex = (unsigned)(vertices.size()/3-1);
             for (int j = 0; j < numVert-1; j++) {
                 faces.push_back((unsigned short) mesh.getFaceVertex(i, j));
@@ -573,19 +519,35 @@ drawMesh(const Transform& X_GM, const Vec3& scale, const Vec4& color,
     WRITE(outPipe, &command, 1);
     float buffer[13];
     Vec3 rot = X_GM.R().convertRotationToBodyFixedXYZ();
-    buffer[0] = (float) rot[0];
-    buffer[1] = (float) rot[1];
-    buffer[2] = (float) rot[2];
-    buffer[3] = (float) X_GM.p()[0];
-    buffer[4] = (float) X_GM.p()[1];
-    buffer[5] = (float) X_GM.p()[2];
-    buffer[6] = (float) scale[0];
-    buffer[7] = (float) scale[1];
-    buffer[8] = (float) scale[2];
-    buffer[9] = (float) color[0];
-    buffer[10] = (float) color[1];
-    buffer[11] = (float) color[2];
-    buffer[12] = (float) color[3];
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        buffer[0] = (float)rot[0];
+        buffer[1] = (float)rot[1];
+        buffer[2] = (float)rot[2];
+        buffer[3] = (float)X_GM.p()[0];
+        buffer[4] = (float)X_GM.p()[1];
+        buffer[5] = (float)X_GM.p()[2];
+        buffer[6] = (float)scale[0];
+        buffer[7] = (float)scale[1];
+        buffer[8] = (float)scale[2];
+        buffer[9] = (float)color[0];
+        buffer[10] = (float)color[1];
+        buffer[11] = (float)color[2];
+        buffer[12] = (float)color[3];
+    #else
+        buffer[0] = (float) rot[0].getValue();
+        buffer[1] = (float) rot[1].getValue();
+        buffer[2] = (float) rot[2].getValue();
+        buffer[3] = (float) X_GM.p()[0].getValue();
+        buffer[4] = (float) X_GM.p()[1].getValue();
+        buffer[5] = (float) X_GM.p()[2].getValue();
+        buffer[6] = (float) scale[0].getValue();
+        buffer[7] = (float) scale[1].getValue();
+        buffer[8] = (float) scale[2].getValue();
+        buffer[9] = (float) color[0].getValue();
+        buffer[10] = (float) color[1].getValue();
+        buffer[11] = (float) color[2].getValue();
+        buffer[12] = (float) color[3].getValue();
+    #endif
     WRITE(outPipe, buffer, 13*sizeof(float));
     unsigned short buffer2[2];
     buffer2[0] = meshIndex;
@@ -598,16 +560,29 @@ drawLine(const Vec3& end1, const Vec3& end2, const Vec4& color, Real thickness)
 {
     WRITE(outPipe, &AddLine, 1);
     float buffer[10];
-    buffer[0] = (float) color[0];
-    buffer[1] = (float) color[1];
-    buffer[2] = (float) color[2];
-    buffer[3] = (float) thickness;
-    buffer[4] = (float) end1[0];
-    buffer[5] = (float) end1[1];
-    buffer[6] = (float) end1[2];
-    buffer[7] = (float) end2[0];
-    buffer[8] = (float) end2[1];
-    buffer[9] = (float) end2[2];
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        buffer[0] = (float)color[0];
+        buffer[1] = (float)color[1];
+        buffer[2] = (float)color[2];
+        buffer[3] = (float)thickness;
+        buffer[4] = (float)end1[0];
+        buffer[5] = (float)end1[1];
+        buffer[6] = (float)end1[2];
+        buffer[7] = (float)end2[0];
+        buffer[8] = (float)end2[1];
+        buffer[9] = (float)end2[2];
+    #else
+        buffer[0] = (float) color[0].getValue();
+        buffer[1] = (float) color[1].getValue();
+        buffer[2] = (float) color[2].getValue();
+        buffer[3] = (float) thickness.getValue();
+        buffer[4] = (float) end1[0].getValue();
+        buffer[5] = (float) end1[1].getValue();
+        buffer[6] = (float) end1[2].getValue();
+        buffer[7] = (float) end2[0].getValue();
+        buffer[8] = (float) end2[1].getValue();
+        buffer[9] = (float) end2[2].getValue();
+    #endif
     WRITE(outPipe, buffer, 10*sizeof(float));
 }
 
@@ -621,18 +596,33 @@ drawText(const Transform& X_GT, const Vec3& scale, const Vec4& color,
     WRITE(outPipe, &AddText, 1);
     float buffer[12];
     const Vec3 rot = X_GT.R().convertRotationToBodyFixedXYZ();
-    buffer[0] = (float) rot[0];
-    buffer[1] = (float) rot[1];
-    buffer[2] = (float) rot[2];
-    buffer[3] = (float) X_GT.p()[0];
-    buffer[4] = (float) X_GT.p()[1];
-    buffer[5] = (float) X_GT.p()[2];
-    buffer[6] = (float) scale[0];
-    buffer[7] = (float) scale[1];
-    buffer[8] = (float) scale[2];
-    buffer[9] = (float) color[0];
-    buffer[10]= (float) color[1];
-    buffer[11]= (float) color[2];
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        buffer[0] = (float)rot[0];
+        buffer[1] = (float)rot[1];
+        buffer[2] = (float)rot[2];
+        buffer[3] = (float)X_GT.p()[0];
+        buffer[4] = (float)X_GT.p()[1];
+        buffer[5] = (float)X_GT.p()[2];
+        buffer[6] = (float)scale[0];
+        buffer[7] = (float)scale[1];
+        buffer[8] = (float)scale[2];
+        buffer[9] = (float)color[0];
+        buffer[10] = (float)color[1];
+        buffer[11] = (float)color[2];
+    #else
+        buffer[0] = (float) rot[0].getValue();
+        buffer[1] = (float) rot[1].getValue();
+        buffer[2] = (float) rot[2].getValue();
+        buffer[3] = (float) X_GT.p()[0].getValue();
+        buffer[4] = (float) X_GT.p()[1].getValue();
+        buffer[5] = (float) X_GT.p()[2].getValue();
+        buffer[6] = (float) scale[0].getValue();
+        buffer[7] = (float) scale[1].getValue();
+        buffer[8] = (float) scale[2].getValue();
+        buffer[9] = (float) color[0].getValue();
+        buffer[10]= (float) color[1].getValue();
+        buffer[11]= (float) color[2].getValue();
+    #endif
     WRITE(outPipe, buffer, 12*sizeof(float));
     short face = (short)faceCamera;
     WRITE(outPipe, &face, sizeof(short));
@@ -648,24 +638,39 @@ drawCoords(const Transform& X_GF, const Vec3& axisLengths, const Vec4& color) {
     WRITE(outPipe, &AddCoords, 1);
     float buffer[12];
     const Vec3 rot = X_GF.R().convertRotationToBodyFixedXYZ();
-    buffer[0] = (float) rot[0];
-    buffer[1] = (float) rot[1];
-    buffer[2] = (float) rot[2];
-    buffer[3] = (float) X_GF.p()[0];
-    buffer[4] = (float) X_GF.p()[1];
-    buffer[5] = (float) X_GF.p()[2];
-    buffer[6] = (float) axisLengths[0];
-    buffer[7] = (float) axisLengths[1];
-    buffer[8] = (float) axisLengths[2];
-    buffer[9] = (float) color[0];
-    buffer[10]= (float) color[1];
-    buffer[11]= (float) color[2];
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        buffer[0] = (float)rot[0];
+        buffer[1] = (float)rot[1];
+        buffer[2] = (float)rot[2];
+        buffer[3] = (float)X_GF.p()[0];
+        buffer[4] = (float)X_GF.p()[1];
+        buffer[5] = (float)X_GF.p()[2];
+        buffer[6] = (float)axisLengths[0];
+        buffer[7] = (float)axisLengths[1];
+        buffer[8] = (float)axisLengths[2];
+        buffer[9] = (float)color[0];
+        buffer[10] = (float)color[1];
+        buffer[11] = (float)color[2];
+    #else
+        buffer[0] = (float) rot[0].getValue();
+        buffer[1] = (float) rot[1].getValue();
+        buffer[2] = (float) rot[2].getValue();
+        buffer[3] = (float) X_GF.p()[0].getValue();
+        buffer[4] = (float) X_GF.p()[1].getValue();
+        buffer[5] = (float) X_GF.p()[2].getValue();
+        buffer[6] = (float) axisLengths[0].getValue();
+        buffer[7] = (float) axisLengths[1].getValue();
+        buffer[8] = (float) axisLengths[2].getValue();
+        buffer[9] = (float) color[0].getValue();
+        buffer[10]= (float) color[1].getValue();
+        buffer[11]= (float) color[2].getValue();
+    #endif
     WRITE(outPipe, buffer, 12*sizeof(float));
 }
 
 void VisualizerProtocol::
 addMenu(const String& title, int id, const Array_<pair<String, int> >& items) {
-    std::lock_guard<std::mutex> lock(sceneMutex);
+    pthread_mutex_lock(&sceneLock);
     WRITE(outPipe, &DefineMenu, 1);
     short titleLength = (short)title.size();
     WRITE(outPipe, &titleLength, sizeof(short));
@@ -678,166 +683,240 @@ addMenu(const String& title, int id, const Array_<pair<String, int> >& items) {
         WRITE(outPipe, buffer, 2*sizeof(int));
         WRITE(outPipe, items[i].first.c_str(), items[i].first.size());
     }
+    pthread_mutex_unlock(&sceneLock);
 }
 
 void VisualizerProtocol::
 addSlider(const String& title, int id, Real minVal, Real maxVal, Real value) {
-    std::lock_guard<std::mutex> lock(sceneMutex);
+    pthread_mutex_lock(&sceneLock);
     WRITE(outPipe, &DefineSlider, 1);
     short titleLength = (short)title.size();
     WRITE(outPipe, &titleLength, sizeof(short));
     WRITE(outPipe, title.c_str(), titleLength);
     WRITE(outPipe, &id, sizeof(int));
     float buffer[3];
-    buffer[0] = (float) minVal;
-    buffer[1] = (float) maxVal;
-    buffer[2] = (float) value;
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        buffer[0] = (float)minVal;
+        buffer[1] = (float)maxVal;
+        buffer[2] = (float)value;
+    #else
+        buffer[0] = (float) minVal.getValue();
+        buffer[1] = (float) maxVal.getValue();
+        buffer[2] = (float) value.getValue();
+    #endif
     WRITE(outPipe, buffer, 3*sizeof(float));
+    pthread_mutex_unlock(&sceneLock);
 }
 
 
 void VisualizerProtocol::setSliderValue(int id, Real newValue) const {
+#ifndef SimTK_REAL_IS_ADOUBLE
     const float value = (float)newValue;
-    std::lock_guard<std::mutex> lock(sceneMutex);
+#else
+    const float value = (float)newValue.getValue();
+#endif
+    pthread_mutex_lock(&sceneLock);
     WRITE(outPipe, &SetSliderValue, 1);
     WRITE(outPipe, &id, sizeof(int));
     WRITE(outPipe, &value, sizeof(float));
+    pthread_mutex_unlock(&sceneLock);
 }
 
 void VisualizerProtocol::setSliderRange(int id, Real newMin, Real newMax) const {
     float buffer[2];
-    buffer[0] = (float)newMin; buffer[1] = (float)newMax;
-    std::lock_guard<std::mutex> lock(sceneMutex);
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        buffer[0] = (float)newMin; buffer[1] = (float)newMax;
+    #else
+        buffer[0] = (float)newMin.getValue(); buffer[1] = (float)newMax.getValue();
+    #endif
+    pthread_mutex_lock(&sceneLock);
     WRITE(outPipe, &SetSliderRange, 1);
     WRITE(outPipe, &id, sizeof(int));
     WRITE(outPipe, buffer, 2*sizeof(float));
+    pthread_mutex_unlock(&sceneLock);
 }
 
 void VisualizerProtocol::setWindowTitle(const String& title) const {
-    std::lock_guard<std::mutex> lock(sceneMutex);
+    pthread_mutex_lock(&sceneLock);
     WRITE(outPipe, &SetWindowTitle, 1);
     short titleLength = (short)title.size();
     WRITE(outPipe, &titleLength, sizeof(short));
     WRITE(outPipe, title.c_str(), titleLength);
+    pthread_mutex_unlock(&sceneLock);
 }
 
 void VisualizerProtocol::setMaxFrameRate(Real rate) const {
-    const float frameRate = (float)rate;
-    std::lock_guard<std::mutex> lock(sceneMutex);
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        const float frameRate = (float)rate;
+    #else
+        const float frameRate = (float)rate.getValue();
+    #endif
+    pthread_mutex_lock(&sceneLock);
     WRITE(outPipe, &SetMaxFrameRate, 1);
     WRITE(outPipe, &frameRate, sizeof(float));
+    pthread_mutex_unlock(&sceneLock);
 }
 
 
 void VisualizerProtocol::setBackgroundColor(const Vec3& color) const {
     float buffer[3];
-    buffer[0] = (float)color[0]; 
-    buffer[1] = (float)color[1]; 
-    buffer[2] = (float)color[2];
-    std::lock_guard<std::mutex> lock(sceneMutex);
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        buffer[0] = (float)color[0];
+        buffer[1] = (float)color[1];
+        buffer[2] = (float)color[2];
+    #else
+        buffer[0] = (float)color[0].getValue();
+        buffer[1] = (float)color[1].getValue();
+        buffer[2] = (float)color[2].getValue();
+    #endif
+    pthread_mutex_lock(&sceneLock);
     WRITE(outPipe, &SetBackgroundColor, 1);
     WRITE(outPipe, buffer, 3*sizeof(float));
+    pthread_mutex_unlock(&sceneLock);
 }
 
 void VisualizerProtocol::setShowShadows(bool shouldShow) const {
     const short show = (short)shouldShow; // 0 or 1
-    std::lock_guard<std::mutex> lock(sceneMutex);
+    pthread_mutex_lock(&sceneLock);
     WRITE(outPipe, &SetShowShadows, 1);
     WRITE(outPipe, &show, sizeof(short));
+    pthread_mutex_unlock(&sceneLock);
 }
 
 void VisualizerProtocol::setShowFrameRate(bool shouldShow) const {
     const short show = (short)shouldShow; // 0 or 1
-    std::lock_guard<std::mutex> lock(sceneMutex);
+    pthread_mutex_lock(&sceneLock);
     WRITE(outPipe, &SetShowFrameRate, 1);
     WRITE(outPipe, &show, sizeof(short));
+    pthread_mutex_unlock(&sceneLock);
 }
 
 void VisualizerProtocol::setShowSimTime(bool shouldShow) const {
     const short show = (short)shouldShow; // 0 or 1
-    std::lock_guard<std::mutex> lock(sceneMutex);
+    pthread_mutex_lock(&sceneLock);
     WRITE(outPipe, &SetShowSimTime, 1);
     WRITE(outPipe, &show, sizeof(short));
+    pthread_mutex_unlock(&sceneLock);
 }
 
 void VisualizerProtocol::setShowFrameNumber(bool shouldShow) const {
     const short show = (short)shouldShow; // 0 or 1
-    std::lock_guard<std::mutex> lock(sceneMutex);
+    pthread_mutex_lock(&sceneLock);
     WRITE(outPipe, &SetShowFrameNumber, 1);
     WRITE(outPipe, &show, sizeof(short));
+    pthread_mutex_unlock(&sceneLock);
 }
 
 void VisualizerProtocol::setBackgroundType(Visualizer::BackgroundType type) const {
     const short backgroundType = (short)type;
-    std::lock_guard<std::mutex> lock(sceneMutex);
+    pthread_mutex_lock(&sceneLock);
     WRITE(outPipe, &SetBackgroundType, 1);
     WRITE(outPipe, &backgroundType, sizeof(short));
+    pthread_mutex_unlock(&sceneLock);
 }
 
 void VisualizerProtocol::setCameraTransform(const Transform& X_GC) const {
-    std::lock_guard<std::mutex> lock(sceneMutex);
+    pthread_mutex_lock(&sceneLock);
     WRITE(outPipe, &SetCamera, 1);
     float buffer[6];
     Vec3 rot = X_GC.R().convertRotationToBodyFixedXYZ();
-    buffer[0] = (float) rot[0];
-    buffer[1] = (float) rot[1];
-    buffer[2] = (float) rot[2];
-    buffer[3] = (float) X_GC.p()[0];
-    buffer[4] = (float) X_GC.p()[1];
-    buffer[5] = (float) X_GC.p()[2];
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        buffer[0] = (float)rot[0];
+        buffer[1] = (float)rot[1];
+        buffer[2] = (float)rot[2];
+        buffer[3] = (float)X_GC.p()[0];
+        buffer[4] = (float)X_GC.p()[1];
+        buffer[5] = (float)X_GC.p()[2];
+    #else
+        buffer[0] = (float) rot[0].getValue();
+        buffer[1] = (float) rot[1].getValue();
+        buffer[2] = (float) rot[2].getValue();
+        buffer[3] = (float) X_GC.p()[0].getValue();
+        buffer[4] = (float) X_GC.p()[1].getValue();
+        buffer[5] = (float) X_GC.p()[2].getValue();
+    #endif
     WRITE(outPipe, buffer, 6*sizeof(float));
+    pthread_mutex_unlock(&sceneLock);
 }
 
 void VisualizerProtocol::zoomCamera() const {
-    std::lock_guard<std::mutex> lock(sceneMutex);
+    pthread_mutex_lock(&sceneLock);
     WRITE(outPipe, &ZoomCamera, 1);
+    pthread_mutex_unlock(&sceneLock);
 }
 
 void VisualizerProtocol::lookAt(const Vec3& point, const Vec3& upDirection) const {
-    std::lock_guard<std::mutex> lock(sceneMutex);
+    pthread_mutex_lock(&sceneLock);
     WRITE(outPipe, &LookAt, 1);
     float buffer[6];
-    buffer[0] = (float) point[0];
-    buffer[1] = (float) point[1];
-    buffer[2] = (float) point[2];
-    buffer[3] = (float) upDirection[0];
-    buffer[4] = (float) upDirection[1];
-    buffer[5] = (float) upDirection[2];
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        buffer[0] = (float)point[0];
+        buffer[1] = (float)point[1];
+        buffer[2] = (float)point[2];
+        buffer[3] = (float)upDirection[0];
+        buffer[4] = (float)upDirection[1];
+        buffer[5] = (float)upDirection[2];
+    #else
+        buffer[0] = (float) point[0].getValue();
+        buffer[1] = (float) point[1].getValue();
+        buffer[2] = (float) point[2].getValue();
+        buffer[3] = (float) upDirection[0].getValue();
+        buffer[4] = (float) upDirection[1].getValue();
+        buffer[5] = (float) upDirection[2].getValue();
+    #endif
     WRITE(outPipe, buffer, 6*sizeof(float));
+    pthread_mutex_unlock(&sceneLock);
 }
 
 void VisualizerProtocol::setFieldOfView(Real fov) const {
-    std::lock_guard<std::mutex> lock(sceneMutex);
+    pthread_mutex_lock(&sceneLock);
     WRITE(outPipe, &SetFieldOfView, 1);
     float buffer[1];
-    buffer[0] = (float)fov;
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        buffer[0] = (float)fov;
+    #else
+        buffer[0] = (float)fov.getValue();
+    #endif
     WRITE(outPipe, buffer, sizeof(float));
+    pthread_mutex_unlock(&sceneLock);
 }
 
 void VisualizerProtocol::setClippingPlanes(Real near, Real far) const {
-    std::lock_guard<std::mutex> lock(sceneMutex);
+    pthread_mutex_lock(&sceneLock);
     WRITE(outPipe, &SetClipPlanes, 1);
     float buffer[2];
-    buffer[0] = (float)near;
-    buffer[1] = (float)far;
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        buffer[0] = (float)near;
+        buffer[1] = (float)far;
+    #else
+        buffer[0] = (float)near.getValue();
+        buffer[1] = (float)far.getValue();
+    #endif
     WRITE(outPipe, buffer, 2*sizeof(float));
+    pthread_mutex_unlock(&sceneLock);
 }
 
 void VisualizerProtocol::
 setSystemUpDirection(const CoordinateDirection& upDir) {
-    std::lock_guard<std::mutex> lock(sceneMutex);
+    pthread_mutex_lock(&sceneLock);
     WRITE(outPipe, &SetSystemUpDirection, 1);
     const unsigned char axis = (unsigned char)upDir.getAxis();
     const signed char   sign = (signed char)upDir.getDirection();
     WRITE(outPipe, &axis, 1);
     WRITE(outPipe, &sign, 1);
+    pthread_mutex_unlock(&sceneLock);
 }
 
 void VisualizerProtocol::setGroundHeight(Real height) {
-    std::lock_guard<std::mutex> lock(sceneMutex);
+    pthread_mutex_lock(&sceneLock);
     WRITE(outPipe, &SetGroundHeight, 1);
-    float heightBuffer = (float) height;
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        float heightBuffer = (float)height;
+    #else
+        float heightBuffer = (float) height.getValue();
+    #endif
     WRITE(outPipe, &heightBuffer, sizeof(float));
+    pthread_mutex_unlock(&sceneLock);
 }
 
 

@@ -16,7 +16,7 @@
 
 #include <map>
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   enum RegisteredOptionType

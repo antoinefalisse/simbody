@@ -17,7 +17,7 @@
 #include <iostream>
 #include <map>
 
-namespace SimTKIpopt
+namespace Ipopt
 {
   /** Exception that can be used to indicate errors with options */
   DECLARE_STD_EXCEPTION(OPTION_INVALID);

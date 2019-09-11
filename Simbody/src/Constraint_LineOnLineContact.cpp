@@ -26,6 +26,9 @@ Constraint::LineOnLineContact, and its implementation class
 Constraint::LineOnLineContactImpl. */
 
 #include "SimTKcommon.h"
+
+#ifndef SimTK_REAL_IS_ADOUBLE
+
 #include "simbody/internal/common.h"
 #include "simbody/internal/Constraint.h"
 #include "simbody/internal/Constraint_LineOnLineContact.h"
@@ -362,7 +365,7 @@ calcPositionInfo(const State& state,
     // Use whichever of the outward normal directions gives a clearer signal.
     // We want w point out from F or into B.          ~12 flops
     const Real wsf = ~wraw_A*sf_A, wsb = ~wraw_A*sb_A;
-    if (std::abs(wsf) > std::abs(wsb)) pc.sense = (wsf >= 0 ?  1 : -1);
+    if (fabs(wsf) > fabs(wsb)) pc.sense = (wsf >= 0 ?  1 : -1);
     else                               pc.sense = (wsb >= 0 ? -1 :  1);
 
     pc.w_A = pc.sense * wraw_A;                     //  3 flops
@@ -395,7 +398,13 @@ calcPositionInfo(const State& state,
     // direction df. y = z X x = n X df.
     pc.p_AQf = p_APf + pc.tf * pc.df_A;             //  6 flops
     pc.p_AQb = p_APb + pc.tb * pc.db_A;             //  6
-    const Vec3 p_ACo = 0.5*(pc.p_AQf + pc.p_AQb);   //  6
+	
+	//changed 
+	Vec3 p_ACo = Real(0.5)*(pc.p_AQf + pc.p_AQb);
+	/*p_ACo = aux*0.5;*/
+	//for
+		//const Vec3 p_ACo = 0.5*(pc.p_AQf + pc.p_AQb);   //  6
+	//
     pc.X_AC.updP() = p_ACo;
 
     // Since unit vector n is perpendicular to df (and db), n X df 
@@ -477,7 +486,12 @@ calcVelocityInfo(const State& state,
 
     const Vec3 dQf = v_APf + dtf * pc.df_A + pc.tf * vc.ddf_A;  // 12 flops
     const Vec3 dQb = v_APb + dtb * pc.db_A + pc.tb * vc.ddb_A;  // 12
-    const Vec3 dCo = 0.5*(dQf + dQb);                           //  6
+    //changed
+	const Vec3 dCo = Real(0.5)*(dQf + dQb);
+	//for
+	/*const Vec3 dCo = 0.5*(dQf + dQb);          */                 //  6
+	//
+
     const Vec3 dp_FCo = dCo - v_AF;                             //  3
     const Vec3 dp_BCo = dCo - v_AB;                             //  3
 
@@ -577,4 +591,6 @@ calcDecorativeGeometryAndAppendVirtual
 
 
 } // namespace SimTK
+
+#endif
 

@@ -281,7 +281,7 @@ public:
     /// }
     /// @endcode
     static bool getFunctionLibraryDirectory(void* func,
-                                            std::string& absolutePathname);
+        std::string& absolutePathname);
     /// Get the absolute pathname of the current working directory
     /// including a trailing separator character. Windows keeps a current
     /// working directory for each drive which can be optionally specified

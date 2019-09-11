@@ -64,9 +64,15 @@ Box_(const Vec3P& halfLengths) {setHalfLengths(halfLengths);}
 /** Change the half-dimensions of this box. Dimensions must be nonnegative. 
 Cost is 4 flops to sort the edges. **/
 Box_& setHalfLengths(const Vec3P& halfLengths) {
-    SimTK_ERRCHK3(halfLengths >= 0, "Geo::Box_::setHalfLengths()",
-        "Half lengths must be nonnegative; got %g,%g,%g.",
-        (double)halfLengths[0],(double)halfLengths[1],(double)halfLengths[2]);
+	#ifdef SimTK_REAL_IS_ADOUBLE
+		SimTK_ERRCHK3(halfLengths >= 0, "Geo::Box_::setHalfLengths()",
+			"Half lengths must be nonnegative; got %g,%g,%g.",
+			Recorder(halfLengths[0]).getValue(),Recorder(halfLengths[1]).getValue(),Recorder(halfLengths[2]).getValue());
+	#else
+		SimTK_ERRCHK3(halfLengths >= 0, "Geo::Box_::setHalfLengths()",
+			"Half lengths must be nonnegative; got %g,%g,%g.",
+			(double)halfLengths[0], (double)halfLengths[1], (double)halfLengths[2]);
+	#endif
     h = halfLengths; 
     sortEdges();
     return *this; 
@@ -75,10 +81,17 @@ Box_& setHalfLengths(const Vec3P& halfLengths) {
 /** Change the half-dimensions of this box by adding the given vector. The
 result must be nonnegative. Cost is 7 flops, including resorting the edges. **/
 Box_& addToHalfLengths(const Vec3P& incr) {
-    h += incr; 
-    SimTK_ERRCHK3(h >= 0, "Geo::Box_::addToHalfLengths()",
-        "Half lengths must be nonnegative but were %g,%g,%g after change.",
-        (double)h[0],(double)h[1],(double)h[2]);
+    /*h += incr; */
+	h += incr;
+	#ifdef SimTK_REAL_IS_ADOUBLE
+		SimTK_ERRCHK3(h >= 0, "Geo::Box_::addToHalfLengths()",
+			"Half lengths must be nonnegative but were %g,%g,%g after change.",
+			Recorder(h[0]).getValue(),Recorder(h[1]).getValue(),Recorder(h[2]).getValue());
+	#else
+		SimTK_ERRCHK3(h >= 0, "Geo::Box_::addToHalfLengths()",
+			"Half lengths must be nonnegative but were %g,%g,%g after change.",
+			(double)h[0], (double)h[1], (double)h[2]);
+	#endif
     sortEdges();
     return *this; 
 }
@@ -136,11 +149,11 @@ Vec3P findClosestPointOnSurface(const Vec3P& pt, bool& ptWasInside) const {
     Vec3P c = findClosestPointOfSolidBox(pt, ptWasInside);
 
     if (ptWasInside) { // every |c[i]| <= h[i]
-        RealP dToSide = h[0]-std::abs(c[0]); // distance to closest x-face
+        RealP dToSide = h[0]-fabs(c[0]); // distance to closest x-face
         int which=0; RealP minDist=dToSide;
-        dToSide = h[1]-std::abs(c[1]);
+        dToSide = h[1]-fabs(c[1]);
         if (dToSide < minDist) {which=1; minDist=dToSide;}
-        dToSide = h[2]-std::abs(c[2]);
+        dToSide = h[2]-fabs(c[2]);
         if (dToSide < minDist) {which=2; minDist=dToSide;}
         // Now project the point to the nearest side.
         c[which] = c[which] < 0 ? -h[which] : h[which];
@@ -507,8 +520,8 @@ AlignedBox_& stretchBoundary() {
     const RealP tol    = Geo::getDefaultTol<P>();
     const RealP maxdim = max(getCenter().abs());
     const RealP maxrad = max(getHalfLengths());
-    const RealP scale  = std::max(maxdim, maxrad);
-    const RealP incr   = std::max(scale*Geo::getEps<P>(), tol);
+    const RealP scale  = fmax(maxdim, maxrad);
+    const RealP incr   = fmax(scale*Geo::getEps<P>(), tol);
     box.addToHalfLengths(Vec3P(incr));
     return *this; 
 }
@@ -543,7 +556,9 @@ OrientedBox_(const TransformP& X_FB, const Geo::Box_<P>& box)
 /** Construct an OrientedBox with the given location and 
 half-dimensions. **/
 OrientedBox_(const TransformP& X_FB, const Vec3P& halfLengths) 
-:   X_FB(X_FB), box(halfLengths) {} 
+:   X_FB(X_FB), box(halfLengths) {
+	Rotation_<P> orient = X_FB.R();
+} 
 
 
 /** Change the pose of this box. **/
@@ -580,13 +595,16 @@ very far from the origin, must be stretched more than a small one at the
 origin. Cost is 6 flops.
 @see Geo class for tolerance information. **/
 OrientedBox_& stretchBoundary() {
-    const RealP tol    = Geo::getDefaultTol<P>();
-    const RealP maxdim = max(getCenter().abs());
+    //const RealP tol    = Geo::getDefaultTol<P>();
+	double tol = Geo::getDefaultTol<double>();
+	const RealP maxdim = max(getCenter().abs());
     const RealP maxrad = max(getHalfLengths());
-    const RealP scale  = std::max(maxdim, maxrad);
-    const RealP incr   = std::max(scale*Geo::getEps<P>(), tol);
-    box.addToHalfLengths(Vec3P(incr));
-    return *this; 
+    const RealP scale  = fmax(maxdim, maxrad);
+    //const RealP incr   = fmax(scale*Geo::getEps<P>(), tol);
+	const RealP incr = fmax(scale*Geo::getEps<double>(), tol);
+	box.addToHalfLengths(Vec3P(incr));
+	
+	return *this; 
 }
 
 private:

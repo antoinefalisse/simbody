@@ -71,22 +71,40 @@ using std::cout; using std::endl;
 
 using namespace SimTK;
 
-Real A[16] = { 1.80,   2.88,   2.05,   -0.89,
-               5.25,  -2.95,  -0.95,   -3.80,
-               1.58,  -2.69,  -2.90,   -1.04,
-              -1.11,  -0.66,  -0.59,    0.80  };
+#ifndef SimTK_REAL_IS_ADOUBLE
+	Real A[16] = { 1.80,   2.88,   2.05,   -0.89,
+				   5.25,  -2.95,  -0.95,   -3.80,
+				   1.58,  -2.69,  -2.90,   -1.04,
+				  -1.11,  -0.66,  -0.59,    0.80  };
 
-Real B[4] =  { 9.52, 24.35,  0.77, -6.22 };
+	Real B[4] =  { 9.52, 24.35,  0.77, -6.22 };
 
-Real X[4] =  { 1.,   -1.,    3.,   -5.   };
+	Real X[4] =  { 1.,   -1.,    3.,   -5.   };
+#else
+	double A[16] = { 1.80,   2.88,   2.05,   -0.89,
+	5.25,  -2.95,  -0.95,   -3.80,
+	1.58,  -2.69,  -2.90,   -1.04,
+	-1.11,  -0.66,  -0.59,    0.80 };
+
+	double B[4] = { 9.52, 24.35,  0.77, -6.22 };
+
+	double X[4] = { 1.,   -1.,    3.,   -5. };
+#endif
 
 int main () {
     try { 
             // Default precision (Real, normally double) test.
-        Matrix a(4,4, A);
-        Vector b(4, B);
-        Vector x_right(4, X);
-        Vector x; // should get sized automatically to 4 by solve()
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			Matrix a(4,4, A);
+			Vector b(4, B);
+			Vector x_right(4, X);
+			Vector x; // should get sized automatically to 4 by solve()
+		#else
+			Matrix_<double> a(4, 4, A);
+			Vector_<double> b(4, B);
+			Vector_<double> x_right(4, X);
+			Vector_<double> x; // should get sized automatically to 4 by solve()
+		#endif
 
         FactorLU lu(a);  // perform LU factorization 
 
@@ -96,7 +114,7 @@ int main () {
         ASSERT((x-x_right).norm() < 10*SignificantReal);
 
             // float test
-
+		
         Matrix_<float> af(4,4); for (int i=0; i<4; ++i) for (int j=0; j<4; ++j) af(i,j)=(float)a(i,j);
         Vector_<float> bf(4); for (int i=0; i<4; ++i) bf[i] = (float)b[i];
         Vector_<float> xf_right(4); for (int i=0; i<4; ++i) xf_right[i] = (float)x_right[i];
@@ -115,30 +133,56 @@ int main () {
         cout << " Real SOLUTION: " << x << "  errnorm=" << (x-x_right).norm() << endl;
         ASSERT((x-x_right).norm() < 10*SignificantReal);
         
-        Real C[4] = { 1.0,   2.0,
-                      1.0,   3.0  };
-        Matrix c(2,2, C);
-        FactorLU clu(c);
-        Matrix invC;
-        clu.inverse(invC);
-        cout << "Inverse c: " << endl;
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			Real C[4] = { 1.0,   2.0,
+						  1.0,   3.0  };
+			Matrix c(2,2, C);
+			FactorLU clu(c);
+			Matrix invC;
+			clu.inverse(invC);
+		#else
+				double C[4] = { 1.0,   2.0,
+					1.0,   3.0 };
+				Matrix_<double> c(2, 2, C);
+				FactorLU clu(c);
+				Matrix_<double> invC;
+				clu.inverse(invC);
+		#endif
+        
+		cout << "Inverse c: " << endl;
         cout << invC[0] << endl;
         cout << invC[1] << endl;
-        Real Z[4] = { 0.0,   0.0,
-                     0.0,   0.0  };
-        Matrix z(2,2, Z);
-        FactorLU zlu(z);
-        Vector_<double> xz;
-        Vector_<double> bz(2);
+        
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			Real Z[4] = { 0.0,   0.0,
+						 0.0,   0.0  };
+			Matrix z(2,2, Z);
+			FactorLU zlu(z);
+			Vector_<SimTK::Real> xz;
+			Vector_<SimTK::Real> bz(2);
+		#else
+			double Z[4] = { 0.0,   0.0,
+				0.0,   0.0 };
+			Matrix_<double> z(2, 2, Z);
+			FactorLU zlu(z);
+			Vector_<double> xz;
+			Vector_<double> bz(2);
+		#endif
         bz(1) = bz(0) = 0.0;
         zlu.solve( bz, xz );
         cout << " solve with mat all zeros : " << endl;
         for(int i=0;i<xz.size();i++) printf("%f ", xz(i) );  printf("\n");
    
         try {
-            Matrix_<double> z0;
-            FactorLU z0lu(z0);
-            Vector_<double> bz0(0);
+			#ifndef SimTK_REAL_IS_ADOUBLE
+				Matrix_<SimTK::Real> z0;
+				FactorLU z0lu(z0);
+				Vector_<SimTK::Real> bz0(0);
+			#else
+				Matrix_<double> z0;
+				FactorLU z0lu(z0);
+				Vector_<double> bz0(0);
+			#endif
             z0lu.solve( bz0, xz );
             cout << " solve with mat(0,0) : " << endl;
             for(int i=0;i<xz.size();i++) printf("%f ", xz(i) );  printf("\n");

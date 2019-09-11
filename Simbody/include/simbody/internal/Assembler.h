@@ -194,7 +194,7 @@ value can be used for all of them. By default, tolerance is set to
 accuracy/10 if accuracy has been set, otherwise 1e-4; calling 
 setErrorTolerance() with no argument or with zero restores it to its default 
 behavior. **/
-Assembler& setErrorTolerance(Real tolerance=0) {
+Assembler& setErrorTolerance(double tolerance = 0) {
     SimTK_ERRCHK1_ALWAYS(0 <= tolerance,
         "Assembler::setTolerance()", "The requested error tolerance %g"
         " is illegal; we require 0 <= tolerance, with 0 indicating that"
@@ -206,9 +206,9 @@ Assembler& setErrorTolerance(Real tolerance=0) {
 assemble() or track() call. Note that this may be an explicitly-set
 tolerance or a default value calculated as accuracy/10 if accuracy has been
 set, otherwise 1e-4. **/
-Real getErrorToleranceInUse() const {   
-    return tolerance > 0 ? tolerance 
-           : (accuracy > 0 ? accuracy/10 : Real(0.1)/OODefaultAccuracy); 
+double getErrorToleranceInUse() const {
+	return tolerance > 0 ? tolerance
+		: (accuracy > 0 ? accuracy / 10 : double(0.1) / OODefaultAccuracy);
 }
 
 /** Set the accuracy to which a solution should be pursued. This is a
@@ -220,18 +220,22 @@ However, if you don't say otherwise, this number is also used to set the
 absolute error tolerance used to determine whether the assembly succeeded 
 or failed, by the following formula: error tolerance = accuracy/10. By
 default, we set accuracy=1e-3 and tolerance=1e-4. **/
-Assembler& setAccuracy(Real accuracy=0) {
+//Assembler& setAccuracy(Real accuracy=0) {
+Assembler& setAccuracy(double accuracy = 0) {
+
     SimTK_ERRCHK2_ALWAYS(0 <= accuracy && accuracy < 1,
         "Assembler::setAccuracy()", "The requested accuracy %g is illegal;"
         " we require 0 <= accuracy < 1, with 0 indicating that the default"
-        " accuracy (%g) is to be used.", Real(1)/OODefaultAccuracy, accuracy);
+		" accuracy (%g) is to be used.", double(1) / OODefaultAccuracy, accuracy);
+
     this->accuracy = accuracy;
     return *this;
 }
 /** Obtain the accuracy setting that will be used during the next 
 assemble() or track() call. The default is to use 1e-3, i.e., 1/10 of 1%. **/
-Real getAccuracyInUse() const 
-{   return accuracy > 0 ? accuracy : Real(1)/OODefaultAccuracy; }
+double getAccuracyInUse() const
+{ return accuracy > 0 ? accuracy : double(1) / OODefaultAccuracy; }
+
 
 
 /** Change how the System's enabled built-in Constraints are weighted as
@@ -630,8 +634,8 @@ Array_<const EventReporter*>    reporters; // just references; don't delete
 
 // These members affect the behavior of the assembly algorithm.
 static const int OODefaultAccuracy = 1000; // 1/accuracy if acc==0
-Real    accuracy;               // 0 means use 1/OODefaultAccuracy
-Real    tolerance;              // 0 means use accuracy/10
+double    accuracy;               // 0 means use 1/OODefaultAccuracy
+double    tolerance;              // 0 means use accuracy/10
 bool    forceNumericalGradient; // ignore analytic gradient methods
 bool    forceNumericalJacobian; // ignore analytic Jacobian methods
 bool    useRMSErrorNorm;        // what norm defines success?
@@ -681,7 +685,9 @@ mutable Array_<AssemblyConditionIndex>  goals;
 
 class AssemblerSystem; // local class
 mutable AssemblerSystem* asmSys;
-mutable Optimizer*       optimizer;
+#ifndef SimTK_REAL_IS_ADOUBLE
+    mutable Optimizer*       optimizer;
+#endif
 
 mutable int nAssemblySteps;   // count assemble() and track() calls
 mutable int nInitializations; // # times we had to reinitialize

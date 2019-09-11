@@ -77,9 +77,11 @@ RBNodeBushing(const MassProperties& mProps_B,
 
     // Implementations of virtual methods.
 
-// This has a default implementation but it rotates first then translates,
-// which works fine for the normal bushing but produces wrong behavior when
-// the mobilizer is reversed.
+ /*This has a default implementation but it rotates first then translates,
+ which works fine for the normal bushing but produces wrong behavior when
+ the mobilizer is reversed.*/
+#ifndef SimTK_REAL_IS_ADOUBLE
+
 void setQToFitTransformImpl(const SBStateDigest& sbs, const Transform& X_FM, 
                             Vector& q) const override 
 {
@@ -96,16 +98,18 @@ void setQToFitTranslationImpl(const SBStateDigest& sbs, const Vec3& p_FM,
                               Vector& q) const override {
     this->toQVec3(q,3) = p_FM; // skip the 3 Euler angles
 }
+#endif
 
 // Given the angular velocity of M in F, expressed in F, compute the Euler
 // angle derivatives qdot that would produce that angular velocity, and 
 // return u=qdot.
+#ifndef SimTK_REAL_IS_ADOUBLE
 void setUToFitAngularVelocityImpl
    (const SBStateDigest& sbs, const Vector& q, const Vec3& w_FM,
     Vector& u) const override 
 {
-    const Vec2 cosxy(std::cos(q[0]), std::cos(q[1]));
-    const Vec2 sinxy(std::sin(q[0]), std::sin(q[1]));
+    const Vec2 cosxy(cos(q[0]), cos(q[1]));
+    const Vec2 sinxy(sin(q[0]), sin(q[1]));
     const Real oocosy = 1 / cosxy[1];
     const Vec3 qdot = 
         Rotation::convertAngVelInParentToBodyXYZDot(cosxy,sinxy,oocosy,w_FM);
@@ -118,6 +122,7 @@ void setUToFitLinearVelocityImpl
 {
     this->toUVec3(u,3) = v_FM;
 }
+#endif
 
 // We want to cache cos and sin for each angle, and also 1/cos of the middle 
 // angle will be handy to have around.
@@ -137,11 +142,16 @@ void performQPrecalculations(const SBStateDigest& sbs,
 {
     assert(q && nq==6 && qCache && nQCache==PoolSize && nQErr==0);
 
-    const Real cy = std::cos(q[1]);
+    //const Real cy = NTraits<Real>::cos(q[1]);
+    //Vec3::updAs(&qCache[CosQ]) =
+    //    Vec3(NTraits<Real>::cos(q[0]), cy, NTraits<Real>::cos(q[2]));
+    //Vec3::updAs(&qCache[SinQ]) =
+    //    Vec3(NTraits<Real>::sin(q[0]), NTraits<Real>::sin(q[1]), NTraits<Real>::sin(q[2]));
+    const Real cy = cos(q[1]);
     Vec3::updAs(&qCache[CosQ]) =
-        Vec3(std::cos(q[0]), cy, std::cos(q[2]));
+        Vec3(cos(q[0]), cy, cos(q[2]));
     Vec3::updAs(&qCache[SinQ]) =
-        Vec3(std::sin(q[0]), std::sin(q[1]), std::sin(q[2]));
+        Vec3(sin(q[0]), sin(q[1]), sin(q[2]));
     qCache[OOCosQy] = 1/cy; // trouble at 90 or 270 (-90) degrees
 }
 

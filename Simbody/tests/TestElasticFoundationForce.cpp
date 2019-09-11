@@ -32,7 +32,7 @@ const Real TOL = 1e-5;
 
 template <class T>
 void assertEqual(T val1, T val2) {
-    ASSERT(abs(val1-val2) < TOL || abs(val1-val2)/max(abs(val1), abs(val2)) < TOL);
+    ASSERT(NTraits<Real>::abs(val1-val2) < TOL || NTraits<Real>::abs(val1-val2)/max(NTraits<Real>::abs(val1), NTraits<Real>::abs(val2)) < TOL);
 }
 
 template <int N>
@@ -77,6 +77,8 @@ void testForces() {
     ASSERT(ef.getTransitionVelocity() == vt);
     State state = system.realizeTopology();
 
+#ifndef SimTK_REAL_IS_ADOUBLE
+
     // Position the pyramid at a variety of positions and check the normal
     // force.
 
@@ -115,8 +117,8 @@ void testForces() {
         for (Real v = -1.0; v <= 1.0; v += 0.1) {
             mesh.setUToFitLinearVelocity(state, Vec3(v, 0, 0));
             system.realize(state, Stage::Dynamics);
-            const Real vrel = std::abs(v/vt);
-            Real ff = (v < 0 ? 1 : -1)*fh*(std::min(vrel, 1.0)*(ud+2*(us-ud)/(1+vrel*vrel))+uv*std::fabs(v));
+            const Real vrel = NTraits<Real>::abs(v/vt);
+            Real ff = (v < 0 ? 1 : -1)*fh*(NTraits<Real>::min(vrel, 1.0)*(ud+2*(us-ud)/(1+vrel*vrel))+uv*NTraits<Real>::abs(v));
             const Vec3 totalForce = Vec3(ff, fh, 0);
             expectedForce = SpatialVec(Vec3(0), Vec3(0));
             Vec3 contactPoint1 = mesh.findStationAtGroundPoint(state, Vec3(2.0/3.0, 0, 1.0/3.0));
@@ -128,6 +130,7 @@ void testForces() {
             assertEqual(actualForce[1], expectedForce[mesh.getMobilizedBodyIndex()][1]);
         }
     }
+#endif
 }
 
 /**
@@ -192,16 +195,16 @@ void testEffSphereOnPlaneOldFormulation(bool verbose = false)
         const Real volumeSphericalCap = Pi*penetration*penetration/3.0*(3.0*radius-penetration);
         const Real theoreticalResult = stiffness*volumeSphericalCap;
         const Real numericalResult = r[1][1];
-        ASSERT(abs(r[1][0])<TOL);
-        ASSERT(abs(r[1][2])<TOL);
-        const Real relativeDifference = abs((numericalResult/theoreticalResult)-1.0);
+        ASSERT(NTraits<Real>::abs(r[1][0])<TOL);
+        ASSERT(NTraits<Real>::abs(r[1][2])<TOL);
+        const Real relativeDifference = NTraits<Real>::abs((numericalResult/theoreticalResult)-1.0);
         if (verbose) {
             cout<<"Effort for penetration : "
                 <<penetration*1000.0<<" mm -> F = "<<numericalResult<<" N "
                 <<"(theoretical result : "<<theoreticalResult<< " N "
                 <<" relative difference : "<<100.0*relativeDifference<<" %)"<<endl;
         }
-        ASSERT(abs((numericalResult/theoreticalResult)-1.0)<tolerances[i]);
+        ASSERT(NTraits<Real>::abs((numericalResult/theoreticalResult)-1.0)<tolerances[i]);
     }
 }
 
@@ -249,12 +252,12 @@ void testEffSphereOnPlaneNewFormulation(bool verbose = false)
         ASSERT(contactForces.getNumContactForces(state)==1);
         const ContactForce& force = contactForces.getContactForce(state,0);
         const Vec3& frc = force.getForceOnSurface2()[1];
-        ASSERT(abs(frc[0])<TOL);
-        ASSERT(abs(frc[2])<TOL);
+        ASSERT(NTraits<Real>::abs(frc[0])<TOL);
+        ASSERT(NTraits<Real>::abs(frc[2])<TOL);
         const Real numericalResult = frc[1];
         const Real volumeSphericalCap = Pi*penetration*penetration/3.0*(3.0*radius-penetration);
         const Real theoreticalResult = stiffness*volumeSphericalCap;
-        const Real relativeDifference = abs((numericalResult/theoreticalResult)-1.0);
+        const Real relativeDifference = NTraits<Real>::abs((numericalResult/theoreticalResult)-1.0);
         if (verbose) {
             cout<<force;
             cout<<"Effort for penetration : "
@@ -262,11 +265,12 @@ void testEffSphereOnPlaneNewFormulation(bool verbose = false)
                 <<"(theoretical result : "<<theoreticalResult<< " N "
                 <<" relative difference : "<<100.0*relativeDifference<<" %)"<<endl;
         }
-        ASSERT(abs((numericalResult/theoreticalResult)-1.0)<tolerances[i]);
+        ASSERT(NTraits<Real>::abs((numericalResult/theoreticalResult)-1.0)<tolerances[i]);
     }
 }
 
 int main() {
+#ifndef SimTK_REAL_IS_ADOUBLE
     try {
         testForces();
         testEffSphereOnPlaneOldFormulation();
@@ -278,4 +282,7 @@ int main() {
     }
     cout << "Done" << endl;
     return 0;
+#else
+    std::cout << "This test is not supported with ADOL-C" << std::endl;
+#endif
 }

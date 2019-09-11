@@ -209,7 +209,7 @@ public:
        (const State& state, int nq, Real* q) const override {
         assert(level==Motion::Position); assert(nq==0 || q);
         const Real t = state.getTime();
-        const Real out = defAmplitude*std::sin(defRate*t + defPhase);
+        const Real out = defAmplitude*NTraits<Real>::sin(defRate*t + defPhase);
         for (int i=0; i<nq; ++i) 
             q[i] = out;
     }
@@ -218,7 +218,7 @@ public:
        (const State& state, int nq, Real* qdot) const override {
         assert(level==Motion::Position); assert(nq==0 || qdot);
         const Real t = state.getTime();
-        const Real outd = defAmplitude*defRate*std::cos(defRate*t + defPhase);
+        const Real outd = defAmplitude*defRate*NTraits<Real>::cos(defRate*t + defPhase);
         for (int i=0; i<nq; ++i) 
             qdot[i] = outd;
     }
@@ -228,7 +228,7 @@ public:
         assert(level==Motion::Position); assert(nq==0 || qdotdot);
         const Real t = state.getTime();
         const Real outdd = 
-            -defAmplitude*defRate*defRate*std::sin(defRate*t + defPhase);
+            -defAmplitude*defRate*defRate*NTraits<Real>::sin(defRate*t + defPhase);
         for (int i=0; i<nq; ++i) 
             qdotdot[i] = outdd;
     }
@@ -238,7 +238,7 @@ public:
         assert(level==Motion::Velocity);
         assert(nu==0 || u);
         const Real t = state.getTime();
-        const Real out = defAmplitude*std::sin(defRate*t + defPhase);
+        const Real out = defAmplitude*NTraits<Real>::sin(defRate*t + defPhase);
         for (int i=0; i<nu; ++i) 
             u[i] = out;
     }
@@ -248,7 +248,7 @@ public:
         assert(level==Motion::Velocity);
         assert(nu==0 || udot);
         const Real t = state.getTime();
-        const Real outd = defAmplitude*defRate*std::cos(defRate*t + defPhase);
+        const Real outd = defAmplitude*defRate*NTraits<Real>::cos(defRate*t + defPhase);
         for (int i=0; i<nu; ++i) 
             udot[i] = outd;
     }
@@ -257,7 +257,7 @@ public:
        (const State& state, int nu, Real* udot) const override {
         assert(level==Motion::Acceleration); assert(nu==0 || udot);
         const Real t = state.getTime();
-        const Real out = defAmplitude*std::sin(defRate*t + defPhase);
+        const Real out = defAmplitude*NTraits<Real>::sin(defRate*t + defPhase);
         for (int i=0; i<nu; ++i) 
             udot[i] = out;
     }

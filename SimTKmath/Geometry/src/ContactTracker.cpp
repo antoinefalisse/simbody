@@ -261,7 +261,7 @@ estimateConvexImplicitPairContactUsingMPR
             return false;
         }
 
-        const Real depthChange = std::abs(s4.depth - depth);
+        const Real depthChange = fabs(s4.depth - depth);
 
 
         bool mustReturn=false, okToReturn=false;
@@ -357,15 +357,18 @@ refineImplicitPair
         ++numIterations;
         J = calcImplicitPairJacobian(shapeA, pointP, shapeB, pointQ, 
                                      X_AB, err);
-
-        // Try to use LU factorization; fall back to QTZ if singular.
-        FactorLU lu(JMat);
-        if (!lu.isSingular())
-            lu.solve(errVec, deltaVec);     // writes into delta also
-        else {
-            FactorQTZ qtz(JMat, SqrtEps);
-            qtz.solve(errVec, deltaVec);    // writes into delta also
-        }
+		//// Try to use LU factorization; fall back to QTZ if singular.
+		FactorLU lu(JMat);
+		if (!lu.isSingular())
+			lu.solve(errVec, deltaVec);     // writes into delta also
+		else {
+            #ifndef SimTK_REAL_IS_ADOUBLE
+                FactorQTZ qtz(JMat, SqrtEps);
+            #else
+                FactorQTZ qtz(JMat, SqrtEps.getValue());
+            #endif			
+			qtz.solve(errVec, deltaVec);    // writes into delta also
+		}
 
         // Line search for safety in case starting guess bad. Don't accept
         // any move that makes things worse.      
@@ -454,8 +457,8 @@ findImplicitPairError
 
     UnitVec3 nA(-gradA);
     UnitVec3 nB(X_AB.R()*(-gradB));
-    UnitVec3 uA(std::abs(nA[0])>Real(0.5)? nA%Vec3(0, 1, 0) : nA%Vec3(1, 0, 0));
-    UnitVec3 uB(std::abs(nB[0])>Real(0.5)? nB%Vec3(0, 1, 0) : nB%Vec3(1, 0, 0));
+    UnitVec3 uA(fabs(nA[0])>Real(0.5)? nA%Vec3(0, 1, 0) : nA%Vec3(1, 0, 0));
+    UnitVec3 uB(fabs(nB[0])>Real(0.5)? nB%Vec3(0, 1, 0) : nB%Vec3(1, 0, 0));
     Vec3 vA = nA%uA; // Already a unit vector, so we don't need to normalize it.
     Vec3 vB = nB%uB;
 
@@ -732,16 +735,17 @@ bool ContactTracker::SphereSphere::trackContact
         if (!priorStatus.getContactId().isValid())
             return true; // successful return: still separated
 
-        const Real separation = std::sqrt(d2) - rr;   // > cutoff, ~25 flops
+        const Real separation = NTraits<Real>::sqrt(d2) - rr;   // > cutoff, ~25 flops
         const Transform X_S1S2(~X_GS1.R()*X_GS2.R(), 
                                ~X_GS1.R()*p_12_G);    // 60 flops
+
         currentStatus = BrokenContact(priorStatus.getSurface1(),
                                       priorStatus.getSurface2(),
                                       X_S1S2, separation);
         return true;
     }
 
-    const Real d = std::sqrt(d2); // ~20 flops
+    const Real d = NTraits<Real>::sqrt(d2); // ~20 flops
     if (d < SignificantReal) {    // 1 flop
         // TODO: If the centers are coincident we should use past information
         // to determine the most likely normal. For now just fail.
@@ -750,7 +754,7 @@ bool ContactTracker::SphereSphere::trackContact
 
     const Transform X_S1S2(~X_GS1.R()*X_GS2.R(), 
                            ~X_GS1.R()*p_12_G);// 60 flops
-    const Vec3& p_12 = X_S1S2.p(); // center-to-center vector in S1
+	const Vec3& p_12 = X_S1S2.p(); // center-to-center vector in S1
 
     const Real depth = rr - d; // >0 for penetration (1 flop)
     const Real r     = r1*r2/rr; // r=r1r2/(r1+r2)=1/(1/r1+1/r2) ~20 flops

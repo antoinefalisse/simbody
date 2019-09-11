@@ -22,7 +22,7 @@
 #include "IpHessianUpdater.hpp"
 #include "IpEqMultCalculator.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   /** @name Exceptions */

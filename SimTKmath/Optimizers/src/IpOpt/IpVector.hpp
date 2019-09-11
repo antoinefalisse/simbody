@@ -17,7 +17,7 @@
 
 #include <vector>
 
-namespace SimTKIpopt
+namespace Ipopt
 {
   /* forward declarations */
   class VectorSpace;

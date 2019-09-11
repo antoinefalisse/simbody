@@ -42,10 +42,6 @@ add_executable(${GUI_NAME}
     simbody-visualizer.cpp lodepng.cpp lodepng.h
     ${GLUT32_HEADERS}) # only on Windows
 
-if(NOT WIN32)
-    target_include_directories(${GUI_NAME} PRIVATE ${GLUT_INCLUDE_DIR})
-endif()
-
 # If building as debug, append the debug postfix to the name of the executable.
 # CMAKE_DEBUG_POSTFIX only affects non-executable targets, but we use its value
 # to set the postfix for this executable.
@@ -70,13 +66,8 @@ if(${SIMBODY_USE_INSTALL_RPATH})
         )
 endif()
 
-if(BUILD_DYNAMIC_LIBRARIES)
-    target_link_libraries(${GUI_NAME} ${TEST_SHARED_TARGET})
-else()
-    target_link_libraries(${GUI_NAME} ${TEST_STATIC_TARGET})
-endif()
-    
-target_link_libraries(${GUI_NAME} ${GLUT_LIBRARIES} ${OPENGL_LIBRARIES})
+target_link_libraries(${GUI_NAME} 
+    ${TEST_SHARED_TARGET} ${GLUT_LIBRARIES} ${OPENGL_LIBRARIES})
 
 # SIMBODY_VISUALIZER_INSTALL_DIR is set in the root CMakeLists.txt
 install(TARGETS ${GUI_NAME}

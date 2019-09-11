@@ -389,6 +389,7 @@ acceleration vector a_GB (more explicitly, a_GBo) of this body B's origin point
 Bo, measured with respect to the Ground frame and expressed in the Ground frame. 
 This response is available at Acceleration stage. **/
 const Vec3& getBodyOriginAcceleration(const State& state) const {   // a_GB
+	std::cout << "getBodyOriginAcceleration MobilizedBody.h" << std::endl;
     return getBodyAcceleration(state)[1];
 }
 
@@ -608,20 +609,27 @@ make specific promises about what they will do; consult the documentation. These
 routines do not throw exceptions even for absurd requests like specifying a
 rotation for a sliding mobilizer. Nothing happens if there are no mobilities 
 here, i.e. Ground or a Weld mobilizer. **/
+#ifndef SimTK_REAL_IS_ADOUBLE
 void setQToFitTransform(State& state, const Transform& X_FM) const;
+#endif
 
 /** Adjust this mobilizer's q's to best approximate the supplied Rotation matrix
 which requests a particular relative orientation between the "fixed" frame F and
 "moving" frame M connected by this mobilizer.
 @see setQToFitTransform() **/
+#ifndef SimTK_REAL_IS_ADOUBLE
 void setQToFitRotation(State& state, const Rotation& R_FM) const;
+#endif
+
 
 /** Adjust this mobilizer's q's to best approximate the supplied position vector
 which requests a particular offset between the origins of the F "fixed" frame
 and M "moving" frame connected by this mobilizer, with \e any q's (rotational
 or translational) being modified if doing so helps satisfy the request.
 @see setQToFitTransform() **/
+#ifndef SimTK_REAL_IS_ADOUBLE
 void setQToFitTranslation(State& state, const Vec3& p_FM) const;
+#endif
 
 /** Adjust this mobilizer's u's (generalized speeds) to best approximate the 
 supplied spatial velocity \p V_FM which requests the relative angular and linear 
@@ -629,20 +637,26 @@ velocity between the "fixed" and "moving" frames connected by this mobilizer.
 Routines which affect generalized speeds u depend on the generalized coordinates
 q already having been set; they never change these coordinates.
 @see setQToFitTransform() **/
+#ifndef SimTK_REAL_IS_ADOUBLE
 void setUToFitVelocity(State& state, const SpatialVec& V_FM) const;
+#endif
 
 /** Adjust this mobilizer's u's (generalized speeds) to best approximate the 
 supplied angular velocity \p w_FM which requests a particular relative angular
 between the "fixed" and "moving" frames connected by this mobilizer.
 @see setQToFitTransform(), setUToFitVelocity() **/
+#ifndef SimTK_REAL_IS_ADOUBLE
 void setUToFitAngularVelocity(State& state, const Vec3& w_FM) const;
+#endif
 
 /** Adjust <em>any</em> of this mobilizer's u's (generalized speeds) to best 
 approximate the supplied linear velocity \p v_FM which requests a particular 
 velocity for the "moving" frame M origin in the "fixed" frame F on the parent 
 where these are the frames connected by this mobilizer.
 @see setQToFitTransform(), setUToFitVelocity() **/
+#ifndef SimTK_REAL_IS_ADOUBLE
 void setUToFitLinearVelocity(State& state, const Vec3& v_FM) const;
+#endif
 
 /** Expert use only: obtain a column of the hinge matrix H corresponding to one 
 of this mobilizer's mobilities (actually a column of H_PB_G; what Jain calls H* 

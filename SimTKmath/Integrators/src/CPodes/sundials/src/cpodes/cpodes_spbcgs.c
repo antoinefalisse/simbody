@@ -507,4 +507,3 @@ static void cpSpbcgFree(CPodeMem cp_mem)
   if (ode_type == CP_EXPL) N_VDestroy(yptemp);
   free(cpspils_mem); cpspils_mem = NULL;
 }
-

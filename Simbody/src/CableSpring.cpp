@@ -23,6 +23,8 @@
 
 #include "SimTKcommon.h"
 
+#ifndef SimTK_REAL_IS_ADOUBLE
+
 #include "simbody/internal/common.h"
 #include "simbody/internal/MobilizedBody.h"
 #include "simbody/internal/SimbodyMatterSubsystem.h"
@@ -131,7 +133,7 @@ friend class CableSpring;
         const Real f_stretch = inst.k * x;
         const Real xdot = path.getCableLengthDot(state);
         const Real diss = f_stretch*inst.c*xdot;
-        const Real f_rate = std::max(-f_stretch, diss);
+        const Real f_rate = fmax(-f_stretch, diss);
         f = f_stretch + f_rate;    // f=0 if dissipation too negative
         powerLoss = f_rate * xdot; // but can still dissipate power
     }
@@ -320,4 +322,4 @@ const CablePath& CableSpring::
 getCablePath() const
 {   return getImpl().path; }
 
-
+#endif

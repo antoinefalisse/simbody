@@ -846,5 +846,3 @@ int cpDlsDenseProjDQJac(int Nc, int Ny, realtype t,
   return(retval);
 
 }
-
-

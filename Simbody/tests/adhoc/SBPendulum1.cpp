@@ -154,7 +154,7 @@ try {
 
     Vec3 gravity(0.,-g,0.);
     Force::UniformGravity gravityForces(springs, pend, gravity);
-    cout << "period should be " << 2*std::acos(-1.)*std::sqrt(L/g) << " seconds." << endl;
+    cout << "period should be " << 2*std::acos(-1.)*sqrt(L/g) << " seconds." << endl;
 
     MobilizedBody::Free aPendulum(pend.Ground(), Transform(), // ground, at origin
                                   Body::Rigid(mprops), jointFrame);

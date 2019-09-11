@@ -291,8 +291,13 @@ void testCoordinateCoupler2() {
         for (int i = 0; i < cq.size(); ++i)
             cq[i] = matter.getMobilizedBody(mobilizers[i])
                           .getOneQ(istate, coordinates[i]);
+        #ifndef SimTK_REAL_IS_ADOUBLE
         SimTK_TEST_EQ_TOL(0.0, function->calcValue(cq), 
                           integ.getConstraintToleranceInUse());
+        #else
+                SimTK_TEST_EQ_TOL(0.0, function->calcValue(cq),
+                    integ.getConstraintToleranceInUse().value());
+        #endif
 
         // Power output should always be zero to machine precision
         // with some slop for calculation of multipliers.
@@ -301,8 +306,12 @@ void testCoordinateCoupler2() {
         // Energy conservation depends on global integration accuracy;
         // accuracy returned here is local so we'll fudge at 10X.
         const Real etol = 10*integ.getAccuracyInUse()
-                          *std::max(std::abs(energy), std::abs(energy0));
-        SimTK_TEST_EQ_TOL(energy0, energy, etol);
+                          *std::max(fabs(energy), fabs(energy0));
+        #ifndef SimTK_REAL_IS_ADOUBLE
+            SimTK_TEST_EQ_TOL(energy0, energy, etol);
+        #else
+            SimTK_TEST_EQ_TOL(energy0, energy, etol.value());
+        #endif
     }
 }
 
@@ -353,14 +362,23 @@ void testCoordinateCoupler3() {
         // normalized, that can increase the constraint error. That is why we 
         // need the factor of 3 in the next line.
         // TODO: Huh? (sherm)
-        SimTK_TEST_EQ_TOL(0.0, function->calcValue(args), 
-                          3*integ.getConstraintToleranceInUse());
+        #ifndef SimTK_REAL_IS_ADOUBLE
+            SimTK_TEST_EQ_TOL(0.0, function->calcValue(args),
+                3 * integ.getConstraintToleranceInUse());
+        #else
+            SimTK_TEST_EQ_TOL(0.0, function->calcValue(args),
+                3 * integ.getConstraintToleranceInUse().value());
+        #endif
         
          // Energy conservation depends on global integration accuracy;
         // accuracy returned here is local so we'll fudge at 10X.
         const Real etol = 10*integ.getAccuracyInUse()
-                          *std::max(std::abs(energy), std::abs(energy0));        
-        SimTK_TEST_EQ_TOL(energy0, energy, etol);       
+                          *max(fabs(energy), fabs(energy0));        
+        #ifndef SimTK_REAL_IS_ADOUBLE
+            SimTK_TEST_EQ_TOL(energy0, energy, etol);
+        #else
+            SimTK_TEST_EQ_TOL(energy0, energy, etol.value());
+        #endif
     }
 }
 
@@ -445,16 +463,29 @@ void testSpeedCoupler2() {
 
         for (int i = 0; i < args.size(); ++i)
             args[i] = matter.getMobilizedBody(bodies[i]).getOneU(istate, speeds[i]);
-        SimTK_TEST_EQ_TOL(0.0, function->calcValue(args), 
-                          integ.getConstraintToleranceInUse());
-
-        SimTK_TEST_EQ_TOL(0.0, power, 10*integ.getConstraintToleranceInUse());
+        #ifndef SimTK_REAL_IS_ADOUBLE
+            SimTK_TEST_EQ_TOL(0.0, function->calcValue(args),
+                integ.getConstraintToleranceInUse());
+        #else
+            SimTK_TEST_EQ_TOL(0.0, function->calcValue(args),
+                integ.getConstraintToleranceInUse().value());
+        #endif
+        
+        #ifndef SimTK_REAL_IS_ADOUBLE
+            SimTK_TEST_EQ_TOL(0.0, power, 10 * integ.getConstraintToleranceInUse());
+        #else
+            SimTK_TEST_EQ_TOL(0.0, power, 10 * integ.getConstraintToleranceInUse().value());
+        #endif
 
         // Energy conservation depends on global integration accuracy;
         // accuracy returned here is local so we'll fudge at 10X.
         const Real etol = 10*integ.getAccuracyInUse()
-                          *std::max(std::abs(energy), std::abs(energy0));        
-        SimTK_TEST_EQ_TOL(energy0, energy, etol);
+                          *max(fabs(energy),fabs(energy0));        
+        #ifndef SimTK_REAL_IS_ADOUBLE
+            SimTK_TEST_EQ_TOL(energy0, energy, etol);
+        #else
+            SimTK_TEST_EQ_TOL(energy0, energy, etol.value());
+        #endif
     }
 }
 
@@ -516,14 +547,23 @@ void testSpeedCoupler3() {
         args[0] = matter.getMobilizedBody(ubody[0]).getOneU(state, uindex[0]);
         args[1] = matter.getMobilizedBody(ubody[1]).getOneU(state, uindex[1]);
         args[2] = matter.getMobilizedBody(qbody[0]).getOneQ(state, qindex[0]);
-        SimTK_TEST_EQ_TOL(0.0, function->calcValue(args), 
-                          integ.getConstraintToleranceInUse());
+        #ifndef SimTK_REAL_IS_ADOUBLE
+            SimTK_TEST_EQ_TOL(0.0, function->calcValue(args),
+                integ.getConstraintToleranceInUse());
+        #else
+            SimTK_TEST_EQ_TOL(0.0, function->calcValue(args),
+                integ.getConstraintToleranceInUse().value());
+        #endif
 
         // Energy conservation depends on global integration accuracy;
         // accuracy returned here is local so we'll fudge at 10X.
         const Real etol = 10*integ.getAccuracyInUse()
-                          *std::max(std::abs(energy-work), std::abs(energy0));        
-        SimTK_TEST_EQ_TOL(energy0, energy-work, etol)
+                          *max(fabs(energy-work), fabs(energy0));        
+        #ifndef SimTK_REAL_IS_ADOUBLE
+            SimTK_TEST_EQ_TOL(energy0, energy - work, etol);
+        #else
+            SimTK_TEST_EQ_TOL(energy0, energy - work, etol.value());
+        #endif
 
     }
 }
@@ -574,14 +614,23 @@ void testPrescribedMotion1() {
 
         Vector args(1, istate.getTime());
         const Real q = matter.getMobilizedBody(body).getOneQ(istate, coordinate);
-        SimTK_TEST_EQ_TOL(function->calcValue(args), q, 
-                          integ.getConstraintToleranceInUse());
+        #ifndef SimTK_REAL_IS_ADOUBLE
+            SimTK_TEST_EQ_TOL(function->calcValue(args), q,
+                integ.getConstraintToleranceInUse());
+        #else
+            SimTK_TEST_EQ_TOL(function->calcValue(args), q,
+                integ.getConstraintToleranceInUse().value());
+        #endif
 
         // Energy conservation depends on global integration accuracy;
         // accuracy returned here is local so we'll fudge at 10X.
         const Real etol = 10*integ.getAccuracyInUse()
-                          *std::max(std::abs(energy-work), std::abs(energy0));        
-        SimTK_TEST_EQ_TOL(energy0, energy-work, etol)
+                          *max(fabs(energy-work), fabs(energy0));        
+        #ifndef SimTK_REAL_IS_ADOUBLE
+            SimTK_TEST_EQ_TOL(energy0, energy - work, etol);
+        #else
+            SimTK_TEST_EQ_TOL(energy0, energy - work, etol.value());
+        #endif
     }
 }
 
@@ -646,22 +695,41 @@ void testPrescribedMotion2() {
         const Real work2 =  workMeas2.getValue(istate);
 
         Vector args(1, istate.getTime());
-        SimTK_TEST_EQ_TOL(function1->calcValue(args), 
-            matter.getMobilizedBody(body1).getOneQ(istate, coordinate1), 
-            integ.getConstraintToleranceInUse());
-        SimTK_TEST_EQ_TOL(function2->calcValue(args), 
-            matter.getMobilizedBody(body2).getOneQ(istate, coordinate2), 
-            integ.getConstraintToleranceInUse());
+
+        #ifndef SimTK_REAL_IS_ADOUBLE
+            SimTK_TEST_EQ_TOL(function1->calcValue(args),
+                matter.getMobilizedBody(body1).getOneQ(istate, coordinate1),
+                integ.getConstraintToleranceInUse());
+        #else
+            SimTK_TEST_EQ_TOL(function1->calcValue(args),
+                matter.getMobilizedBody(body1).getOneQ(istate, coordinate1),
+                integ.getConstraintToleranceInUse().value());
+        #endif        
+
+        #ifndef SimTK_REAL_IS_ADOUBLE
+            SimTK_TEST_EQ_TOL(function2->calcValue(args),
+                matter.getMobilizedBody(body2).getOneQ(istate, coordinate2),
+                integ.getConstraintToleranceInUse());
+        #else
+            SimTK_TEST_EQ_TOL(function2->calcValue(args),
+                matter.getMobilizedBody(body2).getOneQ(istate, coordinate2),
+                integ.getConstraintToleranceInUse().value());
+        #endif
 
         // Energy conservation depends on global integration accuracy;
         // accuracy returned here is local so we'll fudge at 10X.
         const Real etol = 10*integ.getAccuracyInUse()
-                          *std::max(std::abs(energy-(work1+work2)), std::abs(energy0));        
-        SimTK_TEST_EQ_TOL(energy0, energy-(work1+work2), etol)
+                          *max(fabs(energy-(work1+work2)), fabs(energy0));        
+        #ifndef SimTK_REAL_IS_ADOUBLE
+                SimTK_TEST_EQ_TOL(energy0, energy - (work1 + work2), etol);
+        #else
+                SimTK_TEST_EQ_TOL(energy0, energy - (work1 + work2), etol.value());
+        #endif
     }
 }
 
 int main() {
+#ifndef SimTK_REAL_IS_ADOUBLE
     SimTK_START_TEST("TestCustomConstraints");
         SimTK_SUBTEST(testCoordinateCoupler1);
         SimTK_SUBTEST(testCoordinateCoupler2);
@@ -672,4 +740,7 @@ int main() {
         SimTK_SUBTEST(testPrescribedMotion1);
         SimTK_SUBTEST(testPrescribedMotion2);
     SimTK_END_TEST();
+#else
+    std::cout << "This test is not supported with ADOL-C" << std::endl;
+#endif
 }

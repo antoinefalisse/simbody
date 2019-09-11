@@ -173,25 +173,29 @@ protected:
     // This is for use by scalar col- and row- ordered matrices only. The same
     // code works because transpose(inv(m))==inv(transpose(m)).
     void lapackInvertInPlace() {
-        // should have been checked already
-        assert(this->m_eltSize==1 && this->nrow()==this->ncol()); 
-        const int m = this->nrow();
-        StdNumber* rawMem = reinterpret_cast<StdNumber*>(this->m_data);
-        Array_<int> ipiv(m);
-        int info;
-        Lapack::getrf<StdNumber>(m,m,rawMem,this->m_leadingDim,&ipiv[0],info);
-        assert(info==0);
+            #ifndef SimTK_REAL_IS_ADOUBLE
+                // should have been checked already
+                assert(this->m_eltSize==1 && this->nrow()==this->ncol()); 
+                const int m = this->nrow();
+                StdNumber* rawMem = reinterpret_cast<StdNumber*>(this->m_data);
+                Array_<int> ipiv(m);
+                int info;
+                Lapack::getrf<StdNumber>(m,m,rawMem,this->m_leadingDim,&ipiv[0],info);
+                assert(info==0);
 
-        // Calculate optimal size for work
-        StdNumber workSz;
-        Lapack::getri<StdNumber>(m,rawMem,this->m_leadingDim,&ipiv[0],
-                                 &workSz,-1,info);
-        const int wsz = (int)CNT<StdNumber>::real(workSz);
+                // Calculate optimal size for work
+                StdNumber workSz;
+                Lapack::getri<StdNumber>(m,rawMem,this->m_leadingDim,&ipiv[0],
+                                            &workSz,-1,info);
+                const int wsz = (int)CNT<StdNumber>::real(workSz);
 
-        Array_<StdNumber> work(wsz);
-        Lapack::getri<StdNumber>(m,rawMem,this->m_leadingDim,&ipiv[0],
-                                 &work[0],wsz,info);
-        assert(info==0);
+                Array_<StdNumber> work(wsz);
+                Lapack::getri<StdNumber>(m,rawMem,this->m_leadingDim,&ipiv[0],
+                                            &work[0],wsz,info);
+                assert(info==0);
+            #else
+                throw std::runtime_error("Lapack not supported with ADOL-C");
+            #endif                 
     }
 };
 
@@ -248,11 +252,13 @@ public:
         p->m_owner = true;
         p->allocateData(this->nelt());
         if (hasContiguousData_())
-            std::copy(this->m_data, this->m_data + 
-                      Base::nelt()*this->m_eltSize, p->m_data);
+            //std::memcpy(p->m_data, this->m_data, 
+            //            Base::nelt()*this->m_eltSize*sizeof(S));
+			std::copy(this->m_data, this->m_data + Base::nelt()*this->m_eltSize, p->m_data);
         else for (int j=0; j < this->ncol(); ++j)
-            std::copy(getElt_(0,j), getElt_(0,j) + 
-                      this->nrow()*this->m_eltSize, p->updElt_(0,j));
+            //std::memcpy(p->updElt_(0,j), getElt_(0,j), 
+            //            this->nrow()*this->m_eltSize*sizeof(S));
+			std::copy(getElt_(0, j), getElt_(0, j) + this->nrow()*this->m_eltSize, p->updElt_(0, j));
         return p;
     }
 
@@ -273,7 +279,8 @@ public:
         for (int j=0; j < colsToCopy; ++j) {
             S*       const dest = newData + (ptrdiff_t)j*newLeadingDim;
             const S* const src  = this->m_data + (ptrdiff_t)j*this->m_leadingDim;
-            std::copy(src, src+rowsToCopy*this->m_eltSize, dest);
+            //std::memcpy(dest, src, rowsToCopy*this->m_eltSize*sizeof(S));
+			std::copy(src, src + rowsToCopy*this->m_eltSize, dest);
         }
         this->clearData();
         this->setData(newData);
@@ -367,11 +374,13 @@ public:
         p->m_owner = true;
         p->allocateData(this->nelt());
         if (hasContiguousData_())
-            std::copy(this->m_data, this->m_data + 
-                      this->nelt()*this->m_eltSize, p->m_data);
+            //std::memcpy(p->m_data, this->m_data, 
+            //            this->nelt()*this->m_eltSize*sizeof(S));
+			std::copy(this->m_data, this->m_data + this->nelt()*this->m_eltSize, p->m_data);
         else for (int i=0; i < this->nrow(); ++i)
-            std::copy(this->getElt_(i,0), this->getElt_(i,0) + 
-                      this->ncol()*this->m_eltSize, p->updElt_(i,0));
+            //std::memcpy(p->updElt_(i,0), this->getElt_(i,0), 
+            //            this->ncol()*this->m_eltSize*sizeof(S));
+			std::copy(this->getElt_(i, 0), this->getElt_(i, 0) + this->ncol()*this->m_eltSize, p->updElt_(i, 0));
         return p;
     }
 
@@ -390,7 +399,8 @@ public:
         for (int i=0; i < rowsToCopy; ++i) {
             S*       const dest = newData + (ptrdiff_t)i*newLeadingDim;
             const S* const src  = this->m_data + (ptrdiff_t)i*this->m_leadingDim;
-            std::copy(src, src+colsToCopy*this->m_eltSize, dest);
+            //std::memcpy(dest, src, colsToCopy*this->m_eltSize*sizeof(S));
+			std::copy(src, src + colsToCopy*this->m_eltSize, dest);
         }
         this->clearData();
         this->setData(newData);

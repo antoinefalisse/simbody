@@ -81,7 +81,7 @@ const Real MaxStepSize    = Real(1/1000.); // 1 ms (1000 Hz)
 const int  DrawEveryN     = 5;
 const Real SimTime        = 1.5;
 const int  NSteps         = // make this a whole number of viz frames
-    DrawEveryN*(int(SimTime/MaxStepSize/DrawEveryN+0.5));
+    DrawEveryN*(int(SimTime.value()/MaxStepSize.value()/DrawEveryN+0.5));
 
 // Use this class to hold references into the Simbody system.
 struct MyMultibodySystem {
@@ -109,6 +109,10 @@ static void runOnce(const MyMultibodySystem& mbs, Integrator& integ,
 //                                   MAIN
 //==============================================================================
 int main() {
+
+#ifndef SimTK_REAL_IS_ADOUBLE
+
+
     SimTK_START_TEST("TrikeyWheelResponse");
         // Create the system.   
         MyMultibodySystem mbs;
@@ -122,6 +126,12 @@ int main() {
         SimTK_SUBTEST3(runOnce,mbs,rkm,Accuracy/1000);
 
     SimTK_END_TEST();
+
+#else
+
+    std::cout << "GazeboBasicControllerResponse is not supported with ADOL-C" << std::endl;
+
+#endif
 }
 
 
@@ -326,3 +336,4 @@ static void dumpIntegratorStats(const Integrator& integ) {
     printf("# REALIZE/PROJECT = %d/%d\n", integ.getNumRealizations(), 
                                           integ.getNumProjections());
 }
+

@@ -82,8 +82,9 @@ public:
 // at h, which we calculate h=(y0+hEst)-y0 taking care not
 // to let a clever compiler optimize that away.
 static Real cleanUpH(Real hEst, Real y0) {
-    volatile Real temp = y0+hEst; 
-    return temp-y0;
+    //volatile Real temp = y0+hEst; 
+	Real temp = y0 + hEst;
+	    return temp-y0;
 }
 
 static void throwIfMethodInvalid(Differentiator::Method m, const char* op) {
@@ -686,8 +687,8 @@ Differentiator::DifferentiatorRep::DifferentiatorRep
     NFunctions(fr.getNumFunctions()), 
     EstimatedAccuracy(fr.getEstimatedAccuracy()),
     defaultMethod(getMethodOrThrow(defMthd, DefaultDefaultMethod, "Differentiator")),
-    AccFac1(std::sqrt(EstimatedAccuracy)),
-    AccFac2(std::pow(EstimatedAccuracy, OneThird))
+    AccFac1(NTraits<Real>::sqrt(EstimatedAccuracy)),
+    AccFac2(pow(EstimatedAccuracy, OneThird))
 {
     //TODO
     assert(NParameters >= 0 && NFunctions >= 0 && EstimatedAccuracy > 0);
@@ -708,7 +709,7 @@ void Differentiator::DifferentiatorRep::calcDerivative
     assert(NParameters==1 && NFunctions==1);
 
     const int  order = Differentiator::getMethodOrder(method);
-    const Real hEst  = getAccFac(order)*std::max(std::abs(y0), YMin);
+    const Real hEst  = getAccFac(order)*fmax(fabs(y0), YMin);
     const Real h     = cleanUpH(hEst, y0);
 
     Real fyplus, fyminus;
@@ -740,7 +741,7 @@ void Differentiator::DifferentiatorRep::calcGradient
     const int order = Differentiator::getMethodOrder(method);
 
     for (int i=0; i < f.getNumParameters(); ++i) {
-        const Real hEst = getAccFac(order)*std::max(std::abs(y0[i]), YMin);
+        const Real hEst = getAccFac(order)*fmax(fabs(y0[i]), YMin);
         const Real h = cleanUpH(hEst, y0[i]);
         Real fyplus, fyminus;
         ytmp[i] = y0[i]+h; 
@@ -774,7 +775,7 @@ void Differentiator::DifferentiatorRep::calcJacobian
 
     ytmp = y0;
     for (int i=0; i < NParameters; ++i) {
-        const Real hEst = getAccFac(order)*std::max(std::abs(y0[i]), YMin);
+        const Real hEst = getAccFac(order)*fmax(fabs(y0[i]), YMin);
         const Real h = cleanUpH(hEst, y0[i]);
         ytmp[i] = y0[i]+h; 
         nCallsToUserFunction++; f.call(ytmp, fyptmp);

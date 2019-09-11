@@ -439,9 +439,9 @@ static bool isValidInertiaMatrix(const SymMat<3,P>& m) {
 
     // Thanks to Paul Mitiguy for this condition on products of inertia.
     const Vec<3,P>& p = m.getLower();
-    if (!( d[0]+Slop>=std::abs(2*p[2])
-        && d[1]+Slop>=std::abs(2*p[1])
-        && d[2]+Slop>=std::abs(2*p[0])))
+    if (!( d[0]+Slop>=fabs(2*p[2])
+        && d[1]+Slop>=fabs(2*p[1])
+        && d[2]+Slop>=fabs(2*p[0])))
         return false;               // max products are limited by moments
 
     return true;
@@ -520,40 +520,50 @@ UnitInertia_<P>& updAsUnitInertia()
 // matrix and throw an error message if it is not valid. This should be 
 // the same set of tests as run by the isValidInertiaMatrix() method above.
 void errChk(const char* methodName) const {
-#ifndef NDEBUG
-    SimTK_ERRCHK(!isNaN(), methodName,
-        "Inertia matrix contains a NaN.");
-
-    const Vec<3,P>& d = I_OF_F.getDiag();  // moments
-    const Vec<3,P>& p = I_OF_F.getLower(); // products
-    const P Ixx = d[0], Iyy = d[1], Izz = d[2];
-    const P Ixy = p[0], Ixz = p[1], Iyz = p[2];
-
-    SimTK_ERRCHK3(d >= -SignificantReal, methodName,
-        "Diagonals of an Inertia matrix must be nonnegative; got %g,%g,%g.",
-        (double)Ixx,(double)Iyy,(double)Izz);
-
-    // TODO: This is looser than it should be as a workaround for distorted
-    // rotation matrices that were produced by an 11,000 body chain that
-    // Sam Flores encountered. 
-    const P Slop = std::max(d.sum(),P(1))
-                       * std::sqrt(NTraits<P>::getEps());
-
-    SimTK_ERRCHK3(   Ixx+Iyy+Slop>=Izz 
-                  && Ixx+Izz+Slop>=Iyy 
-                  && Iyy+Izz+Slop>=Ixx,
-        methodName,
-        "Diagonals of an Inertia matrix must satisfy the triangle "
-        "inequality; got %g,%g,%g.",
-        (double)Ixx,(double)Iyy,(double)Izz);
-
-    // Thanks to Paul Mitiguy for this condition on products of inertia.
-    SimTK_ERRCHK(   Ixx+Slop>=std::abs(2*Iyz) 
-                 && Iyy+Slop>=std::abs(2*Ixz)
-                 && Izz+Slop>=std::abs(2*Ixy),
-        methodName,
-        "The magnitude of a product of inertia was too large to be physical.");
-#endif
+//#ifndef NDEBUG
+//    SimTK_ERRCHK(!isNaN(), methodName,
+//        "Inertia matrix contains a NaN.");
+//
+//    const Vec<3,P>& d = I_OF_F.getDiag();  // moments
+//    const Vec<3,P>& p = I_OF_F.getLower(); // products
+//    const P Ixx = d[0], Iyy = d[1], Izz = d[2];
+//    const P Ixy = p[0], Ixz = p[1], Iyz = p[2];
+//
+//    SimTK_ERRCHK3(d >= -SignificantReal, methodName,
+//        "Diagonals of an Inertia matrix must be nonnegative; got %g,%g,%g.",
+//        //(double)Ixx,(double)Iyy,(double)Izz);
+//		//(double)Ixx.getValue(), (double)Iyy.getValue(), (double)Izz.getValue());
+//		Ixx, Iyy, Izz);
+//
+//    // TODO: This is looser than it should be as a workaround for distorted
+//    // rotation matrices that were produced by an 11,000 body chain that
+//    // Sam Flores encountered. 
+//    const P Slop = std::max(d.sum(),P(1))
+//                       //* std::sqrt(NTraits<P>::getEps());
+//					* sqrt(NTraits<P>::getEps());
+//
+//
+//    SimTK_ERRCHK3(   Ixx+Iyy+Slop>=Izz 
+//                  && Ixx+Izz+Slop>=Iyy 
+//                  && Iyy+Izz+Slop>=Ixx,
+//        methodName,
+//        "Diagonals of an Inertia matrix must satisfy the triangle "
+//        "inequality; got %g,%g,%g.",
+//        //(double)Ixx,(double)Iyy,(double)Izz);
+//		//(double)Ixx.getValue(),(double)Iyy.getValue(),(double)Izz.getValue());
+//		Ixx, Iyy, Izz);
+//
+//
+//    // Thanks to Paul Mitiguy for this condition on products of inertia.
+//    //SimTK_ERRCHK(   Ixx+Slop>=std::abs(2*Iyz) 
+//    //             && Iyy+Slop>=std::abs(2*Ixz)
+//    //             && Izz+Slop>=std::abs(2*Ixy),
+//	SimTK_ERRCHK(	Ixx + Slop >= fabs(2 * Iyz)
+//				&&	Iyy + Slop >= fabs(2 * Ixz)
+//				&&	Izz + Slop >= fabs(2 * Ixy),
+//        methodName,
+//        "The magnitude of a product of inertia was too large to be physical.");
+//#endif
 }
 
 // Inertia expressed in frame F and about F's origin OF. Note that frame F
@@ -790,7 +800,7 @@ UnitInertia_ shiftFromCentroid(const Vec3P& p) const
 /// G' = G + Gp where Gp is the inertia of a fictitious, unit-mass point located 
 /// at p, taken about CF. Cost is 17 flops.
 /// @see shiftFromCentroid() if you want to leave this object unmolested.
-/// @see shiftToCentroidInPlace()
+/// @see shitToCentroidInPlace()
 UnitInertia_& shiftFromCentroidInPlace(const Vec3P& p)
 {   InertiaP::operator+=(pointMassAt(p));
     return *this; }
@@ -1011,7 +1021,12 @@ SpatialInertia_(RealP mass, const Vec3P& com, const UnitInertiaP& gyration)
 
 SpatialInertia_& setMass(RealP mass)
 {   SimTK_ERRCHK1(mass >= 0, "SpatialInertia::setMass()",
-        "Negative mass %g is illegal.", (double)mass);
+        //"Negative mass %g is illegal.", (double)mass);
+		//"Negative mass %g is illegal.", (double)mass.getValue());
+		//"Negative mass %g is illegal.", (Real)mass.getValue());
+
+	"Negative mass %g is illegal.", mass);
+
     m=mass; return *this; }
 SpatialInertia_& setMassCenter(const Vec3P& com)
 {   p=com; return *this;} 
@@ -1386,7 +1401,11 @@ MassProperties_& setMassProperties(const P& m, const Vec<3,P>& com, const Inerti
         unitInertia_OB_B = UnitInertia_<P>(0);
     }
     else {
-        unitInertia_OB_B = UnitInertia_<P>(inertia*(1/m));
+        //unitInertia_OB_B = UnitInertia_<P>(inertia*(1/m.getValue()));
+		//unitInertia_OB_B = UnitInertia_<P>(inertia*(1/m));
+		unitInertia_OB_B = UnitInertia_<P>(inertia/m);
+
+
     }
     return *this;
 }

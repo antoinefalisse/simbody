@@ -30,7 +30,7 @@
 using namespace SimTK;
 using namespace std;
 
-static double Tol = NTraits<double>::getSignificant();
+static SimTK::Real Tol = NTraits<SimTK::Real>::getSignificant();
 static float  fTol = NTraits<float>::getSignificant();
 
 
@@ -68,15 +68,30 @@ void testTriMeshBoundingSphere() {
     for (int i = 0; i < NTrials; i++) {
         // Create a mesh consisting of a random number of octahedra at random 
         // places.
-        
-        vector<Vec3> vertices;
-        vector<int> faceIndices;
-        int numOctohedra = random.getIntValue()+1;
-        for (int j = 0; j < numOctohedra; j++)
-            addOctohedron(vertices, faceIndices, 
-            Vec3(random.getValue(), random.getValue(), random.getValue()));
-        ContactGeometry::TriangleMesh mesh(vertices, faceIndices);
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			vector<Vec3> vertices;
+			vector<int> faceIndices;
+			int numOctohedra = random.getIntValue()+1;
+			for (int j = 0; j < numOctohedra; j++)
+				addOctohedron(vertices, faceIndices, 
+				Vec3(random.getValue(), random.getValue(), random.getValue()));
+		#else
+			vector<Vec3> vertices_aux;
+			vector<int> faceIndices_aux;
+			int numOctohedra = random.getIntValue() + 1;
+			for (int j = 0; j < numOctohedra; j++)
+				addOctohedron(vertices_aux, faceIndices_aux,
+				Vec3(random.getValue(), random.getValue(), random.getValue()));
+				ArrayViewConst_<Vec3> vertices(vertices_aux);
+				Vector_<int> faceIndices(faceIndices_aux.size());
+				for (int j = 0; j < faceIndices_aux.size(); ++j) {
+					faceIndices[i] = faceIndices_aux[j];
+			}
 
+		#endif
+		ContactGeometry::TriangleMesh mesh(vertices, faceIndices);
+
+		std::cout << "test0" << std::endl;
         // Verify that all points are inside the bounding sphere.
         
         Vec3 center;
@@ -128,12 +143,16 @@ void testRandomPoints() {
         pts.clear(); fpts.clear();
         int numPoints = random.getIntValue()+1;
         Vec3 offs = Test::randDouble()*1000*Test::randVec3();
-        fVec3 foffs((float)offs[0],(float)offs[1],(float)offs[2]);
+        fVec3 foffs((float)offs[0].value(),(float)offs[1].value(),(float)offs[2].value());
         Real scale = offs.norm();
 
         for (int p=0; p<numPoints; ++p) {
             Vec3  pt(Test::randVec3());
-            fVec3 fpt((float)pt[0],(float)pt[1],(float)pt[2]);
+			#ifndef SimTK_REAL_IS_ADOUBLE
+			fVec3 fpt((float)pt[0], (float)pt[1], (float)pt[2]);
+			#else
+				fVec3 fpt((float)pt[0].value(),(float)pt[1].value(),(float)pt[2].value());
+			#endif
             pts.push_back(pt+offs); fpts.push_back(fpt+foffs);
         }
 
@@ -156,15 +175,25 @@ void testRandomPoints() {
         if (fbsofas > fworst) fworst=fbsofas;
         if (fbsofas < fbest)  fbest=fbsofas;
 
-        // The single and double precision spheres should be the same size
-        // to within a small error. The Ritter sphere is more sensitive.
-        const float frac = std::max((float)scale,1.f)*NTraits<float>::getSqrtEps();
-        
-        //if (!Test::numericallyEqual((float)bs.getRadius(), fbs.getRadius(), 1, frac))
-        //    printf("bs=%g fbs=%g\n", bs.getRadius(), fbs.getRadius());
-        SimTK_TEST_EQ_TOL((float)bs.getRadius(), fbs.getRadius(), 0.2f);
-        SimTK_TEST_EQ_TOL((float)as.getRadius(), fas.getRadius(), 0.2f);
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			// The single and double precision spheres should be the same size
+			// to within a small error. The Ritter sphere is more sensitive.
+			const float frac = max((float)scale, 1.f)*NTraits<float>::getSqrtEps();
 
+			//if (!Test::numericallyEqual((float)bs.getRadius(), fbs.getRadius(), 1, frac))
+			//    printf("bs=%g fbs=%g\n", bs.getRadius(), fbs.getRadius());
+			SimTK_TEST_EQ_TOL((float)bs.getRadius(), fbs.getRadius(), 0.2f);
+			SimTK_TEST_EQ_TOL((float)as.getRadius(), fas.getRadius(), 0.2f);
+		#else
+			// The single and double precision spheres should be the same size
+			// to within a small error. The Ritter sphere is more sensitive.
+			const float frac = max((float)scale.value(),1.f)*NTraits<float>::getSqrtEps();
+        
+			//if (!Test::numericallyEqual((float)bs.getRadius(), fbs.getRadius(), 1, frac))
+			//    printf("bs=%g fbs=%g\n", bs.getRadius(), fbs.getRadius());
+			SimTK_TEST_EQ_TOL((float)bs.getRadius().value(), fbs.getRadius(), 0.2f);
+			SimTK_TEST_EQ_TOL((float)as.getRadius().value(), fas.getRadius(), 0.2f);
+		#endif
         // Compare Welzl spheres with fast & crude Ritter spheres. On lucky 
         // occasions the Ritter spheres can be just as good, and then roundoff
         // might make them trivially better but they shouldn't ever actually 
@@ -196,12 +225,16 @@ void testCollinearPoints() {
     Array_<fVec3> fpts;
     for (int trial=0; trial<1000; ++trial) {
         pts.clear(); fpts.clear();
-        int numPoints = random.getIntValue()+1;
-        Vec3 offs = Test::randDouble()*1000*Test::randVec3();
-        UnitVec3 dir(Test::randVec3());
-        fVec3 foffs((float)offs[0],(float)offs[1],(float)offs[2]);
-        fUnitVec3 fdir((float)dir[0],(float)dir[1],(float)dir[2]);
-
+		int numPoints = random.getIntValue() + 1;
+		Vec3 offs = Test::randDouble() * 1000 * Test::randVec3();
+		UnitVec3 dir(Test::randVec3());
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			fVec3 foffs((float)offs[0],(float)offs[1],(float)offs[2]);
+			fUnitVec3 fdir((float)dir[0],(float)dir[1],(float)dir[2]);
+		#else
+			fVec3 foffs((float)offs[0].value(), (float)offs[1].value(), (float)offs[2].value());
+			fUnitVec3 fdir((float)dir[0].value(), (float)dir[1].value(), (float)dir[2].value());
+		#endif
         int minpos, maxpos;
         Real minval=Infinity, maxval=-Infinity;
         for (int p=0; p<numPoints; ++p) {
@@ -209,7 +242,11 @@ void testCollinearPoints() {
             if (pos > maxval) maxval=pos, maxpos=p;
             if (pos < minval) minval=pos, minpos=p;
             Vec3  pt(offs+pos*dir);
-            fVec3 fpt((float)pt[0],(float)pt[1],(float)pt[2]);
+			#ifndef SimTK_REAL_IS_ADOUBLE
+				fVec3 fpt((float)pt[0],(float)pt[1],(float)pt[2]);
+			#else
+				fVec3 fpt((float)pt[0].value(), (float)pt[1].value(), (float)pt[2].value());
+			#endif
             pts.push_back(pt); fpts.push_back(fpt);
         }
 
@@ -227,19 +264,34 @@ void testCollinearPoints() {
         checkSphere(fas, fpts);
 
         Real scale = std::max(std::max(max(offs.abs()), radius), One);
-        float ftol = float(scale)*fTol;
-        double tol = scale*Tol;
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			float ftol = float(scale)*fTol;
+		#else
+			float ftol = float(scale.value())*fTol;
+		#endif
+        SimTK::Real tol = scale*Tol;
 
-
-        SimTK_TEST_EQ_TOL(bs.getRadius(), radius, tol);
-        SimTK_TEST_EQ_TOL(fbs.getRadius(), radius, ftol);
-        SimTK_TEST_EQ_TOL(as.getRadius(), radius, tol);
-        SimTK_TEST_EQ_TOL(fas.getRadius(), radius, ftol);
+		#ifndef SimTK_REAL_IS_ADOUBLE
+				SimTK_TEST_EQ_TOL(bs.getRadius(), radius, tol);
+				SimTK_TEST_EQ_TOL(fbs.getRadius(), radius, ftol);
+				SimTK_TEST_EQ_TOL(as.getRadius(), radius, tol);
+				SimTK_TEST_EQ_TOL(fas.getRadius(), radius, ftol);
+		#else
+				SimTK_TEST_EQ_TOL(bs.getRadius(), radius, tol.value());
+				SimTK_TEST_EQ_TOL(fbs.getRadius(), radius, ftol);
+				SimTK_TEST_EQ_TOL(as.getRadius(), radius, tol.value());
+				SimTK_TEST_EQ_TOL(fas.getRadius(), radius, ftol);
+		#endif
+        
 
         // Repeat test with random noise added.
         for (int p=0; p<numPoints; ++p) {
             Vec3 noise(Test::randVec3());
-            fVec3 fnoise((float)noise[0],(float)noise[1],(float)noise[2]);
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			fVec3 fnoise((float)noise[0], (float)noise[1], (float)noise[2]);
+		#else
+			fVec3 fnoise((float)noise[0].value(), (float)noise[1].value(), (float)noise[2].value());
+		#endif
             pts[p] += SignificantReal*noise;
             fpts[p] += NTraits<float>::getSignificant()*fnoise;
         }
@@ -253,10 +305,17 @@ void testCollinearPoints() {
         fas = Geo::Point_<float>::calcApproxBoundingSphere(fpts);
         checkSphere(fas, fpts);
 
-        SimTK_TEST_EQ_TOL(bs.getRadius(), radius, tol);
-        SimTK_TEST_EQ_TOL(fbs.getRadius(), radius, ftol);
-        SimTK_TEST_EQ_TOL(as.getRadius(), radius, tol);
-        SimTK_TEST_EQ_TOL(fas.getRadius(), radius, ftol);
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			SimTK_TEST_EQ_TOL(bs.getRadius(), radius, tol);
+			SimTK_TEST_EQ_TOL(fbs.getRadius(), radius, ftol);
+			SimTK_TEST_EQ_TOL(as.getRadius(), radius, tol);
+			SimTK_TEST_EQ_TOL(fas.getRadius(), radius, ftol);
+		#else
+			SimTK_TEST_EQ_TOL(bs.getRadius(), radius, tol.value());
+			SimTK_TEST_EQ_TOL(fbs.getRadius(), radius, ftol);
+			SimTK_TEST_EQ_TOL(as.getRadius(), radius, tol.value());
+			SimTK_TEST_EQ_TOL(fas.getRadius(), radius, ftol);
+		#endif
     }
 }
 
@@ -266,14 +325,24 @@ void testCollocatedPoints() {
     Array_<fVec3> fpts;
     for (int trial=0; trial<1000; ++trial) {
         pts.clear(); fpts.clear();
-        int numPoints = random.getIntValue()+1;
-        Vec3 offs = Test::randDouble()*1000*Test::randVec3();
-        fVec3 foffs((float)offs[0],(float)offs[1],(float)offs[2]);
-        Real scale = offs.norm();
+		
+		int numPoints = random.getIntValue()+1;
+		Vec3 offs = Test::randDouble()*1000*Test::randVec3();
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			fVec3 foffs((float)offs[0],(float)offs[1],(float)offs[2]);
+		#else
+			fVec3 foffs((float)offs[0].value(), (float)offs[1].value(), (float)offs[2].value());
+		#endif
+		Real scale = offs.norm();
 
         for (int p=0; p<numPoints; ++p) {
             Vec3  pt(offs);
-            fVec3 fpt((float)pt[0],(float)pt[1],(float)pt[2]);
+			#ifndef SimTK_REAL_IS_ADOUBLE
+				fVec3 fpt((float)pt[0],(float)pt[1],(float)pt[2]);
+			#else
+				fVec3 fpt((float)pt[0].value(), (float)pt[1].value(), (float)pt[2].value());
+			#endif
+
             pts.push_back(pt); fpts.push_back(fpt);
         }
 
@@ -296,7 +365,11 @@ void testCollocatedPoints() {
         // Repeat test with random noise added.
         for (int p=0; p<numPoints; ++p) {
             Vec3 noise(Test::randVec3());
-            fVec3 fnoise((float)noise[0],(float)noise[1],(float)noise[2]);
+			#ifndef SimTK_REAL_IS_ADOUBLE
+				fVec3 fnoise((float)noise[0],(float)noise[1],(float)noise[2]);
+			#else
+				fVec3 fnoise((float)noise[0].value(), (float)noise[1].value(), (float)noise[2].value());
+			#endif
             pts[p] += SignificantReal*noise;
             fpts[p] += NTraits<float>::getSignificant()*fnoise;
         }
@@ -320,10 +393,10 @@ void testBox() {
     SimTK_TEST(box.getOrderedAxis(2) == YAxis); // largest
 
     Geo::AlignedBox abox(Vec3(0), Vec3(1,2,3));
-    abox.setCenter(Vec3(3,4,2)+Vec3(1,2,3)-Vec3(1e-6)); 
+    abox.setCenter(Vec3(3,4,2)+Vec3(1,2,3)-Vec3(Real(1e-6))); 
     SimTK_TEST(box.intersectsAlignedBox(abox));
 
-    abox.setCenter(Vec3(3,4,2)+Vec3(1,2,3)+Vec3(1e-6)); 
+    abox.setCenter(Vec3(3,4,2)+Vec3(1,2,3)+Vec3(Real(1e-6))); 
     SimTK_TEST(!box.intersectsAlignedBox(abox));
 
     Geo::OrientedBox obox(Transform(), Vec3(1,2,3));

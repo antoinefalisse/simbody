@@ -65,6 +65,7 @@ RBNodeScrew(const MassProperties& mProps_B,
     this->updateSlots(nextUSlot,nextUSqSlot,nextQSlot);
 }
 
+#ifndef SimTK_REAL_IS_ADOUBLE
 void setQToFitRotationImpl(const SBStateDigest& sbs, const Rotation& R_FM, 
                            Vector& q) const {
     // The only rotation our screw joint can handle is about z.
@@ -93,6 +94,7 @@ void setUToFitLinearVelocityImpl
 {
     this->to1U(u) = v_FM[2]/pitch;
 }
+#endif
 
 // We're currently using an angle as the generalized coordinate for the 
 // screw joint but could just as easily have used translation or some 
@@ -112,8 +114,10 @@ void performQPrecalculations(const SBStateDigest& sbs,
                              Real* qErr,    int nQErr) const
 {
     assert(q && nq==1 && qCache && nQCache==PoolSize && nQErr==0);
-    qCache[CosQ] = std::cos(q[0]);
-    qCache[SinQ] = std::sin(q[0]);
+    //qCache[CosQ] = NTraits<Real>::cos(q[0]);
+    //qCache[SinQ] = NTraits<Real>::sin(q[0]);
+    qCache[CosQ] = cos(q[0]);
+    qCache[SinQ] = sin(q[0]);
 }
 
 // This is nearly free since we already calculated sin/cos.

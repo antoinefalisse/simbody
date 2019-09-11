@@ -183,11 +183,12 @@ void testBuiltins() {
                == "unsigned long long");
     SimTK_TEST(NiceTypeName<float>::namestr() == "float");
     SimTK_TEST(NiceTypeName<double>::namestr() == "double");
+    SimTK_TEST(NiceTypeName<adouble>::namestr() == "adouble");
     SimTK_TEST(NiceTypeName<long double>::namestr() == "long double");
     SimTK_TEST(NiceTypeName<std::complex<float>>::namestr() 
                == "std::complex<float>");
-    SimTK_TEST(NiceTypeName<std::complex<double>>::namestr() 
-               == "std::complex<double>");
+    SimTK_TEST(NiceTypeName<std::complex<double>>::namestr()
+        == "std::complex<double>");
     SimTK_TEST(NiceTypeName<std::complex<long double>>::namestr() 
                == "std::complex<long double>");
 

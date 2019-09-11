@@ -21,6 +21,10 @@
  * limitations under the License.                                             *
  * -------------------------------------------------------------------------- */
 
+#include "SimTKmath.h"
+
+//#ifndef SimTK_REAL_IS_ADOUBLE
+
 #include "IntegratorTestFramework.h"
 #include "simmath/ExplicitEulerIntegrator.h"
 
@@ -51,3 +55,8 @@ int main () {
     return 1;
   }
 }
+//#else
+//void main() {
+//	std::cout << ""
+//}
+//#endif

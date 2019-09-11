@@ -143,5 +143,3 @@ void FNV_INITS_S(int *code, int *Ns, int *ier)
     *ier = -1;
   }
 }
-
-

@@ -8,7 +8,7 @@
 
 #include "IpIteratesVector.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   IteratesVector::IteratesVector(const IteratesVectorSpace* owner_space, bool create_new)

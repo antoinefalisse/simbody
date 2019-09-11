@@ -271,5 +271,3 @@ void PrintMat(DlsMat A)
   }
 
 }
-
-

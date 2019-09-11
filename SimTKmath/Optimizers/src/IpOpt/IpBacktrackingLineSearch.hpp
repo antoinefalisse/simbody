@@ -16,7 +16,7 @@
 #include "IpRestoPhase.hpp"
 #include "IpConvCheck.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   /** General implementation of a backtracking line search.  This

@@ -236,7 +236,7 @@ calcCurveFrame(const Vec<3,RealP,S>&    P,
 
     // Calculate the unit tangent t, our y axis.
     const RealP uPrimeSqr = 1/Pu2;                          // ~10 flops
-    const RealP uPrime    = std::sqrt(uPrimeSqr);           // ~20 flops
+    const RealP uPrime    = NTraits<RealP>::sqrt(uPrimeSqr);           // ~20 flops
     const UnitVec3P t(uPrime*Pu, true);                     //   3 flops 
 
     // Next calculate unit normal n, our x axis. See calcUnitNormal() above

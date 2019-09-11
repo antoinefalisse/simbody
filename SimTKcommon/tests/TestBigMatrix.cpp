@@ -38,6 +38,7 @@ static bool isNaN(const T& v) { return v.isNaN(); }
 
 template<> bool isNaN(const double& v) {return SimTK::isNaN(v);}
 template<> bool isNaN(const float& v) {return SimTK::isNaN(v);}
+template<> bool isNaN(const adouble& v) { return SimTK::isNaN(v); }
 template<> bool isNaN(const negator<double>& v) {return SimTK::isNaN(v);}
 template<> bool isNaN(const negator<float>& v) {return SimTK::isNaN(v);}
 
@@ -106,25 +107,25 @@ void testTransform() {
 
 // Make sure we can instantiate all of these successfully.
 namespace SimTK {
-template class MatrixBase<double>;
-template class VectorBase<double>;
-template class RowVectorBase<double>;
-template class MatrixView_<double>;
-template class VectorView_<double>;
-template class RowVectorView_<double>;
-template class Matrix_<double>;
-template class Vector_<double>;
-template class RowVector_<double>;
+template class MatrixBase<SimTK::Real>;
+template class VectorBase<SimTK::Real>;
+template class RowVectorBase<SimTK::Real>;
+template class MatrixView_<SimTK::Real>;
+template class VectorView_<SimTK::Real>;
+template class RowVectorView_<SimTK::Real>;
+template class Matrix_<SimTK::Real>;
+template class Vector_<SimTK::Real>;
+template class RowVector_<SimTK::Real>;
 
-template class MatrixBase<negator<double> >;
-template class VectorBase<negator<double> >;
-template class RowVectorBase<negator<double> >;
-template class MatrixView_<negator<double> >;
-template class VectorView_<negator<double> >;
-template class RowVectorView_<negator<double> >;
-template class Matrix_<negator<double> >;
-template class Vector_<negator<double> >;
-template class RowVector_<negator<double> >;
+template class MatrixBase<negator<SimTK::Real> >;
+template class VectorBase<negator<SimTK::Real> >;
+template class RowVectorBase<negator<SimTK::Real> >;
+template class MatrixView_<negator<SimTK::Real> >;
+template class VectorView_<negator<SimTK::Real> >;
+template class RowVectorView_<negator<SimTK::Real> >;
+template class Matrix_<negator<SimTK::Real> >;
+template class Vector_<negator<SimTK::Real> >;
+template class RowVector_<negator<SimTK::Real> >;
 }
 
 int main() {
@@ -290,18 +291,6 @@ int main() {
         SimTK_TEST(vslice5.nrow()==3 && vslice5.ncol()==0);
         vslice5 = Matrix(3,0);
 
-        // Test RowVector with 0 elements.
-        RowVector rv0;
-        SimTK_TEST(rv0.size() == 0);
-        SimTK_TEST(rv0.nrow() == 1);
-        SimTK_TEST(rv0.ncol() == 0);
-        SimTK_TEST(rv0.nelt() == 0);
-
-        RowVector rv1(0);
-        SimTK_TEST(rv1.size() == 0);
-        SimTK_TEST(rv1.nrow() == 1);
-        SimTK_TEST(rv1.ncol() == 0);
-        SimTK_TEST(rv1.nelt() == 0);
 
     } catch(const std::exception& e) {
         cout << "exception: " << e.what() << endl;

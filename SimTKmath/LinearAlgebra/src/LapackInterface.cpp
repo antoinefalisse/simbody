@@ -45,6 +45,9 @@ int LapackInterface::getLWork( float* work) { return( (int)work[0] ); }
 int LapackInterface::getLWork( double* work) { return( (int)work[0] ); }
 int LapackInterface::getLWork( std::complex<float>* work) { return( (int)work[0].real() ); }
 int LapackInterface::getLWork( std::complex<double>* work) { return( (int)work[0].real() ); }
+#ifdef SimTK_REAL_IS_ADOUBLE
+    int LapackInterface::getLWork(Recorder* work) { throw std::runtime_error("Lapack not supported with Recorder"); }
+#endif
 
 template <typename T> void LapackInterface::gelss( int m, int n,  int mn, int nrhs,
            T* a, int lda, T* b, int ldb,  typename CNT<T>::TReal* s,
@@ -120,6 +123,13 @@ template <> void LapackInterface::gelss<std::complex<double> >( int m, int n,  i
     }
 }
 
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template <> void LapackInterface::gelss<Recorder>(int m, int n, int mn, int nrhs,
+	    Recorder* a, int lda, Recorder* b, int ldb, Recorder* s,
+	    Recorder rcond, int& rank, int& info) {
+	    throw std::runtime_error("Lapack not supported with Recorder");
+    }
+#endif
 
 template <> void LapackInterface::potrs<double>
     ( char uplo, const int ncol, const int nrhs, const double *lu,  double *b ) {
@@ -176,6 +186,14 @@ template <> void LapackInterface::potrs<std::complex<double> >
 
     return;
 }
+
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template <> void LapackInterface::potrs<Recorder>
+	    (char uplo, const int ncol, const int nrhs, const Recorder *lu, Recorder *b) {
+	    throw std::runtime_error("Lapack not supported with Recorder");
+    }
+#endif
+
 template <> void LapackInterface::sytrs<double>
 // TODO fix SimTKlapack.h for const int* pivots    ( char trans,  const int ncol, const int nrhs, const double *lu, const int *pivots, double *b ) {
 ( char trans,  const int ncol, const int nrhs, double *lu,  int *pivots, double *b ) {
@@ -235,6 +253,14 @@ template <> void LapackInterface::sytrs<std::complex<double> >
     return;
 }
 
+#ifdef SimTK_REAL_IS_ADOUBLE
+	template <> void LapackInterface::sytrs<Recorder>
+		// TODO    ( char trans, const int ncol, const int nrhs, const std::complex<double>* lu, const int *pivots, std::complex<double>* b ) {
+		(char trans, const int ncol, const int nrhs, Recorder* lu, int *pivots, Recorder* b) {
+		throw std::runtime_error("Lapack not supported with Recorder");
+	}
+#endif
+
 template <> void LapackInterface::getrs<double>
     ( char trans, const int ncol, const int nrhs, const double *lu, const int *pivots, double *b ) {
 
@@ -248,7 +274,6 @@ template <> void LapackInterface::getrs<double>
 
     return;
 }
-
 
 template <> void LapackInterface::getrs<float>
     ( char trans , const int ncol, const int nrhs, const float *lu, const int *pivots, float *b ) {
@@ -290,6 +315,14 @@ template <> void LapackInterface::getrs<complex<double> >
 
     return;
 }
+
+#ifdef SimTK_REAL_IS_ADOUBLE
+	template <> void LapackInterface::getrs<Recorder>
+		(char trans, const int ncol, const int nrhs, const Recorder *lu, const int *pivots, Recorder *b) {
+		throw std::runtime_error("Lapack not supported with Recorder");
+	}
+#endif
+
 // selected eigenvalues for symmetric matrices
 template <class T> 
 void LapackInterface::syevx( char jobz, char range, char uplo, int n, T* a, int lda,
@@ -298,6 +331,7 @@ void LapackInterface::syevx( char jobz, char range, char uplo, int n, T* a, int 
     T* vectors, int LDVectors, int* ifail, int& info ) {
     assert(false);
 } 
+
 template <> void LapackInterface::syevx<float>( char jobz, char range, 
     char uplo, int n, float* a, int lda, float vl, float vu, int il, 
     int iu,   float abstol, int& nFound, float *values, float* vectors, 
@@ -394,12 +428,22 @@ template <> void LapackInterface::syevx<std::complex<float> >( char jobz,
     return;
 }
 
+#ifdef SimTK_REAL_IS_ADOUBLE
+template <> void LapackInterface::syevx<Recorder>(char jobz,
+	char range, char uplo, int n, Recorder* a, int lda, Recorder vl,
+	Recorder vu, int il, int iu, Recorder abstol, int& nFound, Recorder *values,
+	Recorder* vectors, int LDVectors, int* ifail, int& info) {
+	throw std::runtime_error("Lapack not supported with Recorder");
+}
+#endif
+
 // all eigenvalues for symmetric matrices eigen vectors returned in a
 template <class T> 
 void LapackInterface::syev( char jobz,  char uplo, int n, 
     T* a, int lda, typename CNT<T>::TReal * eigenValues, int& info ) {
     assert(false);
 } 
+
 template <> void LapackInterface::syev<float>( char jobz,  char uplo, int n, 
     float* a, int lda, float* eigenValues, int& info ) {
 
@@ -467,12 +511,21 @@ template <> void LapackInterface::syev<std::complex<double> >( char jobz,  char 
     TypedWorkSpace<std::complex<double> > work(lwork);
     zheev_( jobz, uplo, n, a, lda, eigenValues, work.data, lwork, rwork.data, info, 1, 1 );
 } 
+
+#ifdef SimTK_REAL_IS_ADOUBLE
+template <> void LapackInterface::syev<Recorder>(char jobz, char uplo, int n,
+	Recorder* a, int lda, Recorder* eigenValues, int& info) {
+	throw std::runtime_error("Lapack not supported with Recorder");
+}
+#endif
+
 template <class T> 
 void LapackInterface::gesdd( char jobz, int m, int n, T* a, int lda,
            typename CNT<T>::TReal* s, T* u, int ldu,  T* vt,
            int ldvt,  int& info) {
     assert(false);
 }
+
 template <>
 void LapackInterface::gesdd<float>( char jobz, int m, int n, float* a, int lda,
            float* s, float* u, int ldu,  float* vt,
@@ -492,6 +545,7 @@ void LapackInterface::gesdd<float>( char jobz, int m, int n, float* a, int lda,
         SimTK_THROW2( SimTK::Exception::IllegalLapackArg, "sgesdd", info );
     }
 }
+
 template <>
 void LapackInterface::gesdd<double>( char jobz, int m, int n, double* a, int lda,
            double* s, double* u, int ldu,  double* vt,
@@ -511,6 +565,7 @@ void LapackInterface::gesdd<double>( char jobz, int m, int n, double* a, int lda
         SimTK_THROW2( SimTK::Exception::IllegalLapackArg, "dgesdd", info );
     }
 }
+
 // TODO REMOVE when added to SimTKlapack.
 extern "C" {
     extern void cgesdd_(const char& jobz, const int& m, const int& n,  std::complex<float> *a, const int& lda, float *s,  std::complex<float> *u, const int& ldu,  std::complex<float> *vt, const int& ldvt,  std::complex<float> *work, const int& lwork, float *rwork, int *iwork, int& info, int jobz_len=1 );
@@ -568,151 +623,170 @@ void LapackInterface::gesdd<std::complex<double> >( char jobz, int m, int n,
     }
     return;
 }
+
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template <>
+    void LapackInterface::gesdd<Recorder>(char jobz, int m, int n,
+	    Recorder* a, int lda, Recorder* s, Recorder* u,
+	    int ldu, Recorder* vt, int ldvt, int& info){
+	    throw std::runtime_error("Lapack not supported with Recorder");
+    }
+#endif
+
 // eigenvlaues for nonsymmetric matrices
-template <class T> 
-void LapackInterface::geev (char jobvl, char jobvr,
-    int n, T* a, int lda, std::complex<typename CNT<T>::TReal>* values, 
-    T* vl, int ldvl, std::complex<typename CNT<T>::TReal>* vr, 
-    int ldvr, T* work, int lwork, int& info ) {
-    assert(false);
+template <class T>
+void LapackInterface::geev(char jobvl, char jobvr,
+	int n, T* a, int lda, std::complex<typename CNT<T>::TReal>* values,
+	T* vl, int ldvl, std::complex<typename CNT<T>::TReal>* vr,
+	int ldvr, T* work, int lwork, int& info) {
+	assert(false);
 }
 
-template <> void LapackInterface::geev<double>
-   (char jobvl, char jobvr,
-    int n, double* a, int lda, std::complex<double>* values, 
-    double* vl, int ldvl, std::complex<double>* rightVectors, int ldvr, double* work,
-    int lwork, int& info )
+template <> 
+void LapackInterface::geev<double>(char jobvl, char jobvr,
+		int n, double* a, int lda, std::complex<double>* values,
+		double* vl, int ldvl, std::complex<double>* rightVectors, int ldvr, double* work,
+		int lwork, int& info)
 {
-    TypedWorkSpace<double> wr(n);
-    TypedWorkSpace<double> wi(n);
-    TypedWorkSpace<double> vr(n*n);
+	TypedWorkSpace<double> wr(n);
+	TypedWorkSpace<double> wi(n);
+	TypedWorkSpace<double> vr(n*n);
 
-    // avoid valgrind uninitialized warnings
-    for(int i=0;i<n;i++) wi.data[i] = 0;  
-    dgeev_( jobvl, jobvr, 
-//             n, a, lda, wr.data, wi.data, vl, ldvl, vr.data, ldvr, 
-             n, a, lda, wr.data, wi.data, vl, ldvl, vr.data, ldvr, 
-             work, lwork, info, 1, 1);
+	// avoid valgrind uninitialized warnings
+	for (int i = 0; i<n; i++) wi.data[i] = 0;
+	dgeev_(jobvl, jobvr,
+		//             n, a, lda, wr.data, wi.data, vl, ldvl, vr.data, ldvr, 
+		n, a, lda, wr.data, wi.data, vl, ldvl, vr.data, ldvr,
+		work, lwork, info, 1, 1);
 
-    if( info < 0 ) {
-        SimTK_THROW2( SimTK::Exception::IllegalLapackArg, "dgeev", info );
-    }
+	if (info < 0) {
+		SimTK_THROW2(SimTK::Exception::IllegalLapackArg, "dgeev", info);
+	}
 
-    for(int i=0;i<n;i++) {
-        values[i] = std::complex<double>(wr.data[i], wi.data[i] );
-    }
+	for (int i = 0; i<n; i++) {
+		values[i] = std::complex<double>(wr.data[i], wi.data[i]);
+	}
 
-    /*
-    ** LAPACK returns the eigen vectors as complex conjuate pairs 
-    ** if the eigen value is real  ( imaginary part == 0 ) then the eigen vector is real
-    ** else the vectors are returned with the real part in the jth column and the
-    ** imaginary part in the j+1 column
-    */
-    for(int j=0;j<n;j++) {
-        if( fabs(wi.data[j]) < EPS ) {
-            for(int i=0;i<n;i++) {
-                rightVectors[j*n+i] = std::complex<double>(vr.data[j*n+i], 0.0 );
-             }
-        } else {
-            for(int i=0;i<n;i++) {
-                rightVectors[j*n+i] = std::complex<double>(vr.data[j*n+i], vr.data[(j+1)*n+i]);
-                rightVectors[(j+1)*n+i] = std::complex<double>(vr.data[j*n+i], -vr.data[(j+1)*n+i]);
-            }
-            j++;
-        }
-    } 
-/*
-    for(int j=0;j<n;j++) { 
-        for(int i=0;i<n;i++) printf("%f %f    ", rightVectors(i,j).real(), rightVectors(i,j).imag() ); 
-        printf("\n");
-    }
-*/
+	/*
+	** LAPACK returns the eigen vectors as complex conjuate pairs
+	** if the eigen value is real  ( imaginary part == 0 ) then the eigen vector is real
+	** else the vectors are returned with the real part in the jth column and the
+	** imaginary part in the j+1 column
+	*/
+	for (int j = 0; j<n; j++) {
+		if (fabs(wi.data[j]) < EPS) {
+			for (int i = 0; i<n; i++) {
+				rightVectors[j*n + i] = std::complex<double>(vr.data[j*n + i], 0.0);
+			}
+		}
+		else {
+			for (int i = 0; i<n; i++) {
+				rightVectors[j*n + i] = std::complex<double>(vr.data[j*n + i], vr.data[(j + 1)*n + i]);
+				rightVectors[(j + 1)*n + i] = std::complex<double>(vr.data[j*n + i], -vr.data[(j + 1)*n + i]);
+			}
+			j++;
+		}
+	}
 }
 
 template <> void LapackInterface::geev<float>
-   (char jobvl, char jobvr,
-    int n, float* a, int lda, std::complex<float>* values,
-    float* vl, int ldvl, std::complex<float>* rightVectors, int ldvr, float* work,
-    int lwork, int& info )
+	(char jobvl, char jobvr,
+		int n, float* a, int lda, std::complex<float>* values,
+		float* vl, int ldvl, std::complex<float>* rightVectors, int ldvr, float* work,
+		int lwork, int& info)
 {
-    TypedWorkSpace<float> wr(n);
-    TypedWorkSpace<float> wi(n);
-    TypedWorkSpace<float> vr(n*n);
+	TypedWorkSpace<float> wr(n);
+	TypedWorkSpace<float> wi(n);
+	TypedWorkSpace<float> vr(n*n);
 
-    // avoid valgrind uninitialized warnings
-    for(int i=0;i<n;i++) wi.data[i] = 0;  
+	// avoid valgrind uninitialized warnings
+	for (int i = 0; i<n; i++) wi.data[i] = 0;
 
-    sgeev_( jobvl, jobvr, 
-             n, a, lda, wr.data, wi.data, vl, ldvl, vr.data, ldvr, 
-             work, lwork, info, 
-             1, 1);
+	sgeev_(jobvl, jobvr,
+		n, a, lda, wr.data, wi.data, vl, ldvl, vr.data, ldvr,
+		work, lwork, info,
+		1, 1);
 
-    if( info < 0 ) {
-        SimTK_THROW2( SimTK::Exception::IllegalLapackArg, "sgeev", info );
-    }
+	if (info < 0) {
+		SimTK_THROW2(SimTK::Exception::IllegalLapackArg, "sgeev", info);
+	}
 
-    for(int i=0;i<n;i++) {
-        values[i] = std::complex<float>(wr.data[i], wi.data[i] );
-    }
-    /*
-    ** LAPACK returns the eigen vectors as complex conjuate pairs 
-    ** if the eigen value is real  ( imaginary part == 0 ) then the eigen vector is real
-    ** else the vectors are returned with the real part in the jth column and the
-    ** imaginary part in the j+1 column
-    */
-    for(int j=0;j<n;j++) {
-        if( fabs(wi.data[j]) < (float)EPS ) {
-            for(int i=0;i<n;i++) {
-                rightVectors[j*n+i] = std::complex<float>(vr.data[j*n+i], 0.0 );
-//printf(" %f ",vr.data[j*n+i] );
-             }
-//printf("\n");
-        } else {
-            for(int i=0;i<n;i++) {
-                rightVectors[j*n+i] = std::complex<float>(vr.data[j*n+i], vr.data[(j+1)*n+i]);
-                rightVectors[(j+1)*n+i] = std::complex<float>(vr.data[j*n+i], -vr.data[(j+1)*n+i]);
-            }
-            j++;
-    }
-    } 
-}
-template <> void LapackInterface::geev<std::complex<float> >
-   (char jobvl, char jobvr,
-    int n, std::complex<float>* a, int lda, std::complex<float>* values, 
-    std::complex<float>* vl, int ldvl, std::complex<float>* rightVectors, int ldvr, std::complex<float>* work,
-    int lwork, int& info )
-{
-
-    TypedWorkSpace<float> Rwork(2*n);
-    cgeev_( jobvl, jobvr, 
-             n, a, lda, values,  vl, ldvl, rightVectors, ldvr, 
-             work, lwork, Rwork.data, info, 
-             1, 1);
-
-    if( info < 0 ) {
-        SimTK_THROW2( SimTK::Exception::IllegalLapackArg, "cgeev", info );
-    }
-
+	for (int i = 0; i<n; i++) {
+		values[i] = std::complex<float>(wr.data[i], wi.data[i]);
+	}
+	/*
+	** LAPACK returns the eigen vectors as complex conjuate pairs
+	** if the eigen value is real  ( imaginary part == 0 ) then the eigen vector is real
+	** else the vectors are returned with the real part in the jth column and the
+	** imaginary part in the j+1 column
+	*/
+	for (int j = 0; j<n; j++) {
+		if (fabs(wi.data[j]) < (float)EPS) {
+			for (int i = 0; i<n; i++) {
+				rightVectors[j*n + i] = std::complex<float>(vr.data[j*n + i], 0.0);
+				//printf(" %f ",vr.data[j*n+i] );
+			}
+			//printf("\n");
+		}
+		else {
+			for (int i = 0; i<n; i++) {
+				rightVectors[j*n + i] = std::complex<float>(vr.data[j*n + i], vr.data[(j + 1)*n + i]);
+				rightVectors[(j + 1)*n + i] = std::complex<float>(vr.data[j*n + i], -vr.data[(j + 1)*n + i]);
+			}
+			j++;
+		}
+	}
 }
 
-template <> void LapackInterface::geev<std::complex<double> >
-   (char jobvl, char jobvr,
-    int n, std::complex<double>* a, int lda, std::complex<double>* values, 
-    std::complex<double>* vl, int ldvl, std::complex<double>* rightVectors, int ldvr, std::complex<double>* work,
-    int lwork, int& info )
+template <> void LapackInterface::geev<std::complex<float>>
+	(char jobvl, char jobvr,
+		int n, std::complex<float>* a, int lda, std::complex<float>* values,
+		std::complex<float>* vl, int ldvl, std::complex<float>* rightVectors, int ldvr, std::complex<float>* work,
+		int lwork, int& info)
 {
 
-    TypedWorkSpace<double> Rwork(2*n);
-    zgeev_( jobvl, jobvr, 
-             n, a, lda, values,  vl, ldvl, rightVectors, ldvr, 
-             work, lwork, Rwork.data, info, 
-             1, 1);
+	TypedWorkSpace<float> Rwork(2 * n);
+	cgeev_(jobvl, jobvr,
+		n, a, lda, values, vl, ldvl, rightVectors, ldvr,
+		work, lwork, Rwork.data, info,
+		1, 1);
 
-    if( info < 0 ) {
-        SimTK_THROW2( SimTK::Exception::IllegalLapackArg, "zgeev", info );
-    }
+	if (info < 0) {
+		SimTK_THROW2(SimTK::Exception::IllegalLapackArg, "cgeev", info);
+	}
 
 }
+
+template <> void LapackInterface::geev<std::complex<double>>
+	(char jobvl, char jobvr,
+		int n, std::complex<double>* a, int lda, std::complex<double>* values,
+		std::complex<double>* vl, int ldvl, std::complex<double>* rightVectors, int ldvr, std::complex<double>* work,
+		int lwork, int& info)
+{
+
+	TypedWorkSpace<double> Rwork(2 * n);
+	zgeev_(jobvl, jobvr,
+		n, a, lda, values, vl, ldvl, rightVectors, ldvr,
+		work, lwork, Rwork.data, info,
+		1, 1);
+
+	if (info < 0) {
+		SimTK_THROW2(SimTK::Exception::IllegalLapackArg, "zgeev", info);
+	}
+
+}
+
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template <> void LapackInterface::geev<Recorder>(char jobvl, char jobvr,
+		    int n, Recorder* a, int lda, std::complex<Recorder>* values,
+		    Recorder* vl, int ldvl, std::complex<Recorder>* rightVectors, int ldvr, Recorder* work,
+		    int lwork, int& info)
+    {
+	    throw std::runtime_error("Lapack not supported with Recorder");
+    }
+#endif
+
+
 template <> 
 void  LapackInterface::getrf<double>( const int m, const int n, double *lu, const int lda,  int *pivots, int& info ) {
     dgetrf_(m, n, lu, lda, pivots, info   );
@@ -742,6 +816,13 @@ void  LapackInterface::getrf<std::complex<float> >( const int m, const int n, st
     }
    return;
 }
+
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template <>
+    void  LapackInterface::getrf<Recorder>(const int m, const int n, Recorder *lu, const int lda, int *pivots, int& info) {
+	    throw std::runtime_error("Lapack not supported with Recorder");
+    }
+#endif
 
 template <> 
 void LapackInterface::tzrzf<double>( const int& m, const int& n,  double* a, const int& lda, double* tau, double* work, const int& lwork, int& info ) {
@@ -778,6 +859,13 @@ void LapackInterface::tzrzf<std::complex<float> >( const int& m, const int& n,  
     }
     return;
 }
+
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template <>
+    void LapackInterface::tzrzf<Recorder>(const int& m, const int& n, Recorder* a, const int& lda, Recorder* tau, Recorder* work, const int& lwork, int& info) {
+	    throw std::runtime_error("Lapack not supported with Recorder");
+    }
+#endif
 
 template <> 
 void LapackInterface::geqp3<double>( const int& m, const int& n,  double* a, const int& lda, int *pivots, double* tau, double* work, const int& lwork, int& info ) {
@@ -820,6 +908,13 @@ void LapackInterface::geqp3<std::complex<double> >( const int& m, const int& n, 
     }
      return;
 }
+
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template <>
+    void LapackInterface::geqp3<Recorder>(const int& m, const int& n, Recorder* a, const int& lda, int *pivots, Recorder*  tau, Recorder* work, const int& lwork, int& info) {
+	    throw std::runtime_error("Lapack not supported with Recorder");
+    }
+#endif
 
 template <> 
 void LapackInterface::lascl<double>( const char& type, const int& kl, const int& ku, const double& cfrom, const double& cto,  const int& m, const int& n, double* a, const int& lda, int& info ) {
@@ -865,6 +960,12 @@ void LapackInterface::lascl<std::complex<double> >( const char& type, const int&
     return;
 }
 
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template <>
+    void LapackInterface::lascl<Recorder>(const char& type, const int& kl, const int& ku, const Recorder& cfrom, const Recorder& cto, const int& m, const int& n, Recorder* a, const int& lda, int& info) {
+	    throw std::runtime_error("Lapack not supported with Recorder");
+    }
+#endif
 
 template <> 
 double LapackInterface::lange<float>( const char& norm, const int& m, const int& n, const float* a, const int& lda){
@@ -918,6 +1019,13 @@ double LapackInterface::lange<std::complex<double> >( const char& norm, const in
      return( zlange_( norm, m, n, a, lda, work.data, 1 ) );
 }
  
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template <>
+    double LapackInterface::lange<Recorder>(const char& norm, const int& m, const int& n, const Recorder* a, const int& lda) {
+	    throw std::runtime_error("Lapack not supported with Recorder");
+    }
+#endif
+
 template <> 
 void LapackInterface::ormqr<float>(const char& side, const char& trans, const int& m, const int& n, const int& k, float* a, const int& lda, float *tau, float *c__, const int& ldc, float* work, const int& lwork, int& info) {
 
@@ -962,6 +1070,13 @@ void LapackInterface::ormqr<std::complex<float> >(const char& side, const char& 
      return;
 }
 
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template <>
+    void LapackInterface::ormqr<Recorder>(const char& side, const char& trans, const int& m, const int& n, const int& k, Recorder* a, const int& lda, Recorder *tau, Recorder *c__, const int& ldc, Recorder* work, const int& lwork, int& info) {
+	    throw std::runtime_error("Lapack not supported with Recorder");
+    }
+#endif
+
 template <> 
 void LapackInterface::trsm<float>(const char& side, const char& uplo, const char& transA, const char& diag, const int& m, const int& n, const float& alpha, const float* a, const int& lda, float* b, const int& ldb ) {
      strsm_( side, uplo, transA, diag, m, n, alpha, a, lda, b, ldb, 1, 1, 1 );
@@ -980,11 +1095,19 @@ void LapackInterface::trsm<std::complex<double> >(const char& side, const char& 
      return;
 }
 
-template <> 
-void LapackInterface::trsm<std::complex<float> >(const char& side, const char& uplo, const char& transA, const char& diag, const int& m, const int& n, const std::complex<float>& alpha, const std::complex<float>* a, const int& lda, std::complex<float>* b, const int& ldb ) {
-     ctrsm_( side, uplo, transA, diag, m, n, alpha, a, lda, b, ldb, 1, 1, 1 );
-     return;
+template <>
+void LapackInterface::trsm<std::complex<float> >(const char& side, const char& uplo, const char& transA, const char& diag, const int& m, const int& n, const std::complex<float>& alpha, const std::complex<float>* a, const int& lda, std::complex<float>* b, const int& ldb) {
+	ctrsm_(side, uplo, transA, diag, m, n, alpha, a, lda, b, ldb, 1, 1, 1);
+	return;
 }
+
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template <>
+    void LapackInterface::trsm<Recorder>(const char& side, const char& uplo, const char& transA, const char& diag, const int& m, const int& n, const Recorder& alpha, const Recorder* a, const int& lda, Recorder* b, const int& ldb) {
+	    throw std::runtime_error("Lapack not supported with Recorder");
+    }
+#endif
+
 template <> 
 void LapackInterface::ormrz<float>(const char& side, const char& trans, const int& m, const int& n, const int& k, const int& l, float* a, const int& lda, float* tau, float* c__, const int& ldc, float* work, const int& lwork, int& info) {
    sormrz_( side, trans, m, n, k, l, a, lda, tau, c__, ldc, work, lwork, info, 1, 1 );
@@ -1017,13 +1140,20 @@ void LapackInterface::ormrz<std::complex<float> >(const char& side, const char& 
 
 template <> 
 void LapackInterface::ormrz<std::complex<double> >(const char& side, const char& trans, const int& m, const int& n, const int& k, const int& l, std::complex<double>* a, const int& lda, std::complex<double>* tau, std::complex<double>* c__, const int& ldc, std::complex<double>* work, const int& lwork, int& info) {
-   zunmrz_( side, trans, m, n, k, l, a, lda, tau, c__, ldc, work, lwork, info, 1, 1 );
+	zunmrz_(side, trans, m, n, k, l, a, lda, tau, c__, ldc, work, lwork, info, 1, 1);
 
-    if( info < 0 ) {
-        SimTK_THROW2( SimTK::Exception::IllegalLapackArg, "zunmrz", info );
-    }
-   return;
+	if (info < 0) {
+		SimTK_THROW2(SimTK::Exception::IllegalLapackArg, "zunmrz", info);
+	}
+	return;
 }
+
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template <>
+    void LapackInterface::ormrz<Recorder>(const char& side, const char& trans, const int& m, const int& n, const int& k, const int& l, Recorder* a, const int& lda, Recorder* tau, Recorder* c__, const int& ldc, Recorder* work, const int& lwork, int& info) {
+	    throw std::runtime_error("Lapack not supported with Recorder");
+    }
+#endif
 
 template <> 
 void LapackInterface::copy<float>( const int& n, const float* x, const int& incx, float* y, const int& incy) {
@@ -1048,6 +1178,14 @@ void LapackInterface::copy<std::complex<double> >( const int& n, const std::comp
      zcopy_(n, x, incx, y, incy );
      return;
 }
+
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template <>
+    void LapackInterface::copy<Recorder>(const int& n, const Recorder* x, const int& incx, Recorder* y, const int& incy) {
+	    throw std::runtime_error("Lapack not supported with Recorder");
+    }
+#endif
+
 template <>
 void LapackInterface::getMachineUnderflow<float>( float& underFlow ) {
     underFlow = slamch_('S');
@@ -1058,6 +1196,14 @@ void LapackInterface::getMachineUnderflow<double>( double& underFlow ) {
     underFlow = dlamch_('S');
     return;
 }
+
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template <>
+    void LapackInterface::getMachineUnderflow<Recorder>(Recorder& underFlow) {
+	    throw std::runtime_error("Lapack not supported with Recorder");
+    }
+#endif
+
 template <>
 void LapackInterface::getMachinePrecision<float>( float& smallNumber, float& bigNumber ) {
     
@@ -1073,6 +1219,13 @@ void LapackInterface::getMachinePrecision<double>( double& smallNumber, double& 
     bigNumber = 1.0/smallNumber;
     dlabad_(smallNumber, bigNumber );
 }
+
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template <>
+    void LapackInterface::getMachinePrecision<Recorder>(Recorder& smallNumber, Recorder& bigNumber) {
+	    throw std::runtime_error("Lapack not supported with Recorder");
+    }
+#endif
 
 template <> 
 void LapackInterface::laic1<float>(const int& job, const int& j, const float* x, const float& sest, const float* w, const float& gamma, float& sestpr, float& s, float& c__ ) {
@@ -1098,6 +1251,13 @@ void LapackInterface::laic1<std::complex<double> >(const int& job, const int& j,
     zlaic1_( job, j, x, sest, w, gamma, sestpr, s, c__ );
     return;
 }
+
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template <>
+    void LapackInterface::laic1<Recorder>(const int& job, const int& j, const Recorder* x, const Recorder& sest, const Recorder* w, const Recorder& gamma, Recorder& sestpr, Recorder& s, Recorder& c__) {
+	    throw std::runtime_error("Lapack not supported with Recorder");
+    }
+#endif
 
 template <>
 void LapackInterface::potrf<double>( const char& uplo, const int n,  double* a, const int lda, int& info ) { 
@@ -1140,6 +1300,14 @@ void LapackInterface::potrf<std::complex<float> >( const char& uplo, const int n
 
     return;
  }
+
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template <>
+    void LapackInterface::potrf<Recorder>(const char& uplo, const int n, Recorder* a, const int lda, int& info) {
+	    throw std::runtime_error("Lapack not supported with Recorder");
+    }
+#endif
+
 template <> 
 void LapackInterface::sytrf<float>( const char& uplo, const int n, float* a,  const int lda, int* pivots, float* work, const int lwork, int& info){ 
 
@@ -1183,6 +1351,13 @@ void LapackInterface::sytrf<std::complex<float> >( const char& uplo, const int n
 template <typename T> 
 void LapackInterface::sytrf( const char& uplo, const int n, T* a,  const int lda, int *pivots, T* work, const int lwork, int& info ) { assert(false); }
 
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template <>
+    void LapackInterface::sytrf<Recorder>(const char& uplo, const int n, Recorder* a, const int lda, int *pivots, Recorder* work, const int lwork, int& info) {
+	    throw std::runtime_error("Lapack not supported with Recorder");
+    }
+#endif
+
 template <>
 int LapackInterface::ilaenv<double>( const int& ispec,  const char* name,  const char *opts, const int& n1, const int& n2, const int& n3, const int& n4 ) { 
      char d[10];
@@ -1211,7 +1386,12 @@ int LapackInterface::ilaenv<std::complex<float> >( const int& ispec,  const char
      c[1] = '\0';
      return (ilaenv_( ispec, strcat( c, name), opts, n1, n2, n3, n3, 6, (int)strlen(opts)) ); 
 }
-
+#ifdef SimTK_REAL_IS_ADOUBLE
+	template <>
+	int LapackInterface::ilaenv<Recorder>(const int& ispec, const char* name, const char *opts, const int& n1, const int& n2, const int& n3, const int& n4) {
+		throw std::runtime_error("Lapack not supported with Recorder");
+	}
+#endif
 
 }   // namespace SimTK
 

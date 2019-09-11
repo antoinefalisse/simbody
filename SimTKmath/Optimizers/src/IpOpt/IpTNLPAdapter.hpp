@@ -13,7 +13,7 @@
 #include "IpTNLP.hpp"
 #include "IpOrigIpoptNLP.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   // forward declarations

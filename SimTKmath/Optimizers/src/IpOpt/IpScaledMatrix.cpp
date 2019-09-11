@@ -8,7 +8,7 @@
 
 #include "IpScaledMatrix.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   ScaledMatrix::ScaledMatrix(const ScaledMatrixSpace* owner_space)

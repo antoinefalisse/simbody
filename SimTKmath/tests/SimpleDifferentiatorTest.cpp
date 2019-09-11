@@ -96,7 +96,7 @@ public:
 
     // Must provide this virtual function.
     int f(Real x, Real& fx) const override {
-        fx = std::sin(w*x);
+        fx = sin(w*x);
         return 0; // success
     }
 private:
@@ -111,12 +111,12 @@ int main () {
         Differentiator dsinwx(sinwx);
 
         const Real x = 1.234;
-        Real exact  = w*std::cos(w*x);
+        Real exact  = w*cos(w*x);
         Real approx = dsinwx.calcDerivative(x);
 
         std::printf("exact =%16.12f\n", exact);
         std::printf("approx=%16.12f err=%.3e\n", 
-            approx, std::abs((approx-exact)/exact));
+            approx, fabs((approx-exact)/exact));
 
         return 0;
     } 

@@ -49,11 +49,15 @@
 
 #include "simmath/LinearAlgebra.h"
 #include "simmath/Differentiator.h"
-#include "simmath/Optimizer.h"
+#ifndef SimTK_REAL_IS_ADOUBLE
+    #include "simmath/Optimizer.h"
+#endif
 #include "simmath/MultibodyGraphMaker.h"
 #include "simmath/Integrator.h"
 #include "simmath/TimeStepper.h"
-#include "simmath/CPodesIntegrator.h"
+#ifndef SimTK_REAL_IS_ADOUBLE
+    #include "simmath/CPodesIntegrator.h"
+#endif
 #include "simmath/RungeKuttaMersonIntegrator.h"
 #include "simmath/RungeKuttaFeldbergIntegrator.h"
 #include "simmath/RungeKutta3Integrator.h"

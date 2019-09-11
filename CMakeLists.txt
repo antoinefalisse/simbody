@@ -18,6 +18,11 @@ else()
 endif()
 cmake_minimum_required(VERSION ${SIMBODY_REQUIRED_CMAKE_VERSION})
 
+if(COMMAND cmake_policy)
+    cmake_policy(SET CMP0003 NEW)
+    cmake_policy(SET CMP0005 NEW)
+endif()
+
 project(Simbody)
 
 # At this point CMake will have set CMAKE_INSTALL_PREFIX to /usr/local on Linux
@@ -36,15 +41,13 @@ endif()
 # Include GNUInstallDirs to get canonical paths
 include(GNUInstallDirs)
 
+# Include CMake macros that we wrote to reduce duplication in this project.
+include(cmake/SimbodyMacros.cmake)
+
 # Declare the option for code coverage
 option(SIMBODY_COVERAGE
        "Adding ability to assess test coverage (requires gcc or clang)."
        OFF)
-
-# Declare the option to install documentation
-option(INSTALL_DOCS
-       "Install documentation."
-       ON)
 
 # Check compiler version
 if(MSVC)
@@ -76,10 +79,10 @@ elseif(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
 endif()
 
 set(SIMBODY_MAJOR_VERSION 3)
-set(SIMBODY_MINOR_VERSION 7)
+set(SIMBODY_MINOR_VERSION 6)
 set(SIMBODY_PATCH_VERSION 0)
 
-set(SIMBODY_COPYRIGHT_YEARS "2005-18")
+set(SIMBODY_COPYRIGHT_YEARS "2005-16")
 
 # underbar separated list of dotted authors, no spaces or commas
 set(SIMBODY_AUTHORS "Michael.Sherman_Peter.Eastman")
@@ -130,6 +133,11 @@ if(NOT BUILD_DYNAMIC_LIBRARIES AND NOT BUILD_STATIC_LIBRARIES)
         "are both set to FALSE. No compilation is possible!")
 endif()
 
+# Recorder libraries and tests won't be built unless this is set.
+# Recorder libraries are always built shared rather than static.
+set(BUILD_RECORDER_LIBRARIES FALSE CACHE BOOL
+"Build '_recorder' versions of libraries to allow automatic differentiation.")
+
 # Use this to generate a private set of libraries whose names
 # won't conflict with installed versions.
 set(BUILD_USING_NAMESPACE "" CACHE STRING
@@ -168,24 +176,30 @@ FORCE)
 
 set(SimTKCOMMON_SHARED_LIBRARY ${SimTKCOMMON_LIBRARY_NAME})
 set(SimTKCOMMON_STATIC_LIBRARY ${SimTKCOMMON_LIBRARY_NAME}_static)
+set(SimTKCOMMON_RECORDER_LIBRARY ${SimTKCOMMON_LIBRARY_NAME}_recorder)
 
 set(SimTKCOMMON_LIBRARY_NAME_VN ${NS}SimTKcommon${VN})
 set(SimTKCOMMON_SHARED_LIBRARY_VN ${SimTKCOMMON_LIBRARY_NAME_VN})
 set(SimTKCOMMON_STATIC_LIBRARY_VN ${SimTKCOMMON_LIBRARY_NAME_VN}_static)
+set(SimTKCOMMON_RECORDER_LIBRARY_VN ${SimTKCOMMON_LIBRARY_NAME_VN}_recorder)
 
 set(SimTKMATH_SHARED_LIBRARY ${SimTKMATH_LIBRARY_NAME})
 set(SimTKMATH_STATIC_LIBRARY ${SimTKMATH_LIBRARY_NAME}_static)
+set(SimTKMATH_RECORDER_LIBRARY ${SimTKMATH_LIBRARY_NAME}_recorder)
 
 set(SimTKMATH_LIBRARY_NAME_VN ${NS}SimTKmath${VN})
 set(SimTKMATH_SHARED_LIBRARY_VN ${SimTKMATH_LIBRARY_NAME_VN})
 set(SimTKMATH_STATIC_LIBRARY_VN ${SimTKMATH_LIBRARY_NAME_VN}_static)
+set(SimTKMATH_RECORDER_LIBRARY_VN ${SimTKMATH_LIBRARY_NAME_VN}_recorder)
 
 set(SimTKSIMBODY_SHARED_LIBRARY ${SimTKSIMBODY_LIBRARY_NAME})
 set(SimTKSIMBODY_STATIC_LIBRARY ${SimTKSIMBODY_LIBRARY_NAME}_static)
+set(SimTKSIMBODY_RECORDER_LIBRARY ${SimTKSIMBODY_LIBRARY_NAME}_recorder)
 
 set(SimTKSIMBODY_LIBRARY_NAME_VN ${NS}SimTKsimbody${VN})
 set(SimTKSIMBODY_SHARED_LIBRARY_VN ${SimTKSIMBODY_LIBRARY_NAME_VN})
 set(SimTKSIMBODY_STATIC_LIBRARY_VN ${SimTKSIMBODY_LIBRARY_NAME_VN}_static)
+set(SimTKSIMBODY_RECORDER_LIBRARY_VN ${SimTKSIMBODY_LIBRARY_NAME_VN}_recorder)
 
 
 # Caution: this variable is automatically created by the CMake
@@ -454,8 +468,11 @@ if(MSVC)
     set(mxcpu ${BUILD_LIMIT_PARALLEL_COMPILES}) # abbreviation
 
     ## C++
+    # Warning 4996 is emitted in DEBUG mode when using std::copy
+    # with raw pointers, as is done in MatrixHelperRep*.h". /wd4996
+    # tells MSVC to ignore this warning.
     set(BUILD_CXX_FLAGS_DEBUG
-    "/D _DEBUG /MDd /Od /Ob0 /RTC1 /Zi /GS- ${CL_INST_SET}") 
+    "/D _DEBUG /MDd /Od /Ob0 /RTC1 /Zi /GS- /wd4996 ${CL_INST_SET}") 
     set(BUILD_CXX_FLAGS_RELEASE
     "/D NDEBUG /MD  /O2 /Ob2 /Oi /GS- ${CL_INST_SET}")
     set(BUILD_CXX_FLAGS_RELWITHDEBINFO
@@ -547,17 +564,22 @@ endif()
 if(UNIX)
     if(NOT APPLE)
         set(REALTIME_LIB rt)
-        # We do not use pthreads directly anymore, but on Linux, C++11 threads
-        # are implemented with pthreads, and we must link to it.
-        set(PTHREAD_LIB pthread)
     endif()
     set(MATH_LIBRARY m)
     set(DL_LIBRARY dl)
 endif()
 
-set(MATH_LIBS_TO_USE    ${LAPACK_BEING_USED} ${PTHREAD_LIB}
+set(MATH_LIBS_TO_USE    ${LAPACK_BEING_USED} pthread
                         ${REALTIME_LIB} ${DL_LIBRARY} ${MATH_LIBRARY})
 set(MATH_LIBS_TO_USE_VN ${MATH_LIBS_TO_USE})
+
+# Recorder
+if(BUILD_RECORDER_LIBRARIES)
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+    find_package(RECORDER REQUIRED)
+    include_directories("${RECORDER_INCLUDES}")
+    simbody_copy_dlls(RECORDER "${RECORDER_DIR}/bin")
+endif()
 
 #
 # Allow automated build and dashboard.
@@ -587,12 +609,7 @@ if(BUILD_TESTING)
     add_custom_target(RUN_TESTS_PARALLEL COMMAND ${cmd})
 endif()
 
-# These are used in Doxyfile.in and SimbodyConfig.cmake.in.
-set(SIMBODY_INSTALL_DOXYGENDIR   "${CMAKE_INSTALL_DOCDIR}/api")
-set(SIMBODY_DOXYGEN_TAGFILE_NAME "SimbodyDoxygenTagfile")
-if( INSTALL_DOCS )
-    add_subdirectory(doc)
-endif()
+include(ApiDoxygen.cmake)
 
 # Specify where visualizer should be installed. This needs to be in the
 # root CMakeLists.txt so the cmake config file can see this value.
@@ -631,10 +648,8 @@ if( BUILD_EXAMPLES )
     add_subdirectory( examples )
 endif()
 
-if( INSTALL_DOCS )
-    file(GLOB TOPLEVEL_DOCS LICENSE.txt *.md doc/*.pdf doc/*.md)
-    install(FILES ${TOPLEVEL_DOCS} DESTINATION ${CMAKE_INSTALL_DOCDIR})
-endif()
+file(GLOB TOPLEVEL_DOCS LICENSE.txt *.md doc/*.pdf doc/*.txt doc/*.md)
+install(FILES ${TOPLEVEL_DOCS} DESTINATION ${CMAKE_INSTALL_DOCDIR})
 
 # Add uninstall target
 configure_file(
@@ -700,12 +715,12 @@ install(FILES ${CMAKE_SOURCE_DIR}/cmake/SampleCMakeLists.txt
 if(WIN32)
     if(${PLATFORM_ABI} MATCHES "x64")
         # win 64 bits
-        set(PKGCONFIG_PLATFORM_LIBS "-lliblapack -llibblas")
+        set(PKGCONFIG_PLATFORM_LIBS "-lliblapack -llibblas -lpthreadVC2_x64")
     else()
-        set(PKGCONFIG_PLATFORM_LIBS "-lliblapack -llibblas")
+        set(PKGCONFIG_PLATFORM_LIBS "-lliblapack -llibblas -lpthreadVC2")
     endif()
 elseif(APPLE)
-    set(PKGCONFIG_PLATFORM_LIBS     "-llapack -lblas -ldl")
+    set(PKGCONFIG_PLATFORM_LIBS     "-llapack -lblas -lpthread -ldl")
 else()
     set(PKGCONFIG_PLATFORM_LIBS     "-llapack -lblas -lpthread -lrt -ldl -lm")
 endif()

@@ -81,7 +81,7 @@ public:
         // This should be triggered when the pendulum crosses x == 0.
         
         Real x = state.getQ(pendulum.getGuts().getSubsysIndex())[0];
-        ASSERT(std::abs(x) < 0.01);
+        ASSERT(fabs(x) < 0.01);
         ASSERT(state.getTime() > lastEventTime);
         eventCount++;
         lastEventTime = state.getTime();
@@ -115,7 +115,7 @@ public:
         // negative direction: q[0] == -1, u[0] == 0.
         
         Vector u = state.getU(pendulum.getGuts().getSubsysIndex());
-        ASSERT(std::abs(u[0]) < 0.01);
+        ASSERT(fabs(u[0]) < 0.01);
         ASSERT(state.getTime() > lastEventTime);
         eventCount++;
         lastEventTime = state.getTime();
@@ -147,7 +147,7 @@ public:
                               * pendulum.getGravity(state);
         if (ZeroPositionHandler::hasAccelerated)
             expectedEnergy *= 1.5;
-        ASSERT(std::abs(1.0-energy/expectedEnergy) < 0.05);
+        ASSERT(fabs(1.0-energy/expectedEnergy) < 0.05);
     }
 private:
     PendulumSystem& pendulum;
@@ -173,8 +173,13 @@ public:
     DiscontinuousReporter() : TriggeredEventReporter(Stage::Time) {
     }
     Real getValue(const State& state) const override {
-        Real step = std::floor(state.getTime());
-        step = std::fmod(step, 4.0);
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			Real step = floor(state.getTime());
+			step = std::fmod(step, 4.0);
+		#else
+			double step = floor(state.getTime()).getValue();
+			step = std::fmod(step, 4.0);
+		#endif
         if (step == 0.0)
             return 1.0;
         if (step == 2.0)
@@ -184,10 +189,14 @@ public:
     void handleEvent(const State& state) const override {
         
         // This should be triggered when the value goes to 0, but not when it leaves 0.
-        
-        Real t = state.getTime();
-        Real phase = std::fmod(t, 2.0);
-        ASSERT(std::abs(phase-1.0) < 0.01);
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			Real t = state.getTime();
+			Real phase = std::fmod(t, 2.0);
+		#else
+			double t = state.getTime().getValue();
+			double phase = std::fmod(t, 2.0);
+		#endif
+        ASSERT(fabs(phase-1.0) < 0.01);
         eventCount++;
     }
 };
@@ -260,10 +269,10 @@ void testIntegrator (Integrator& integ, PendulumSystem& sys, Real accuracy=1e-4)
     ASSERT(ts.getTime() == tFinal);
     ASSERT(integ.getTerminationReason() == Integrator::ReachedFinalTime);
     ASSERT(ZeroVelocityHandler::eventCount > 10);
-    ASSERT(PeriodicHandler::eventCount == (int) (ts.getTime()/PeriodicHandler::handler->getEventInterval())+1);
+    ASSERT(PeriodicHandler::eventCount == (int) (ts.getTime()/PeriodicHandler::handler->getEventInterval()).value()+1);
     ASSERT(ZeroPositionHandler::eventCount > 10);
-    ASSERT(PeriodicReporter::eventCount == (int) (ts.getTime()/PeriodicReporter::reporter->getEventInterval())+1);
-    ASSERT(DiscontinuousReporter::eventCount == (int) (ts.getTime()/2.0));
+    ASSERT(PeriodicReporter::eventCount == (int) (ts.getTime()/PeriodicReporter::reporter->getEventInterval()).value()+1);
+    ASSERT(DiscontinuousReporter::eventCount == (int) (ts.getTime()/2.0).value());
 }
 
 #endif /*SimTK_SIMMATH_INTEGRATOR_TEST_FRAMEWORK_H_*/

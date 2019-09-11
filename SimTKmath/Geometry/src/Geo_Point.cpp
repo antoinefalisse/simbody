@@ -33,7 +33,6 @@ Non-inline static methods from the Geo::Point_ class. **/
 #include "simmath/internal/Geo_Box.h"
 #include "simmath/internal/Geo_Sphere.h"
 
-#include <set>
 #include <cstdio>
 #include <iostream>
 using std::cout; using std::endl;
@@ -262,12 +261,20 @@ calcPrincipalComponentsIndirect(const Array_<const Vec3P*>& points_F,
     // Calculate eigenvalues and eigenvectors.
     const Mat33P cov33(covariance);
     Matrix_<P> cov(cov33);
-    Vector_< std::complex<P> > evals;
-    Matrix_< std::complex<P> > evecs;
-    Eigen(cov).getAllEigenValuesAndVectors(evals, evecs);
+	
+	#ifndef SimTK_REAL_IS_ADOUBLE
+		Vector_< std::complex<P> > evals;
+		Matrix_< std::complex<P> > evecs;
+		Eigen(cov).getAllEigenValuesAndVectors(evals, evecs);
+		// Find the largest and smallest eigenvalues and corresponding vectors.
+		const Vec3P vals(evals[0].real(), evals[1].real(), evals[2].real());
+	#else
+		const Vec3P vals(0);
+		throw std::runtime_error("complex numbers not supported with Recorder");	
+	#endif
 
-    // Find the largest and smallest eigenvalues and corresponding vectors.
-    const Vec3P vals(evals[0].real(), evals[1].real(), evals[2].real());
+
+    
     int minIx, maxIx; RealP minVal, maxVal;
     minOf(vals[0], vals[1], vals[2], minVal, minIx);
     maxOf(vals[0], vals[1], vals[2], maxVal, maxIx);
@@ -275,15 +282,20 @@ calcPrincipalComponentsIndirect(const Array_<const Vec3P*>& points_F,
     if (maxIx == minIx) // eigenvalues must all be the same
         maxIx = (minIx+1) % 3; // pick a different axis
 
-    // Eigenvectors for a real symmetric matrix are perpendicular and
-    // normalized already.
-    UnitVec3P longAxis( Vec3P(evecs(0,maxIx).real(), evecs(1,maxIx).real(), 
-                              evecs(2,maxIx).real()), 
-                        true); // "trust me" to prevent normalizing
-    UnitVec3P shortAxis(Vec3P(evecs(0,minIx).real(), evecs(1,minIx).real(), 
-                              evecs(2,minIx).real()), 
-                        true);
-    X_FP.updR() = RotationP(longAxis, XAxis, shortAxis, YAxis);
+	#ifndef SimTK_REAL_IS_ADOUBLE
+		// Eigenvectors for a real symmetric matrix are perpendicular and
+		// normalized already.
+		UnitVec3P longAxis( Vec3P(evecs(0,maxIx).real(), evecs(1,maxIx).real(), 
+								  evecs(2,maxIx).real()), 
+							true); // "trust me" to prevent normalizing
+		UnitVec3P shortAxis(Vec3P(evecs(0,minIx).real(), evecs(1,minIx).real(), 
+								  evecs(2,minIx).real()), 
+							true);
+		X_FP.updR() = RotationP(longAxis, XAxis, shortAxis, YAxis);
+	
+	#else
+		throw std::runtime_error("complex numbers not supported with Recorder");
+	#endif
 }
 
 //==============================================================================
@@ -453,8 +465,12 @@ public:
     // This function calculates the volume as a function of rotation angles
     // relative to the starting frame B0.
     int f(const Vector& angles, Real& volume) const override {
-        Vec3P a; a[0] = P(angles[0]); a[1] = P(angles[1]); a[2] = P(angles[2]);
-        Rotation_<P> R_B0B(BodyRotationSequence,
+	 	#ifndef SimTK_REAL_IS_ADOUBLE
+			Vec3P a; a[0] = P(angles[0]); a[1] = P(angles[1]); a[2] = P(angles[2]);
+		#else
+			Vec3P a; a[0] = P(angles[0].getValue()); a[1] = P(angles[1].getValue()); a[2] = P(angles[2].getValue());
+		#endif
+		Rotation_<P> R_B0B(BodyRotationSequence,
                            a[0], XAxis, a[1], YAxis, a[2], ZAxis);
         int least[3], most[3];
         Vec<3,P> low_B, high_B;
@@ -475,14 +491,14 @@ Geo::OrientedBox_<P> Geo::Point_<P>::
 calcOrientedBoundingBoxIndirect(const Array_<const Vec3P*>& points_F,
                                 Array_<int>&                support,
                                 bool                        optimize) {
-    TransformP X_FB0;
+	TransformP X_FB0;
     //TODO: this is not a good initial guess because it is sensitive to
     // point clustering and distribution of interior points. Should start
     // with a convex hull, get the mass properties of that and use principal
     // moments as directions.
     calcPrincipalComponentsIndirect(points_F, X_FB0);
-
-    // We'll update these as we go.
+	
+	// We'll update these as we go.
     RotationP R_FB = X_FB0.R();
     Vec3P center_F = X_FB0.p();
 
@@ -507,7 +523,11 @@ calcOrientedBoundingBoxIndirect(const Array_<const Vec3P*>& points_F,
         Differentiator diff(grad);
         Vector g;
         diff.calcGradient(Vector(3, Real(0)), (Real)volume, g);
-        Vec3P dir; dir[0]=P(g[0]); dir[1]=P(g[1]); dir[2]=P(g[2]);
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			Vec3P dir; dir[0]=P(g[0]); dir[1]=P(g[1]); dir[2]=P(g[2]);
+		#else
+			Vec3P dir; dir[0] = P(g[0].getValue()); dir[1] = P(g[1].getValue()); dir[2] = P(g[2].getValue());
+		#endif
 
         // Gradient has units of volume/radian.
         // Set initial step to attempt a 10% volume reduction.
@@ -522,13 +542,14 @@ calcOrientedBoundingBoxIndirect(const Array_<const Vec3P*>& points_F,
             Rotation_<P> R_B0B(BodyRotationSequence,
                                a[0], XAxis, a[1], YAxis, a[2], ZAxis);
             Rotation_<P> tryR_FB = X_FB0.R()*R_B0B;
+
             int tryLeast[3], tryMost[3];
             Vec3P tryLow_B, tryHigh_B;
             findOrientedExtremePointsIndirect
                    (points_F, tryR_FB, tryLeast, tryMost, tryLow_B, tryHigh_B);
             Vec3P tryExtent_B = tryHigh_B - tryLow_B;
             RealP tryVol = tryExtent_B[0]*tryExtent_B[1]*tryExtent_B[2];
-
+			
             if (tryVol < volume) {
                 const RealP improvement = (volume-tryVol)/volume;
                 for (int j=0; j<3; ++j) 
@@ -537,15 +558,16 @@ calcOrientedBoundingBoxIndirect(const Array_<const Vec3P*>& points_F,
                 extent_B = tryExtent_B;
                 center_F = R_FB*(tryHigh_B+tryLow_B)/2;
                 volume = tryVol;
+				
                 if (improvement < MinImprovement)
                     break;           
                 incr *= RealP(1.5); // grow slowly
-                continue;
+				continue;
             } 
 
             // Volume got worse.
             step += incr; // back to previous best 
-            if (incr <= minIncr) 
+			if (incr <= minIncr) 
                 break;
             incr /= 10; // shrink fast
         }
@@ -559,7 +581,11 @@ calcOrientedBoundingBoxIndirect(const Array_<const Vec3P*>& points_F,
     }
     support.assign(supportSet.begin(), supportSet.end());
     
-    OrientedBox_<P> obb(TransformP(R_FB,center_F), extent_B/2);
+	Transform_<P> Trans_aux;
+	Trans_aux.setP(center_F);
+	Trans_aux.set(R_FB, center_F);
+	OrientedBox_<P> obb(Trans_aux, extent_B / 2);
+
     return obb.stretchBoundary();
 }
 
@@ -609,13 +635,13 @@ calcBoundingSphere(const Vec3P& p0, const Vec3P& p1, Array_<int>& which) {
     RealP rad;
     which.clear();
     if (p0d2 >= p1d2) {
-        rad = std::sqrt(p0d2);          // 20 flops
+        rad = NTraits<RealP>::sqrt(p0d2);          // 20 flops
         if (rad <= tol/2) {             //  2 flops
             which.push_back(1);
             return Sphere_<P>(p1, 0).stretchBoundary(); 
         }
     } else { // p1d2 > p0d2
-        rad = std::sqrt(p1d2);          // same cost here
+        rad = NTraits<RealP>::sqrt(p1d2);          // same cost here
         if (rad <= tol/2) {
             which.push_back(0);
             return Sphere_<P>(p0, 0).stretchBoundary(); 
@@ -788,7 +814,7 @@ calcBoundingSphere(const Vec3P& a, const Vec3P& b, const Vec3P& c,
     RealP rmax2; int rmaxIx;
     maxOf((a-ctr).normSqr(),(b-ctr).normSqr(),(c-ctr).normSqr(),
             rmax2, rmaxIx);                          // 27 flops
-    const RealP rad = std::sqrt(rmax2);              // 20 flops
+    const RealP rad = NTraits<RealP>::sqrt(rmax2);              // 20 flops
 
     // If the max radius point wasn't in the support set, we have to add it.
     if (   which.size() < 3 
@@ -1000,7 +1026,7 @@ calcBoundingSphere(const Vec3P& a, const Vec3P& b,
     maxOf((a-ctr).normSqr(),(b-ctr).normSqr(),
           (c-ctr).normSqr(),(d-ctr).normSqr(),
           rmax2, rmaxIx);                            // 35 flops
-    const RealP rad = std::sqrt(rmax2);              // 20 flops
+    const RealP rad = NTraits<RealP>::sqrt(rmax2);              // 20 flops
 
     // If the max radius point wasn't in the support set, we have to add it.
     if (   which.size() < 4 
@@ -1202,7 +1228,7 @@ calcBoundingSphere(const Array_<Vec3P>& points, Array_<int>& which) {
 //        // Not worth rearranging.
 //        return findWelzlSphere<P>(points, ix, 1, which, 0);
 //    }
-//
+//	
 //    // There are enough points that we'll try to improve the ordering so that
 //    // the bounding sphere gets large quickly. This optimization helps *a lot* 
 //    // for large numbers of points.
@@ -1210,7 +1236,7 @@ calcBoundingSphere(const Array_<Vec3P>& points, Array_<int>& which) {
 //    // Find the six points that have the most extreme
 //    // x,y, and z coordinates (not necessarily six unique points) and move
 //    // them to the front so they get processed first.
-//    Vec3P lo=*points[0], hi=*points[0]; // initialize extremes
+//	Vec3P lo=*points[0], hi=*points[0]; // initialize extremes
 //    int   ilo[3], ihi[3]; for (int i=0; i<3; ++i) ilo[i]=ihi[i]=0;
 //    for (unsigned i=0; i<points.size(); ++i) {
 //        const Vec3P& p = *points[i];
@@ -1348,7 +1374,7 @@ calcApproxBoundingSphereIndirect(const Array_<const Vec3P*>& points) {
     ctr = (pmin+pmax)/2;
     // Calculating radius this way ensures that roundoff won't leave one of
     // the points outside. We'll do a final roundoff adjustment at the end.
-    rad = std::sqrt(std::max((pmax-ctr).normSqr(),
+    rad = NTraits<RealP>::sqrt(fmax((pmax-ctr).normSqr(),
                              (pmin-ctr).normSqr()));
 
     // Now run through all the points again and grow the sphere if necessary. 
@@ -1358,14 +1384,14 @@ calcApproxBoundingSphereIndirect(const Array_<const Vec3P*>& points) {
         const Vec3P ctr2p = p-ctr; 
         const RealP dist2 = ctr2p.normSqr();
         if (dist2 > square(rad)) {
-            const RealP dist   = std::sqrt(dist2);
+            const RealP dist   = NTraits<RealP>::sqrt(dist2);
             const RealP newrad = (dist + rad)/2;
             ctr += (newrad - rad)/dist * ctr2p; // has roundoff issues
             rad = newrad;
             // Make sure we didn't miss the new point due to roundoff.
             const RealP newdist2 = (p-ctr).normSqr();
             if (newdist2 > square(rad)) 
-                rad = std::sqrt(newdist2);
+                rad = NTraits<RealP>::sqrt(newdist2);
         }
     }
 
@@ -1375,6 +1401,6 @@ calcApproxBoundingSphereIndirect(const Array_<const Vec3P*>& points) {
 // Explicit instantiations for float and double.
 template class Geo::Point_<float>;
 template class Geo::Point_<double>;
-
+template class Geo::Point_<Real>;
 
 }  // End of namespace SimTK

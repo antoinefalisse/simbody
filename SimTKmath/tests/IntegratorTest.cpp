@@ -26,6 +26,9 @@
  */
 
 #include "SimTKcommon.h"
+
+#ifndef SimTK_REAL_IS_ADOUBLE
+
 #include "SimTKcommon/internal/SystemGuts.h"
 
 #include "SimTKmath.h"
@@ -124,7 +127,7 @@ public:
         Array_<EventId>& eventIds, bool includeCurrentTime) const override
     {
         // Generate an event every 5.123 seconds.
-        int nFives = (int)(s.getTime() / 5.123); // rounded down
+        int nFives = (int)(s.getTime().value() / 5.123); // rounded down
         if (s.getTime()==0) nFives=1; // don't start with the event
 
         tNextEvent = nFives * Real(5.123);
@@ -649,7 +652,7 @@ static Real wrms(const Vector& y, const Vector& w) {
     Real sumsq = 0;
     for (int i=0; i<y.size(); ++i)
         sumsq += square(y[i]*w[i]);
-    return std::sqrt(sumsq/y.size());
+    return sqrt(sumsq/y.size());
 }
 
 // qerrest is in/out
@@ -673,11 +676,11 @@ void MyPendulumGuts::projectQImpl(State& s, Vector& qerrest,
     results.setAnyChangeMade(false);
 
     //cout << "BEFORE wperr=" << tp*ep << endl;
-    if (!forceProj && std::abs(tp*ep) <= consAccuracy) {
+    if (!forceProj && fabs(tp*ep) <= consAccuracy) {
         results.setExitStatus(ProjectResults::Succeeded);
         return;
     }
-    if (std::abs(tp*ep) > projLimit) {
+    if (fabs(tp*ep) > projLimit) {
         results.setProjectionLimitExceeded(true);
         results.setExitStatus(ProjectResults::FailedToConverge);
         ++qProjFail;
@@ -697,14 +700,14 @@ void MyPendulumGuts::projectQImpl(State& s, Vector& qerrest,
         Vec2 dq  = Pinv*(ep);      //cout << "dq=" << dq << endl;
         Vec2 wdq = PWinv*(tp*ep);  //cout << "wdq=" << wdq << endl;
     
-        wqchg = std::sqrt(wdq.normSqr()/q.size()); // wrms norm
+        wqchg = sqrt(wdq.normSqr()/q.size()); // wrms norm
     
         s.updQ(subsysIndex)[0] -= wdq[0]/wq[0]; 
         s.updQ(subsysIndex)[1] -= wdq[1]/wq[1]; 
         realize(s, Stage::Position); // recalc QErr (ep)
     
         //cout << "AFTER q-=wdq/W wperr=" << tp*ep << " wqchg=" << wqchg << endl;
-    } while (std::abs(tp*ep) > consAccuracy && wqchg >= 0.01*consAccuracy);
+    } while (fabs(tp*ep) > consAccuracy && wqchg >= 0.01*consAccuracy);
     
     //cout << "...AFTER wperr=" << tp*ep << endl;
 
@@ -753,11 +756,11 @@ void MyPendulumGuts::projectUImpl(State& s, Vector& uerrest,
     results.setAnyChangeMade(false);
 
     //cout << "BEFORE wverr=" << tv*ev << endl;
-    if (!forceProj && std::abs(tv*ev) <= consAccuracy) {
+    if (!forceProj && fabs(tv*ev) <= consAccuracy) {
         results.setExitStatus(ProjectResults::Succeeded);
         return;
     }
-    if (std::abs(tv*ev) > projLimit) {
+    if (fabs(tv*ev) > projLimit) {
         results.setProjectionLimitExceeded(true);
         results.setExitStatus(ProjectResults::FailedToConverge);
         ++uProjFail;
@@ -810,4 +813,8 @@ void MyPendulumGuts::projectUImpl(State& s, Vector& uerrest,
 }
 
 
-
+#else
+void main() {
+	std::cout << "Integrators not supported with adouble" << std::endl;
+}
+#endif

@@ -407,112 +407,112 @@ void testFunctions(double& flopTime, bool flopTimeOnly=false) {
 
     for (int i = 0; i < 100000000/2; i++) {
         const Real ir = (Real)i;
-        sqrtRes += std::sqrt(ir+(Real)0.001); // two adds
-        sqrtRes += std::sqrt(ir+(Real)0.1);
-        sqrtRes += std::sqrt(ir+(Real)0.2);
-        sqrtRes += std::sqrt(ir+(Real)0.3);
-        sqrtRes += std::sqrt(ir+(Real)0.4);
-        sqrtRes += std::sqrt(ir+(Real)0.501);
-        sqrtRes += std::sqrt(ir+(Real)0.6);
-        sqrtRes += std::sqrt(ir+(Real)0.7);
-        sqrtRes += std::sqrt(ir+(Real)0.8);
-        sqrtRes += std::sqrt(ir+(Real)0.9);
+        sqrtRes += sqrt(ir+(Real)0.001); // two adds
+        sqrtRes += sqrt(ir+(Real)0.1);
+        sqrtRes += sqrt(ir+(Real)0.2);
+        sqrtRes += sqrt(ir+(Real)0.3);
+        sqrtRes += sqrt(ir+(Real)0.4);
+        sqrtRes += sqrt(ir+(Real)0.501);
+        sqrtRes += sqrt(ir+(Real)0.6);
+        sqrtRes += sqrt(ir+(Real)0.7);
+        sqrtRes += sqrt(ir+(Real)0.8);
+        sqrtRes += sqrt(ir+(Real)0.9);
     }
     t = threadCpuTime(); double sqrtTime=2*(t-tprev)-2*addTime;
     printf("sqrt %gs\n", t-tprev);
     tprev = threadCpuTime();
     for (int i = 0; i < 100000000/4; i++) {
         const Real ir = (Real)i;
-        oosqrtRes += 1/std::sqrt(ir+(Real)0.001); // two adds
-        oosqrtRes += 1/std::sqrt(ir+(Real)0.1);
-        oosqrtRes += 1/std::sqrt(ir+(Real)0.2);
-        oosqrtRes += 1/std::sqrt(ir+(Real)0.3);
-        oosqrtRes += 1/std::sqrt(ir+(Real)0.4);
-        oosqrtRes += 1/std::sqrt(ir+(Real)0.501);
-        oosqrtRes += 1/std::sqrt(ir+(Real)0.6);
-        oosqrtRes += 1/std::sqrt(ir+(Real)0.7);
-        oosqrtRes += 1/std::sqrt(ir+(Real)0.8);
-        oosqrtRes += 1/std::sqrt(ir+(Real)0.9);
+        oosqrtRes += 1/sqrt(ir+(Real)0.001); // two adds
+        oosqrtRes += 1/sqrt(ir+(Real)0.1);
+        oosqrtRes += 1/sqrt(ir+(Real)0.2);
+        oosqrtRes += 1/sqrt(ir+(Real)0.3);
+        oosqrtRes += 1/sqrt(ir+(Real)0.4);
+        oosqrtRes += 1/sqrt(ir+(Real)0.501);
+        oosqrtRes += 1/sqrt(ir+(Real)0.6);
+        oosqrtRes += 1/sqrt(ir+(Real)0.7);
+        oosqrtRes += 1/sqrt(ir+(Real)0.8);
+        oosqrtRes += 1/sqrt(ir+(Real)0.9);
     }
     t = threadCpuTime(); double oosqrtTime=4*(t-tprev)-2*addTime;
     printf("1/sqrt %gs\n", t-tprev);
     tprev = threadCpuTime();
     for (int i = 0; i < 100000000/5; i++) {
         const Real ir = (Real)i;
-        logRes += std::log(ir+(Real)0.001); // two adds
-        logRes += std::log(ir+(Real)0.1);
-        logRes += std::log(ir+(Real)0.2);
-        logRes += std::log(ir+(Real)0.3);
-        logRes += std::log(ir+(Real)0.4);
-        logRes += std::log(ir+(Real)0.501);
-        logRes += std::log(ir+(Real)0.6);
-        logRes += std::log(ir+(Real)0.7);
-        logRes += std::log(ir+(Real)0.8);
-        logRes += std::log(ir+(Real)0.9);
+        logRes += log(ir+(Real)0.001); // two adds
+        logRes += log(ir+(Real)0.1);
+        logRes += log(ir+(Real)0.2);
+        logRes += log(ir+(Real)0.3);
+        logRes += log(ir+(Real)0.4);
+        logRes += log(ir+(Real)0.501);
+        logRes += log(ir+(Real)0.6);
+        logRes += log(ir+(Real)0.7);
+        logRes += log(ir+(Real)0.8);
+        logRes += log(ir+(Real)0.9);
     }
     t = threadCpuTime(); double logTime=(t-tprev)*5-2*addTime;
     printf("log %gs\n", t-tprev);
     tprev = threadCpuTime();
     for (int i = 0; i < 100000000/5; i++) {
         const Real ir = (Real).000000001*(Real)i;
-        expRes += std::exp(ir+(Real)0.001); // two adds
-        expRes += std::exp(ir+(Real)0.1);
-        expRes += std::exp(ir+(Real)0.2);
-        expRes += std::exp(ir+(Real)0.3);
-        expRes += std::exp(ir+(Real)0.4);
-        expRes += std::exp(ir+(Real)0.501);
-        expRes += std::exp(ir+(Real)0.6);
-        expRes += std::exp(ir+(Real)0.7);
-        expRes += std::exp(ir+(Real)0.8);
-        expRes += std::exp(ir+(Real)0.9);
+        expRes += exp(ir+(Real)0.001); // two adds
+        expRes += exp(ir+(Real)0.1);
+        expRes += exp(ir+(Real)0.2);
+        expRes += exp(ir+(Real)0.3);
+        expRes += exp(ir+(Real)0.4);
+        expRes += exp(ir+(Real)0.501);
+        expRes += exp(ir+(Real)0.6);
+        expRes += exp(ir+(Real)0.7);
+        expRes += exp(ir+(Real)0.8);
+        expRes += exp(ir+(Real)0.9);
     }
     t = threadCpuTime(); double expTime=(t-tprev)*5-2*addTime;
     printf("exp %gs\n", t-tprev);
     tprev = threadCpuTime();
     for (int i = 0; i < 100000000/10; i++) {
         const Real ir = (Real)i;
-        sinRes += std::sin(ir+(Real)0.001); // two adds
-        sinRes += std::sin(ir+(Real)0.1);
-        sinRes += std::sin(ir+(Real)0.2);
-        sinRes += std::sin(ir+(Real)0.3);
-        sinRes += std::sin(ir+(Real)0.4);
-        sinRes += std::sin(ir+(Real)0.501);
-        sinRes += std::sin(ir+(Real)0.6);
-        sinRes += std::sin(ir+(Real)0.7);
-        sinRes += std::sin(ir+(Real)0.8);
-        sinRes += std::sin(ir+(Real)0.9);
+        sinRes += sin(ir+(Real)0.001); // two adds
+        sinRes += sin(ir+(Real)0.1);
+        sinRes += sin(ir+(Real)0.2);
+        sinRes += sin(ir+(Real)0.3);
+        sinRes += sin(ir+(Real)0.4);
+        sinRes += sin(ir+(Real)0.501);
+        sinRes += sin(ir+(Real)0.6);
+        sinRes += sin(ir+(Real)0.7);
+        sinRes += sin(ir+(Real)0.8);
+        sinRes += sin(ir+(Real)0.9);
     }
     t = threadCpuTime(); double sinTime=(t-tprev)*10-2*addTime;
     printf("sin %gs\n", t-tprev);
     tprev = threadCpuTime();
     for (int i = 0; i < 100000000/10; i++) {
         const Real ir = (Real)i;
-        cosRes += std::cos(ir+(Real)0.001); // two adds
-        cosRes += std::cos(ir+(Real)0.1);
-        cosRes += std::cos(ir+(Real)0.2);
-        cosRes += std::cos(ir+(Real)0.3);
-        cosRes += std::cos(ir+(Real)0.4);
-        cosRes += std::cos(ir+(Real)0.501);
-        cosRes += std::cos(ir+(Real)0.6);
-        cosRes += std::cos(ir+(Real)0.7);
-        cosRes += std::cos(ir+(Real)0.8);
-        cosRes += std::cos(ir+(Real)0.9);
+        cosRes += cos(ir+(Real)0.001); // two adds
+        cosRes += cos(ir+(Real)0.1);
+        cosRes += cos(ir+(Real)0.2);
+        cosRes += cos(ir+(Real)0.3);
+        cosRes += cos(ir+(Real)0.4);
+        cosRes += cos(ir+(Real)0.501);
+        cosRes += cos(ir+(Real)0.6);
+        cosRes += cos(ir+(Real)0.7);
+        cosRes += cos(ir+(Real)0.8);
+        cosRes += cos(ir+(Real)0.9);
     }
     t = threadCpuTime(); double cosTime=(t-tprev)*10-2*addTime;
     printf("cos %gs\n", t-tprev);
     tprev = threadCpuTime();
     for (int i = 0; i < 100000000/10; i++) {
         const Real ir = (Real)i;
-        atan2Res += std::atan2(ir+(Real)0.001,ir-(Real)0.001); // three adds
-        atan2Res += std::atan2(ir+(Real)0.1,ir-(Real)0.1);
-        atan2Res += std::atan2(ir+(Real)0.2,ir-(Real)0.2);
-        atan2Res += std::atan2(ir+(Real)0.3,ir-(Real)0.3);
-        atan2Res += std::atan2(ir+(Real)0.4,ir-(Real)0.4);
-        atan2Res += std::atan2(ir+(Real)0.501,ir-(Real)0.501);
-        atan2Res += std::atan2(ir+(Real)0.6,ir-(Real)0.6);
-        atan2Res += std::atan2(ir+(Real)0.7,ir-(Real)0.7);
-        atan2Res += std::atan2(ir+(Real)0.8,ir-(Real)0.8);
-        atan2Res += std::atan2(ir+(Real)0.9,ir-(Real)0.9);
+        atan2Res += atan2(ir+(Real)0.001,ir-(Real)0.001); // three adds
+        atan2Res += atan2(ir+(Real)0.1,ir-(Real)0.1);
+        atan2Res += atan2(ir+(Real)0.2,ir-(Real)0.2);
+        atan2Res += atan2(ir+(Real)0.3,ir-(Real)0.3);
+        atan2Res += atan2(ir+(Real)0.4,ir-(Real)0.4);
+        atan2Res += atan2(ir+(Real)0.501,ir-(Real)0.501);
+        atan2Res += atan2(ir+(Real)0.6,ir-(Real)0.6);
+        atan2Res += atan2(ir+(Real)0.7,ir-(Real)0.7);
+        atan2Res += atan2(ir+(Real)0.8,ir-(Real)0.8);
+        atan2Res += atan2(ir+(Real)0.9,ir-(Real)0.9);
     }
     t = threadCpuTime(); double atan2Time=(t-tprev)*10-3*addTime;
     printf("atan2 %gs\n", t-tprev);

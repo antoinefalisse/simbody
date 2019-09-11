@@ -63,7 +63,7 @@ public:
     }
     Parameters(Real stiffness, Real dissipation, 
                Real staticFriction, Real dynamicFriction, Real viscousFriction) 
-    :   stiffness(std::pow(stiffness, Real(2./3.))), dissipation(dissipation), 
+        : stiffness(NTraits<Real>::pow(stiffness, Real(2. / 3.))), dissipation(dissipation),
         staticFriction(staticFriction), dynamicFriction(dynamicFriction), 
         viscousFriction(viscousFriction) {}
     Real stiffness, dissipation, staticFriction, 

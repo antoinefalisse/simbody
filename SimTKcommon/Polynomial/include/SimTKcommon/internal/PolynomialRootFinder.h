@@ -57,7 +57,9 @@ namespace SimTK {
 class SimTK_SimTKCOMMON_EXPORT PolynomialRootFinder {
 public:
     class ZeroLeadingCoefficient;
-    /**
+   
+#ifndef SimTK_REAL_IS_ADOUBLE
+	/**
      * Find the roots of a quadratic polynomial with real coefficients.
      * 
      * @param coefficients     The polynomial coefficients in order of decreasing powers
@@ -65,7 +67,8 @@ public:
      */
     template <class T>
     static void findRoots(const Vec<3,T>& coefficients, Vec<2,complex<T> >& roots);
-    /**
+
+	/**
      * Find the roots of a quadratic polynomial with complex coefficients.
      * 
      * @param coefficients     The polynomial coefficients in order of decreasing powers
@@ -97,7 +100,7 @@ public:
      */
     template <class T>
     static void findRoots(const Vector_<T>& coefficients, Vector_<complex<T> >& roots);
-    /**
+	/**
      * Find the roots of a polynomial of arbitrary degree with complex coefficients.
      * 
      * @param coefficients     The polynomial coefficients in order of decreasing powers
@@ -105,6 +108,26 @@ public:
      */
     template <class T>
     static void findRoots(const Vector_<complex<T> >& coefficients, Vector_<complex<T> >& roots);
+#else
+	/**
+	* Find the roots of a quadratic polynomial with Recorder's (if the solution are
+	complex numbers, it will throw an error.
+	*
+	* @param coefficients     The polynomial coefficients in order of decreasing powers
+	* @param roots            On exit, the roots of the polynomial are stored in this
+	*/
+	template <class Recorder>
+	static void findRoots(const Vec<3, Recorder>& coefficients, Vec<2, Recorder>& roots);
+	/**
+	* Find the roots of a polynomial of arbitrary degree with real coefficients.
+	*
+	* @param coefficients     The polynomial coefficients in order of decreasing powers
+	* @param roots            On exit, the roots of the polynomial are stored in this
+	*/
+	template <class Recorder>
+	static void findRoots(const Vector_<Recorder>& coefficients, Vector_<Recorder>& roots);
+#endif
+
 };
 
 /**

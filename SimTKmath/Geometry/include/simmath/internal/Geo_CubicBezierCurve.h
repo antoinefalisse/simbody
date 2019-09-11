@@ -259,10 +259,15 @@ for this precision. Cost is 3x15=45 flops. **/
 void split(RealP u, CubicBezierCurve_<P>& left, 
                     CubicBezierCurve_<P>& right) const {
     const RealP tol = getDefaultTol<RealP>();
-    SimTK_ERRCHK1(tol <= u && u <= 1-tol, "Geo::CubicBezierCurve::split()",
-        "Can't split curve at parameter %g; it is either out of range or"
-        " too close to an end point.", (double)u);
-
+	#ifdef SimTK_REAL_IS_ADOUBLE
+		SimTK_ERRCHK1(tol <= u && u <= 1-tol, "Geo::CubicBezierCurve::split()",
+			"Can't split curve at parameter %g; it is either out of range or"
+			" too close to an end point.", Recorder(u).getValue());
+	#else
+		SimTK_ERRCHK1(tol <= u && u <= 1 - tol, "Geo::CubicBezierCurve::split()",
+			"Can't split curve at parameter %g; it is either out of range or"
+			" too close to an end point.", (double)u);
+	#endif
     const RealP u1 = 1-u;
     const Vec3P p01 = u1*B[0] + u*B[1];                     // 3x9 flops
     const Vec3P p12 = u1*B[1] + u*B[2];

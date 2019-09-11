@@ -32,7 +32,6 @@
 #include "simmath/Differentiator.h"
 #include "simmath/internal/ContactGeometry.h"
 
-#include <atomic>
 #include <limits>
 
 namespace SimTK {
@@ -65,7 +64,7 @@ public:
     (thread safe). Each distinct type of ContactGeometry should use this to
     initialize a static variable for that concrete class. */
     static ContactGeometryTypeId  createNewContactGeometryTypeId()
-    {   static std::atomic<int> nextAvailableId(1);
+    {   static AtomicInteger nextAvailableId = 1;
         return ContactGeometryTypeId(nextAvailableId++); }
 
     virtual ContactGeometryImpl*  clone() const = 0;
@@ -205,7 +204,7 @@ public:
     // Calculate a unit tangent vector based on angle theta measured from the
     // binormal axis of the given rotation matrix
     static UnitVec3 calcUnitTangentVec(const Real& theta, const Rotation& R_GS) {
-        UnitVec3 tR_S(std::sin(theta), std::cos(theta), 0);
+        UnitVec3 tR_S(NTraits<Real>::sin(theta), NTraits<Real>::cos(theta), 0);
         return R_GS*tR_S;
     }
 

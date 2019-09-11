@@ -13,7 +13,7 @@
 #include "IpPDSystemSolver.hpp"
 #include "IpIpoptCalculatedQuantities.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   /** Implementation of the probing strategy for computing the

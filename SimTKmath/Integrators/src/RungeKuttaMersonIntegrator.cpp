@@ -134,7 +134,7 @@ bool RungeKuttaMersonIntegratorRep::attemptODEStep
 
     const Vector& y1 = getAdvancedState().getY();
     for (int i=0; i<y1.size(); ++i)
-        y1err[i] = Real(.2)*std::abs(y1[i]-ysave[i]);
+        y1err[i] = Real(.2)*fabs(y1[i]-ysave[i]);
 
     return true;
 }

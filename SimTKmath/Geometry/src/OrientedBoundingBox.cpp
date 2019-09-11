@@ -61,14 +61,17 @@ OrientedBoundingBox::OrientedBoundingBox(const Vector_<Vec3>& points) {
     
     // Find the eigenvectors, which will be our initial guess for the axes of 
     // the box.
-    
-    Vector_<std::complex<Real> > eigenvalues;
-    Matrix_<std::complex<Real> > eigenvectors;
-    Eigen(Matrix(c)).getAllEigenValuesAndVectors(eigenvalues, eigenvectors);
-    Vec3 axes[3];
-    for (int i = 0; i < 2; i++)
-        for (int j = 0; j < 3; j++)
-            axes[i][j] = eigenvectors(j, i).real();
+	Vec3 axes[3];
+	#ifndef SimTK_REAL_IS_ADOUBLE*/
+		Vector_<std::complex<Real> > eigenvalues;
+		Matrix_<std::complex<Real> > eigenvectors;
+		Eigen(Matrix(c)).getAllEigenValuesAndVectors(eigenvalues, eigenvectors);
+		for (int i = 0; i < 2; i++)
+			for (int j = 0; j < 3; j++)
+				axes[i][j] = eigenvectors(j, i).real();
+	#else
+		throw std::runtime_error("complex numbers not supported with Recorder");
+	#endif*/
 
     // Now try optimizing the rotation to give a better fit.
     
@@ -106,8 +109,8 @@ OrientedBoundingBox::OrientedBoundingBox(const Vector_<Vec3>& points) {
     Vec3 maxExtent = Vec3(MostNegativeReal);
     for (int i = 0; i < points.size(); i++) {
         for (int j = 0; j < 3; j++) {
-            minExtent[j] = std::min(minExtent[j], ~axes[j]*points[i]);
-            maxExtent[j] = std::max(maxExtent[j], ~axes[j]*points[i]);
+            minExtent[j] = fmin(minExtent[j], ~axes[j]*points[i]);
+            maxExtent[j] = fmax(maxExtent[j], ~axes[j]*points[i]);
         }
     }
     
@@ -170,7 +173,7 @@ bool OrientedBoundingBox::intersectsBox(const OrientedBoundingBox& box) const {
     for (int i = 0; i < 3; i++) {
         Real ra = a[i];
         Real rb = rabs.row(i)*b;
-        Real distance = std::abs(d[i]);
+        Real distance = fabs(d[i]);
         if (distance > ra+rb)
             return false;
         if (distance > ra)
@@ -185,7 +188,7 @@ bool OrientedBoundingBox::intersectsBox(const OrientedBoundingBox& box) const {
     for (int i = 0; i < 3; i++) {
         Real ra = ~a*rabs.col(i);
         Real rb = b[i];
-        Real distance = std::abs(d[0]*r(0, i)+d[1]*r(1, i)+d[2]*r(2, i));
+        Real distance = fabs(d[0]*r(0, i)+d[1]*r(1, i)+d[2]*r(2, i));
         if (distance > ra+rb)
             return false;
         if (distance > rb)
@@ -200,56 +203,56 @@ bool OrientedBoundingBox::intersectsBox(const OrientedBoundingBox& box) const {
     {
         Real ra = a[1]*rabs(2, 0)+a[2]*rabs(1, 0);
         Real rb = b[1]*rabs(0, 2)+b[2]*rabs(0, 1);
-        if (std::abs(d[2]*r(1, 0) - d[1]*r(2, 0)) > ra+rb)
+        if (fabs(d[2]*r(1, 0) - d[1]*r(2, 0)) > ra+rb)
             return false;
     }
     {
         Real ra = a[1]*rabs(2, 1)+a[2]*rabs(1, 1);
         Real rb = b[0]*rabs(0, 2)+b[2]*rabs(0, 0);
-        if (std::abs(d[2]*r(1, 1) - d[1]*r(2, 1)) > ra+rb)
+        if (fabs(d[2]*r(1, 1) - d[1]*r(2, 1)) > ra+rb)
             return false;
     }
     {
         Real ra = a[1]*rabs(2, 2)+a[2]*rabs(1, 2);
         Real rb = b[0]*rabs(0, 1)+b[1]*rabs(0, 0);
-        if (std::abs(d[2]*r(1, 2) - d[1]*r(2, 2)) > ra+rb)
+        if (fabs(d[2]*r(1, 2) - d[1]*r(2, 2)) > ra+rb)
             return false;
     }
     {
         Real ra = a[0]*rabs(2, 0)+a[2]*rabs(0, 0);
         Real rb = b[1]*rabs(1, 2)+b[2]*rabs(1, 1);
-        if (std::abs(d[0]*r(2, 0) - d[2]*r(0, 0)) > ra+rb)
+        if (fabs(d[0]*r(2, 0) - d[2]*r(0, 0)) > ra+rb)
             return false;
     }
     {
         Real ra = a[0]*rabs(2, 1)+a[2]*rabs(0, 1);
         Real rb = b[0]*rabs(1, 2)+b[2]*rabs(1, 0);
-        if (std::abs(d[0]*r(2, 1) - d[2]*r(0, 1)) > ra+rb)
+        if (fabs(d[0]*r(2, 1) - d[2]*r(0, 1)) > ra+rb)
             return false;
     }
     {
         Real ra = a[0]*rabs(2, 2)+a[2]*rabs(0, 2);
         Real rb = b[0]*rabs(1, 1)+b[1]*rabs(1, 0);
-        if (std::abs(d[0]*r(2, 2) - d[2]*r(0, 2)) > ra+rb)
+        if (fabs(d[0]*r(2, 2) - d[2]*r(0, 2)) > ra+rb)
             return false;
     }
 
     {
         Real ra = a[0]*rabs(1, 0)+a[1]*rabs(0, 0);
         Real rb = b[1]*rabs(2, 2)+b[2]*rabs(2, 1);
-        if (std::abs(d[1]*r(0, 0) - d[0]*r(1, 0)) > ra+rb)
+        if (fabs(d[1]*r(0, 0) - d[0]*r(1, 0)) > ra+rb)
             return false;
     }
     {
         Real ra = a[0]*rabs(1, 1)+a[1]*rabs(0, 1);
         Real rb = b[0]*rabs(2, 2)+b[2]*rabs(2, 0);
-        if (std::abs(d[1]*r(0, 1) - d[0]*r(1, 1)) > ra+rb)
+        if (fabs(d[1]*r(0, 1) - d[0]*r(1, 1)) > ra+rb)
             return false;
     }
     {
         Real ra = a[0]*rabs(1, 2)+a[1]*rabs(0, 2);
         Real rb = b[0]*rabs(2, 1)+b[1]*rabs(2, 0);
-        if (std::abs(d[1]*r(0, 2) - d[0]*r(1, 2)) > ra+rb)
+        if (fabs(d[1]*r(0, 2) - d[0]*r(1, 2)) > ra+rb)
             return false;
     }
     return true;

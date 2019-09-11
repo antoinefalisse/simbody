@@ -137,7 +137,6 @@ public:
         const Transform& transform2,
         Array_<Contact>& contacts) const override;
 };
-
 /**
  * This algorithm detects contacts between two ContactGeometry::Sphere objects.
  */

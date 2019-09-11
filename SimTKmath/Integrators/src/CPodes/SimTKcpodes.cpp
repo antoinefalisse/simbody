@@ -26,6 +26,8 @@
  * handle class and its actual representation CPodesRep.
  */
 
+#ifndef SimTK_REAL_IS_ADOUBLE
+
 #include "simmath/internal/SimTKcpodes.h"
 #include "nvector_SimTK.h"
 #include "cpodes/cpodes.h"
@@ -760,3 +762,5 @@ void CPodesSystem::errorHandler(int, const char*, const char*, char*) const {
 } // namespace SimTK
 
 
+#else
+#endif

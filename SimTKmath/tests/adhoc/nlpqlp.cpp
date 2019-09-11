@@ -1,6 +1,9 @@
 
 
 #include "SimTKmath.h"
+
+#ifndef SimTK_REAL_IS_ADOUBLE
+
 using SimTK::Real;
 using SimTK::Vector;
 using SimTK::Matrix;
@@ -30284,3 +30287,8 @@ Real norint_(Real *x)
     }
     return ret_val;
 } /* norint_ */
+#else
+void main() {
+	std::cout << "Optimizers not implemented in adouble" << std::endl;
+}
+#endif

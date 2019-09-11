@@ -11,7 +11,7 @@
 
 #include "SimTKcommon/internal/common.h"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
   /** Type of all numbers */
   typedef SimTK::Real Number;

@@ -40,7 +40,7 @@
 
 #include <limits>
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
 #ifdef IP_DEBUG
@@ -177,7 +177,7 @@ namespace SimTKIpopt
     DBG_ASSERT(vectors_valid_);
     Number max=0.;
     for(Index i=0; i<NComps(); i++) {
-      max = SimTKIpopt::Max(max, ConstComp(i)->Amax());
+      max = Ipopt::Max(max, ConstComp(i)->Amax());
     }
     return max;
   }
@@ -283,7 +283,7 @@ namespace SimTKIpopt
     Number max = -std::numeric_limits<Number>::max();
     for(Index i=0; i<NComps(); i++) {
       if (ConstComp(i)->Dim() != 0) {
-        max = SimTKIpopt::Max(max, ConstComp(i)->Max());
+        max = Ipopt::Max(max, ConstComp(i)->Max());
       }
     }
     return max;
@@ -297,7 +297,7 @@ namespace SimTKIpopt
     Number min = std::numeric_limits<Number>::max();
     for (Index i=0; i<NComps(); i++) {
       if (ConstComp(i)->Dim() != 0) {
-        min = SimTKIpopt::Min(min, ConstComp(i)->Min());
+        min = Ipopt::Min(min, ConstComp(i)->Min());
       }
     }
     return min;
@@ -362,7 +362,7 @@ namespace SimTKIpopt
 
     Number alpha = 1.;
     for(Index i=0; i<NComps(); i++) {
-      alpha = SimTKIpopt::Min(alpha,
+      alpha = Ipopt::Min(alpha,
                          ConstComp(i)->FracToBound(*comp_delta->GetComp(i), tau));
     }
     return alpha;

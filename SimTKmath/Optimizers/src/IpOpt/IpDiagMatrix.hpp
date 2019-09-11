@@ -12,7 +12,7 @@
 #include "IpUtils.hpp"
 #include "IpSymMatrix.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   /** Class for diagonal matrices.  The diagonal is stored as a

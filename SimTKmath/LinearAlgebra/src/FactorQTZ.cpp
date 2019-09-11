@@ -235,13 +235,20 @@ void FactorQTZRep<T>::doSolve(Matrix_<T>& b, Matrix_<T>& x) const {
     T workSz;
     LapackInterface::ormqr<T>('L', 'T', nRow, b.ncol(), mn, 0, nRow, 
                                0, 0, b.nrow(), &workSz, -1, info );
-    const int lwork1 = (int)NTraits<T>::real(workSz);
-
+	#ifdef SimTK_REAL_IS_ADOUBLE
+		const int lwork1 = 0;
+	#else
+		const int lwork1 = (int)NTraits<T>::real(workSz);
+	#endif
     LapackInterface::ormrz<T>('L', 'T', nCol, b.ncol(), rank, nCol-rank, 
                               0, nRow, 0, 0, 
                               b.nrow(), &workSz, -1, info );
-    const int lwork2 = (int)NTraits<T>::real(workSz);
-    
+	#ifdef SimTK_REAL_IS_ADOUBLE
+		const int lwork2 = 0;
+	#else
+		const int lwork2 = (int)NTraits<T>::real(workSz);
+	#endif
+
     TypedWorkSpace<T> work(std::max(lwork1, lwork2));
 
     // compute norm of RHS
@@ -344,10 +351,15 @@ void FactorQTZRep<T>::factor(const Matrix_<ELT>&mat )  {
     T workSz;
     const int maxRank = std::min(nRow, nCol);
     LapackInterface::tzrzf<T>(maxRank, nCol, 0, nRow, 0, &workSz, -1, info);
-    const int lwork1 = (int)NTraits<T>::real(workSz);
-
-    LapackInterface::geqp3<T>(nRow, nCol, 0, nRow, 0, 0, &workSz, -1, info);
-    const int lwork2 = (int)NTraits<T>::real(workSz);
+	#ifdef SimTK_REAL_IS_ADOUBLE
+		const int lwork1 = 0;
+		const int lwork2 = 0;
+	#else
+		const int lwork1 = (int)NTraits<T>::real(workSz);
+		LapackInterface::geqp3<T>(nRow, nCol, 0, nRow, 0, 0, &workSz, -1, info);
+		const int lwork2 = (int)NTraits<T>::real(workSz);
+	#endif
+    
    
     TypedWorkSpace<T> work(std::max(lwork1, lwork2));
 
@@ -410,8 +422,13 @@ void FactorQTZRep<T>::factor(const Matrix_<ELT>&mat )  {
                     xLarge[rank] = c2;
                     smin = sminpr;
                     smax = smaxpr;
-                    actualRCond = (double)(smin/smax);
-                    rank++;
+					#ifdef SimTK_REAL_IS_ADOUBLE
+						Recorder aux5 = Recorder(smin / smax);
+						actualRCond = aux5.value();
+					#else
+						actualRCond = (double)(smin/smax);
+					#endif
+					rank++;
                 }
             } 
 
@@ -442,6 +459,9 @@ template SimTK_SIMMATH_EXPORT FactorQTZ::FactorQTZ( const Matrix_<negator< std::
 template SimTK_SIMMATH_EXPORT FactorQTZ::FactorQTZ( const Matrix_<negator< std::complex<double> > >& m );
 template SimTK_SIMMATH_EXPORT FactorQTZ::FactorQTZ( const Matrix_<negator< conjugate<float> > >& m );
 template SimTK_SIMMATH_EXPORT FactorQTZ::FactorQTZ( const Matrix_<negator< conjugate<double> > >& m );
+#ifdef SimTK_REAL_IS_ADOUBLE
+	template SimTK_SIMMATH_EXPORT FactorQTZ::FactorQTZ(const Matrix_<Recorder>& m);
+#endif
 
 template SimTK_SIMMATH_EXPORT FactorQTZ::FactorQTZ( const Matrix_<double>& m, double rcond );
 template SimTK_SIMMATH_EXPORT FactorQTZ::FactorQTZ( const Matrix_<float>& m, float rcond );
@@ -455,6 +475,9 @@ template SimTK_SIMMATH_EXPORT FactorQTZ::FactorQTZ( const Matrix_<negator< std::
 template SimTK_SIMMATH_EXPORT FactorQTZ::FactorQTZ( const Matrix_<negator< std::complex<double> > >& m, double rcond );
 template SimTK_SIMMATH_EXPORT FactorQTZ::FactorQTZ( const Matrix_<negator< conjugate<float> > >& m, float rcond );
 template SimTK_SIMMATH_EXPORT FactorQTZ::FactorQTZ( const Matrix_<negator< conjugate<double> > >& m, double rcond );
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template SimTK_SIMMATH_EXPORT FactorQTZ::FactorQTZ(const Matrix_<Recorder>& m, double rcond);
+#endif
 
 template SimTK_SIMMATH_EXPORT void FactorQTZ::factor( const Matrix_<double>& m );
 template SimTK_SIMMATH_EXPORT void FactorQTZ::factor( const Matrix_<float>& m );
@@ -468,6 +491,9 @@ template SimTK_SIMMATH_EXPORT void FactorQTZ::factor( const Matrix_<negator< std
 template SimTK_SIMMATH_EXPORT void FactorQTZ::factor( const Matrix_<negator< std::complex<double> > >& m );
 template SimTK_SIMMATH_EXPORT void FactorQTZ::factor( const Matrix_<negator< conjugate<float> > >& m );
 template SimTK_SIMMATH_EXPORT void FactorQTZ::factor( const Matrix_<negator< conjugate<double> > >& m );
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template SimTK_SIMMATH_EXPORT void FactorQTZ::factor(const Matrix_<Recorder>& m);
+#endif
 
 template SimTK_SIMMATH_EXPORT void FactorQTZ::factor( const Matrix_<double>& m, double rcond );
 template SimTK_SIMMATH_EXPORT void FactorQTZ::factor( const Matrix_<float>& m, float rcond );
@@ -481,6 +507,9 @@ template SimTK_SIMMATH_EXPORT void FactorQTZ::factor( const Matrix_<negator< std
 template SimTK_SIMMATH_EXPORT void FactorQTZ::factor( const Matrix_<negator< std::complex<double> > >& m, double rcond );
 template SimTK_SIMMATH_EXPORT void FactorQTZ::factor( const Matrix_<negator< conjugate<float> > >& m, float rcond );
 template SimTK_SIMMATH_EXPORT void FactorQTZ::factor( const Matrix_<negator< conjugate<double> > >& m, double rcond );
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template SimTK_SIMMATH_EXPORT void FactorQTZ::factor(const Matrix_<Recorder>& m, double rcond);
+#endif
 
 template class FactorQTZRep<double>;
 template FactorQTZRep<double>::FactorQTZRep( const Matrix_<double>& m, double rcond);
@@ -514,6 +543,14 @@ template void FactorQTZRep<std::complex<float> >::factor( const Matrix_<negator<
 template void FactorQTZRep<std::complex<float> >::factor( const Matrix_<conjugate<float> >& m);
 template void FactorQTZRep<std::complex<float> >::factor( const Matrix_<negator<conjugate<float> > >& m);
 
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template class FactorQTZRep<Recorder>;
+    template FactorQTZRep<Recorder>::FactorQTZRep(const Matrix_<Recorder>& m, Recorder rcond);
+    template FactorQTZRep<Recorder>::FactorQTZRep(const Matrix_<negator<Recorder> >& m, Recorder rcond);
+    template void FactorQTZRep<Recorder>::factor(const Matrix_<Recorder>& m);
+    template void FactorQTZRep<Recorder>::factor(const Matrix_<negator<Recorder> >& m);
+#endif
+
 template SimTK_SIMMATH_EXPORT void FactorQTZ::solve<float>(const Vector_<float>&, Vector_<float>&) const;
 template SimTK_SIMMATH_EXPORT void FactorQTZ::solve<double>(const Vector_<double>&, Vector_<double>&) const;
 template SimTK_SIMMATH_EXPORT void FactorQTZ::solve<std::complex<float> >(const Vector_<std::complex<float> >&, Vector_<std::complex<float> >&) const;
@@ -526,5 +563,10 @@ template SimTK_SIMMATH_EXPORT void FactorQTZ::inverse<float>(Matrix_<float>&) co
 template SimTK_SIMMATH_EXPORT void FactorQTZ::inverse<double>(Matrix_<double>&) const;
 template SimTK_SIMMATH_EXPORT void FactorQTZ::inverse<std::complex<float> >(Matrix_<std::complex<float> >&) const;
 template SimTK_SIMMATH_EXPORT void FactorQTZ::inverse<std::complex<double> >(Matrix_<std::complex<double> >&) const;
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template SimTK_SIMMATH_EXPORT void FactorQTZ::solve<Recorder>(const Vector_<Recorder>&, Vector_<Recorder>&) const;
+    template SimTK_SIMMATH_EXPORT void FactorQTZ::solve<Recorder>(const Matrix_<Recorder>&, Matrix_<Recorder>&) const;
+    template SimTK_SIMMATH_EXPORT void FactorQTZ::inverse<Recorder>(Matrix_<Recorder>&) const;													
+#endif
 
 } // namespace SimTK

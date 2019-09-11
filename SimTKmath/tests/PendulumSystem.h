@@ -336,7 +336,7 @@ static Real wrms(const Vector& y, const Vector& w) {
     Real sumsq = 0;
     for (int i=0; i<y.size(); ++i)
         sumsq += square(y[i]*w[i]);
-    return std::sqrt(sumsq/y.size());
+    return sqrt(sumsq/y.size());
 }
 
 //int PendulumSystemGuts::projectImpl(State& s, Real consAccuracy,
@@ -456,14 +456,14 @@ void PendulumSystemGuts::projectQImpl(State& s, Vector& qerrest,
         Vec2 dq  = Pinv*(ep);      //cout << "dq=" << dq << endl;
         Vec2 wdq = PWinv*(tp*ep);  //cout << "wdq=" << wdq << endl;
     
-        wqchg = std::sqrt(wdq.normSqr()/q.size()); // wrms norm
+        wqchg = sqrt(wdq.normSqr()/q.size()); // wrms norm
     
         s.updQ(subsysIndex)[0] -= wdq[0]/wq[0]; 
         s.updQ(subsysIndex)[1] -= wdq[1]/wq[1]; 
         realize(s, Stage::Position); // recalc QErr (ep)
     
         //cout << "AFTER q-=wdq/W wperr=" << tp*ep << " wqchg=" << wqchg << endl;
-    } while (std::abs(tp*ep) > consAccuracy && wqchg >= 0.01*consAccuracy);
+    } while (fabs(tp*ep) > consAccuracy && wqchg >= 0.01*consAccuracy);
 
     // Now do error estimates.
 

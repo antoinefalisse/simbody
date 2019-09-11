@@ -16,7 +16,7 @@
 #include "IpDenseGenMatrix.hpp"
 #include "IpDenseSymMatrix.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   /** Implementation of the HessianUpdater for limit-memory

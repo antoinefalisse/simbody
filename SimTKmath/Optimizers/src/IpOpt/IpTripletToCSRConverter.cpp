@@ -2,7 +2,7 @@
 #include "IpTripletToCSRConverter.hpp"
 #include <list>
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 #ifdef IP_DEBUG
   static const Index dbg_verbosity = 0;

@@ -38,7 +38,7 @@
 # endif
 #endif
 
-namespace SimTKIpopt
+namespace Ipopt
 {
   /** This class collects all timing statistics for Ipopt.
    */

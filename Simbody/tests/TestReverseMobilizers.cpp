@@ -32,13 +32,13 @@ const Real TOL = 1e-10;
 
 template <class T>
 void assertEqual(T val1, T val2, Real tol) {
-    ASSERT(abs(val1-val2) < tol);
+    ASSERT(NTraits<Real>::abs(val1-val2) < tol);
 }
 
 template <int N>
 void assertEqual(Vec<N> val1, Vec<N> val2, Real tol) {
     for (int i = 0; i < N; ++i)
-        ASSERT(abs(val1[i]-val2[i]) < tol);
+        ASSERT(NTraits<Real>::abs(val1[i]-val2[i]) < tol);
 }
 
 template<>
@@ -124,6 +124,7 @@ void testPin() {
     State rev2State = reverse2.realizeTopology();
 
     // Put body A somewhere arbitrary.
+    #ifndef SimTK_REAL_IS_ADOUBLE
     fwdA.setQToFitTransform(fwdState, Transform(Rotation(-1.9, Vec3(-3,2,4)),
                                                 Vec3(-.33, .66, -.99)));
 
@@ -164,6 +165,7 @@ void testPin() {
 
     rev1A.setUToFitVelocity(rev1State, V_BA);
     rev2A.setUToFitVelocity(rev2State, V_BA); // KLUDGE; should be V_BA 
+    #endif
 
     assertEqual(fwdB.getU(fwdState), rev2A.getU(rev2State));
 
@@ -272,9 +274,10 @@ void testPlanar() {
     State rev2State = reverse2.realizeTopology();
 
     // Put body A somewhere arbitrary.
+    #ifndef SimTK_REAL_IS_ADOUBLE
     fwdA.setQToFitTransform(fwdState, Transform(Rotation(-1.9, Vec3(-3,2,4)),
                                                 Vec3(-.33, .66, -.99)));
-
+    #endif
     // Set all the q's; meanings should be identical.
     fwdB.setQ(fwdState, Vec3(Pi/4, -7, 4)); 
     rev2A.setQ(rev2State, Vec3(Pi/4, -7, 4));
@@ -286,7 +289,9 @@ void testPlanar() {
     forward.realize (fwdState,  Stage::Position);
     const Transform& X_GB = fwdB.getBodyTransform(fwdState);
     const Transform X_GMb = X_GB*X_BM;
+    #ifndef SimTK_REAL_IS_ADOUBLE
     rev2B.setQToFitTransform(rev2State, X_GMb);
+    #endif
     reverse2.realize(rev2State, Stage::Position);
 
     assertEqual(fwdB.getBodyTransform(fwdState), rev2B.getBodyTransform(rev2State));
@@ -300,16 +305,18 @@ void testPlanar() {
 
     const SpatialVec V_G_BM( fwdB.getBodyAngularVelocity(fwdState),
                              fwdB.findStationVelocityInGround(fwdState, X_BM.p()));
+    #ifndef SimTK_REAL_IS_ADOUBLE
     rev2B.setUToFitVelocity(rev2State, V_G_BM);
-
+    #endif
     // Need to construct velocity of A in B from B in A.
     const Transform  X_AB = fwdB.getMobilizerTransform(fwdState);
     const Transform  X_BA = ~X_AB;
     const SpatialVec V_AB = fwdB.getMobilizerVelocity(fwdState);
     const SpatialVec V_BA( -X_BA.R()* V_AB[0], 
                            -X_BA.R()*(V_AB[1] + X_AB.p() % V_AB[0]) );
-
+    #ifndef SimTK_REAL_IS_ADOUBLE
     rev2A.setUToFitVelocity(rev2State, V_BA);
+    #endif
     cout << "rev2A.getU()=" << rev2A.getU(rev2State) << endl;
 
     assertEqual(fwdB.getU(fwdState), rev2A.getU(rev2State));
@@ -410,9 +417,10 @@ void testEllipsoid() {
     State rev2State = reverse2.realizeTopology();
 
     // Put body A somewhere arbitrary.
+    #ifndef SimTK_REAL_IS_ADOUBLE
     fwdA.setQToFitTransform(fwdState, Transform(Rotation(-1.9, Vec3(-3,2,4)),
                                                 Vec3(-.33, .66, -.99)));
-
+    #endif
     // Set all the q's; meanings should be identical.
     const Quaternion quat(Rotation(Pi/7, Vec3(1.1,-2.2,3.4)));
     fwdB.setQ(fwdState, quat);
@@ -425,7 +433,9 @@ void testEllipsoid() {
     forward.realize (fwdState,  Stage::Position);
     const Transform& X_GB = fwdB.getBodyTransform(fwdState);
     const Transform X_GMb = X_GB*X_BM;
+    #ifndef SimTK_REAL_IS_ADOUBLE
     rev2B.setQToFitTransform(rev2State, X_GMb);
+    #endif
     reverse2.realize(rev2State, Stage::Position);
 
     assertEqual(fwdB.getBodyTransform(fwdState), rev2B.getBodyTransform(rev2State));
@@ -439,16 +449,18 @@ void testEllipsoid() {
 
     const SpatialVec V_G_BM( fwdB.getBodyAngularVelocity(fwdState),
                              fwdB.findStationVelocityInGround(fwdState, X_BM.p()));
+    #ifndef SimTK_REAL_IS_ADOUBLE
     rev2B.setUToFitVelocity(rev2State, V_G_BM);
-
+    #endif
     // Need to construct velocity of A in B from B in A.
     const Transform  X_AB = fwdB.getMobilizerTransform(fwdState);
     const Transform  X_BA = ~X_AB;
     const SpatialVec V_AB = fwdB.getMobilizerVelocity(fwdState);
     const SpatialVec V_BA( -X_BA.R()* V_AB[0], 
                            -X_BA.R()*(V_AB[1] + X_AB.p() % V_AB[0]) );
-
+    #ifndef SimTK_REAL_IS_ADOUBLE
     rev2A.setUToFitAngularVelocity(rev2State, V_BA[0]);
+    #endif
     cout << "rev2A.getU()=" << rev2A.getU(rev2State) << endl;
 
     assertEqual(fwdB.getU(fwdState), rev2A.getU(rev2State));
@@ -552,9 +564,10 @@ void testFree() {
     State rev2State = reverse2.realizeTopology();
 
     // Put body A somewhere arbitrary.
+    #ifndef SimTK_REAL_IS_ADOUBLE
     fwdA.setQToFitTransform(fwdState, Transform(Rotation(-1.9, Vec3(-3,2,4)),
                                                 Vec3(-.33, .66, -.99)));
-
+    #endif
     // Set all the q's; meanings should be identical.
     const Quaternion quat(Rotation(Pi/7, Vec3(1,2,-3)));
     const Vec3       trans(1.23, 2.34, -3.45);
@@ -569,7 +582,9 @@ void testFree() {
     forward.realize (fwdState,  Stage::Position);
     const Transform& X_GB = fwdB.getBodyTransform(fwdState);
     const Transform X_GMb = X_GB*X_BM;
+    #ifndef SimTK_REAL_IS_ADOUBLE
     rev2B.setQToFitTransform(rev2State, X_GMb);
+    #endif
     reverse2.realize(rev2State, Stage::Position);
 
     cout << "Xforms B\n";
@@ -592,7 +607,9 @@ void testFree() {
 
     const SpatialVec V_G_BM( fwdB.getBodyAngularVelocity(fwdState),
                              fwdB.findStationVelocityInGround(fwdState, X_BM.p()));
+    #ifndef SimTK_REAL_IS_ADOUBLE
     rev2B.setUToFitVelocity(rev2State, V_G_BM);
+    #endif
 
     // Need to construct velocity of A in B from B in A.
     const Transform  X_AB = fwdB.getMobilizerTransform(fwdState);
@@ -600,8 +617,9 @@ void testFree() {
     const SpatialVec V_AB = fwdB.getMobilizerVelocity(fwdState);
     const SpatialVec V_BA( -X_BA.R()* V_AB[0], 
                            -X_BA.R()*(V_AB[1] + X_AB.p() % V_AB[0]) );
-
+    #ifndef SimTK_REAL_IS_ADOUBLE
     rev2A.setUToFitVelocity(rev2State, V_BA);
+    #endif
     cout << "rev2A.getU()=" << rev2A.getU(rev2State) << endl;
 
     assertEqual(fwdB.getU(fwdState), rev2A.getU(rev2State));
@@ -660,6 +678,8 @@ void testFree() {
 }
 
 int main() {
+#ifndef SimTK_REAL_IS_ADOUBLE
+
     try {
         cout << "*** TEST PIN ***\n\n"; testPin();
         cout << "\n\n*** TEST PLANAR ***\n\n"; testPlanar();
@@ -672,5 +692,8 @@ int main() {
     }
     cout << "Done" << endl;
     return 0;
+#else   
+    std::cout << "This test is not supported with ADOL-C" << std::endl;
+#endif
 }
 

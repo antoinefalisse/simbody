@@ -1,32 +1,34 @@
-/* -------------------------------------------------------------------------- *
- *                               Simbody(tm)                                  *
- * -------------------------------------------------------------------------- *
- * This is part of the SimTK biosimulation toolkit originating from           *
- * Simbios, the NIH National Center for Physics-Based Simulation of           *
- * Biological Structures at Stanford, funded under the NIH Roadmap for        *
- * Medical Research, grant U54 GM072970. See https://simtk.org/home/simbody.  *
- *                                                                            *
- * Portions copyright (c) 2014 Stanford University and the Authors.           *
- * Authors: Michael Sherman                                                   *
- * Contributors:                                                              *
- *                                                                            *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may    *
- * not use this file except in compliance with the License. You may obtain a  *
- * copy of the License at http://www.apache.org/licenses/LICENSE-2.0.         *
- *                                                                            *
- * Unless required by applicable law or agreed to in writing, software        *
- * distributed under the License is distributed on an "AS IS" BASIS,          *
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
- * See the License for the specific language governing permissions and        *
- * limitations under the License.                                             *
- * -------------------------------------------------------------------------- */
-
+///* -------------------------------------------------------------------------- *
+// *                               Simbody(tm)                                  *
+// * -------------------------------------------------------------------------- *
+// * This is part of the SimTK biosimulation toolkit originating from           *
+// * Simbios, the NIH National Center for Physics-Based Simulation of           *
+// * Biological Structures at Stanford, funded under the NIH Roadmap for        *
+// * Medical Research, grant U54 GM072970. See https://simtk.org/home/simbody.  *
+// *                                                                            *
+// * Portions copyright (c) 2014 Stanford University and the Authors.           *
+// * Authors: Michael Sherman                                                   *
+// * Contributors:                                                              *
+// *                                                                            *
+// * Licensed under the Apache License, Version 2.0 (the "License"); you may    *
+// * not use this file except in compliance with the License. You may obtain a  *
+// * copy of the License at http://www.apache.org/licenses/LICENSE-2.0.         *
+// *                                                                            *
+// * Unless required by applicable law or agreed to in writing, software        *
+// * distributed under the License is distributed on an "AS IS" BASIS,          *
+// * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+// * See the License for the specific language governing permissions and        *
+// * limitations under the License.                                             *
+// * -------------------------------------------------------------------------- */
+//
 #include "simbody/internal/common.h"
+
+#ifndef SimTK_REAL_IS_ADOUBLE
+
 #include "simbody/internal/MobilizedBody.h"
 #include "simbody/internal/Constraint.h"
 #include "simbody/internal/ConditionalConstraint.h"
 #include "simbody/internal/SimbodyMatterSubsystem.h"
-
 
 namespace SimTK {
 
@@ -489,40 +491,40 @@ getFrictionMultiplierIndices(const State&       s,
 }
 
 
-
-//==============================================================================
-//                             EDGE EDGE CONTACT
-//==============================================================================
-EdgeEdgeContact::EdgeEdgeContact
-   (MobilizedBody&      mobod_F, 
-    const Transform&    defaultEdgeFrameF, 
-    Real                defaultHalfLengthF, 
-    MobilizedBody&      mobod_B, 
-    const Transform&    defaultEdgeFrameB, 
-    Real                defaultHalfLengthB,
-    Real minCOR, Real mu_s, Real mu_d, Real mu_v)
-:   m_minCOR(minCOR), m_mu_s(mu_s), m_mu_d(mu_d), m_mu_v(mu_v)
-{
-    SimTK_ERRCHK1_ALWAYS(0<=minCOR && minCOR<=1,
-        "EdgeEdgeContact()", 
-        "The coefficient of restitution must be between 0 and 1 but was %g.", 
-        minCOR);
-    SimTK_ERRCHK3_ALWAYS(mu_s >= 0 && mu_d >= 0 && mu_v >= 0,
-        "EdgeEdgeContact()", 
-        "All coefficients of friction must be nonnegative; got "
-        "mu_s=%g, mu_d=%g, mu_v=%g.", mu_s, mu_d, mu_v);
-    SimTK_ERRCHK2_ALWAYS(mu_d <= mu_s,
-        "EdgeEdgeContact()", 
-        "The dynamic coefficient of friction can't be larger than "
-        "the static coefficient; got mu_s=%g, mu_d=%g.", mu_s, mu_d);
-
-    // Set up the contact constraint.
-    m_lineOnLine = Constraint::LineOnLineContact
-       (mobod_F, defaultEdgeFrameF, defaultHalfLengthF, 
-       mobod_B, defaultEdgeFrameB, defaultHalfLengthB, true);
-    m_lineOnLine.setIsConditional(true);
-    m_lineOnLine.setDisabledByDefault(true);
-}
+//
+////==============================================================================
+////                             EDGE EDGE CONTACT
+////==============================================================================
+//EdgeEdgeContact::EdgeEdgeContact
+//   (MobilizedBody&      mobod_F, 
+//    const Transform&    defaultEdgeFrameF, 
+//    Real                defaultHalfLengthF, 
+//    MobilizedBody&      mobod_B, 
+//    const Transform&    defaultEdgeFrameB, 
+//    Real                defaultHalfLengthB,
+//    Real minCOR, Real mu_s, Real mu_d, Real mu_v)
+//:   m_minCOR(minCOR), m_mu_s(mu_s), m_mu_d(mu_d), m_mu_v(mu_v)
+//{
+//    SimTK_ERRCHK1_ALWAYS(0<=minCOR && minCOR<=1,
+//        "EdgeEdgeContact()", 
+//        "The coefficient of restitution must be between 0 and 1 but was %g.", 
+//        minCOR);
+//    SimTK_ERRCHK3_ALWAYS(mu_s >= 0 && mu_d >= 0 && mu_v >= 0,
+//        "EdgeEdgeContact()", 
+//        "All coefficients of friction must be nonnegative; got "
+//        "mu_s=%g, mu_d=%g, mu_v=%g.", mu_s, mu_d, mu_v);
+//    SimTK_ERRCHK2_ALWAYS(mu_d <= mu_s,
+//        "EdgeEdgeContact()", 
+//        "The dynamic coefficient of friction can't be larger than "
+//        "the static coefficient; got mu_s=%g, mu_d=%g.", mu_s, mu_d);
+//
+//    // Set up the contact constraint.
+//    m_lineOnLine = Constraint::LineOnLineContact
+//       (mobod_F, defaultEdgeFrameF, defaultHalfLengthF, 
+//       mobod_B, defaultEdgeFrameB, defaultHalfLengthB, true);
+//    m_lineOnLine.setIsConditional(true);
+//    m_lineOnLine.setDisabledByDefault(true);
+//}
 
 //------------------------------------------------------------------------------
 //                            WHERE TO DISPLAY
@@ -575,3 +577,4 @@ getFrictionMultiplierIndices(const State&       s,
 
 } // namespace SimTK
 
+#endif

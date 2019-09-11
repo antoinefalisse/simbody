@@ -11,7 +11,7 @@
 #include "IpDenseGenMatrix.hpp"
 #include "IpBlas.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
 #ifdef IP_DEBUG

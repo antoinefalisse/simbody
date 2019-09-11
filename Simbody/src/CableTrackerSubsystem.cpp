@@ -22,6 +22,9 @@
  * -------------------------------------------------------------------------- */
 
 #include "SimTKmath.h"
+
+#ifndef SimTK_REAL_IS_ADOUBLE
+
 #include "simbody/internal/common.h"
 #include "simbody/internal/MultibodySystem.h"
 #include "simbody/internal/SimbodyMatterSubsystem.h"
@@ -85,3 +88,4 @@ CablePath& CableTrackerSubsystem::
 updCablePath(CablePathIndex cableIx)
 {   return updImpl().updCablePath(cableIx); }
 
+#endif

@@ -129,7 +129,7 @@ intersectsOrientedBoxHelper(const OrientedBox_<P>&  O,
         // Note: round brackets indexing selects a column of R_BO1.
         const RealP rb = dot(h, absR_BO(o));    // proj. p_BV onto axis o (in B)
         const RealP ro = oh[o];                 // proj. of p_OV onto axis o
-        const RealP d  = std::abs(dot(p_BO, R_BO(o))); //B-O dist along o (in B)
+        const RealP d  = fabs(dot(p_BO, R_BO(o))); //B-O dist along o (in B)
         if (d > rb+ro)
             return 0; // axis o is a separating plane normal
         if (d > ro)
@@ -215,47 +215,47 @@ intersectsOrientedBox(const Geo::OrientedBox_<P>& ob) const {
     // Each of these tests takes about 12 flops.
     rb = h[1] *Rabs(2, 0)+h[2] *Rabs(1, 0);         // b0 X oO
     ro = oh[1]*Rabs(0, 2)+oh[2]*Rabs(0, 1);
-    d  = std::abs(p[2]*R(1, 0) - p[1]*R(2, 0)); 
+    d  = fabs(p[2]*R(1, 0) - p[1]*R(2, 0)); 
     if (d > rb+ro) return false;
 
     rb = h[1] *Rabs(2, 1)+h[2] *Rabs(1, 1);         // b0 X o1
     ro = oh[0]*Rabs(0, 2)+oh[2]*Rabs(0, 0);
-    d  = std::abs(p[2]*R(1, 1) - p[1]*R(2, 1)); 
+    d  = fabs(p[2]*R(1, 1) - p[1]*R(2, 1)); 
     if (d > rb+ro) return false;
 
     rb = h[1] *Rabs(2, 2)+h[2] *Rabs(1, 2);         // b0 X o2
     ro = oh[0]*Rabs(0, 1)+oh[1]*Rabs(0, 0);
-    d  = std::abs(p[2]*R(1, 2) - p[1]*R(2, 2)); 
+    d  = fabs(p[2]*R(1, 2) - p[1]*R(2, 2)); 
     if (d > rb+ro) return false;
 
     rb = h[0] *Rabs(2, 0)+h[2] *Rabs(0, 0);         // b1 X oO
     ro = oh[1]*Rabs(1, 2)+oh[2]*Rabs(1, 1);
-    d  = std::abs(p[0]*R(2, 0) - p[2]*R(0, 0)); 
+    d  = fabs(p[0]*R(2, 0) - p[2]*R(0, 0)); 
     if (d > rb+ro) return false;
 
     rb = h[0] *Rabs(2, 1)+h[2] *Rabs(0, 1);         // b1 X o1
     ro = oh[0]*Rabs(1, 2)+oh[2]*Rabs(1, 0);
-    d  = std::abs(p[0]*R(2, 1) - p[2]*R(0, 1)); 
+    d  = fabs(p[0]*R(2, 1) - p[2]*R(0, 1)); 
     if (d > rb+ro) return false;
 
     rb = h[0] *Rabs(2, 2)+h[2] *Rabs(0, 2);         // b1 X o2
     ro = oh[0]*Rabs(1, 1)+oh[1]*Rabs(1, 0);
-    d  = std::abs(p[0]*R(2, 2) - p[2]*R(0, 2)); 
+    d  = fabs(p[0]*R(2, 2) - p[2]*R(0, 2)); 
     if (d > rb+ro) return false;
 
     rb = h[0] *Rabs(1, 0)+h[1] *Rabs(0, 0);         // b2 X oO
     ro = oh[1]*Rabs(2, 2)+oh[2]*Rabs(2, 1);
-    d  = std::abs(p[1]*R(0, 0) - p[0]*R(1, 0)); 
+    d  = fabs(p[1]*R(0, 0) - p[0]*R(1, 0)); 
     if (d > rb+ro) return false;
 
     rb = h[0] *Rabs(1, 1)+h[1] *Rabs(0, 1);         // b2 X o1
     ro = oh[0]*Rabs(2, 2)+oh[2]*Rabs(2, 0);
-    d  = std::abs(p[1]*R(0, 1) - p[0]*R(1, 1)); 
+    d  = fabs(p[1]*R(0, 1) - p[0]*R(1, 1)); 
     if (d > rb+ro) return false;
 
     rb = h[0] *Rabs(1, 2)+h[1] *Rabs(0, 2);         // b2 X o2
     ro = oh[0]*Rabs(2, 1)+oh[1]*Rabs(2, 0);
-    d  = std::abs(p[1]*R(0, 2) - p[0]*R(1, 2)); 
+    d  = fabs(p[1]*R(0, 2) - p[0]*R(1, 2)); 
     if (d > rb+ro) return false;
 
     return true; // The boxes intersect.
@@ -266,14 +266,16 @@ intersectsOrientedBox(const Geo::OrientedBox_<P>& ob) const {
 // Explicit instantiations for float and double.
 template class Geo::Box_<float>;
 template class Geo::Box_<double>;
-    
+template class Geo::Box_<Real>;
+
 //==============================================================================
 //                           GEO :: ALIGNED BOX
 //==============================================================================
 // Explicit instantiations for float and double.
 template class Geo::AlignedBox_<float>;
 template class Geo::AlignedBox_<double>;
-    
+template class Geo::AlignedBox_<Real>;
+
 //==============================================================================
 //                           GEO :: ORIENTED BOX
 //==============================================================================
@@ -283,5 +285,6 @@ template class Geo::AlignedBox_<double>;
 // Explicit instantiations for float and double.
 template class Geo::OrientedBox_<float>;
 template class Geo::OrientedBox_<double>;
+template class Geo::OrientedBox_<Real>;
 
 }  // End of namespace SimTK

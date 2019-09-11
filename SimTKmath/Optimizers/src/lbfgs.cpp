@@ -312,15 +312,15 @@ void SimTK::LBFGSOptimizer::lbfgs_
     // came with this LBFGS implementation.
     // This is a scaled infinity-norm.
 
-    Real fscale = 1 / std::max(Real(0.1), std::abs(*f));
+    Real fscale = 1 / fmax(Real(0.1), fabs(*f));
 
     // Make a quick attempt to quit if we're already converged. No need
     // to calculate the whole norm here; we'll stop as soon as we find
     // a non-converged element.
     converged = true;
     for (int i=0; i<n; ++i) {
-        const Real xscale = std::max(Real(1), std::abs(x[i]));
-        if( std::abs(gradient[i])*fscale*xscale > *eps ) {
+        const Real xscale = fmax(Real(1), fabs(x[i]));
+        if( fabs(gradient[i])*fscale*xscale > *eps ) {
            converged=false;
            break;
         }

@@ -291,8 +291,24 @@ inline bool signBit(long        i) {return ((unsigned long)i
 
 inline bool signBit(const float&  f) {return std::signbit(f);}
 inline bool signBit(const double& d) {return std::signbit(d);}
-inline bool signBit(const negator<float>&  nf) {return std::signbit(-nf);} // !!
-inline bool signBit(const negator<double>& nd) {return std::signbit(-nd);} // !!
+inline bool signBit(const negator<float>&  nf) { return std::signbit(-nf); } // !!
+inline bool signBit(const negator<double>& nd) { return std::signbit(-nd); } // !!
+#ifdef SimTK_REAL_IS_ADOUBLE
+    inline bool signBit(const Recorder& d) {
+        if (d < 0) {
+            return true;
+        }
+        else { return false; }
+    }
+    inline bool signBit(const negator<Recorder>& nd) {
+	    if (-nd < 0) {
+		    return true;
+	    }
+	    else { return false; }
+    }
+#endif
+
+
 
 /*@}*/
 
@@ -324,10 +340,18 @@ inline int sign(long        i) {return i>0 ? 1 : (i<0 ? -1 : 0);}
 inline int sign(long long   i) {return i>0 ? 1 : (i<0 ? -1 : 0);}
 
 inline int sign(const float&       x) {return x>0 ? 1 : (x<0 ? -1 : 0);}
-inline int sign(const double&      x) {return x>0 ? 1 : (x<0 ? -1 : 0);}
+inline int sign(const double&      x) { return x>0 ? 1 : (x<0 ? -1 : 0); }
+inline int sign(const long double& x) {return x>0 ? 1 : (x<0 ? -1 : 0);}
 
 inline int sign(const negator<float>&       x) {return -sign(-x);} // -x is free
-inline int sign(const negator<double>&      x) {return -sign(-x);}
+inline int sign(const negator<double>&      x) { return -sign(-x); }
+inline int sign(const negator<long double>& x) {return -sign(-x);}
+
+#ifdef SimTK_REAL_IS_ADOUBLE
+    inline int sign(const Recorder&      x) {return x>0 ? 1 : (x<0 ? -1 : 0);}
+    inline int sign(const negator<Recorder>&      x) {return -sign(-x);}
+#endif
+
 //@}
 
 /**
@@ -362,12 +386,21 @@ inline long long   square(long long   i) {return i*i;}
 
 inline float       square(const float&       x) {return x*x;}
 inline double      square(const double&      x) {return x*x;}
+inline long double square(const long double& x) {return x*x;}
+
+#ifdef SimTK_REAL_IS_ADOUBLE
+    inline Recorder      square(const Recorder&      x) { return x*x; }
+#endif
 
 // Negation is free for negators, so we can square them and clean
 // them up at the same time at no extra cost.
 inline float       square(const negator<float>&       x) {return square(-x);}
 inline double      square(const negator<double>&      x) {return square(-x);}
+inline long double square(const negator<long double>& x) {return square(-x);}
 
+#ifdef SimTK_REAL_IS_ADOUBLE
+    inline Recorder      square(const negator<Recorder>&      x) { return square(-x); }
+#endif
 // It is safer to templatize using complex classes, and doesn't make
 // debugging any worse since complex is already templatized. 
 // 5 flops vs. 6 for general complex multiply.
@@ -433,6 +466,12 @@ inline long long   cube(long long   i) {return i*i*i;}
 
 inline float       cube(const float&       x) {return x*x*x;}
 inline double      cube(const double&      x) {return x*x*x;}
+inline long double cube(const long double& x) {return x*x*x;}
+
+#ifdef SimTK_REAL_IS_ADOUBLE
+    inline Recorder      cube(const Recorder&      x) { return x*x*x; }
+#endif
+
 
 // To keep this cheap we'll defer getting rid of the negator<> until
 // some other operation. We cube -x and then recast that to negator<>
@@ -443,6 +482,14 @@ inline negator<float> cube(const negator<float>& x) {
 inline negator<double> cube(const negator<double>& x) {
     return negator<double>::recast(cube(-x));
 }
+inline negator<long double> cube(const negator<long double>& x) {
+    return negator<long double>::recast(cube(-x));
+}
+#ifdef SimTK_REAL_IS_ADOUBLE
+    inline negator<Recorder> cube(const negator<Recorder>& x) {
+	    return negator<Recorder>::recast(cube(-x));
+    }
+#endif
 
 // Cubing a complex this way is cheaper than doing it by
 // multiplication. Cost here is 8 flops vs. 11 for a square
@@ -530,10 +577,20 @@ overload.
 
 Cost: These are very fast inline methods; the floating point ones use
 just two flops. **/
-inline double& clampInPlace(double low, double& v, double high) 
-{   assert(low<=high); if (v<low) v=low; else if (v>high) v=high; return v; }
+inline double& clampInPlace(double low, double& v, double high)
+{	assert(low<=high); if (v<low) v=low; else if (v>high) v=high; return v; }
+#ifdef SimTK_REAL_IS_ADOUBLE
+    inline Recorder& clampInPlace(double low, Recorder& v, double high)
+    {   assert(low<=high); if (v<low) v=low; else if (v>high) v=high; return v; }
+
+    inline Recorder& clampInPlace(Recorder low, Recorder& v, Recorder high)
+    {   assert(low<=high); if (v<low) v=low; else if (v>high) v=high; return v; }
+#endif
 /** @copydoc SimTK::clampInPlace(double,double&,double) **/
 inline float& clampInPlace(float low, float& v, float high) 
+{   assert(low<=high); if (v<low) v=low; else if (v>high) v=high; return v; }
+/** @copydoc SimTK::clampInPlace(double,double&,double) **/
+inline long double& clampInPlace(long double low, long double& v, long double high) 
 {   assert(low<=high); if (v<low) v=low; else if (v>high) v=high; return v; }
 
     // Floating point clamps with integer bounds; without these
@@ -541,30 +598,54 @@ inline float& clampInPlace(float low, float& v, float high)
 
 /** @copydoc SimTK::clampInPlace(double,double&,double) 
 Takes integer bounds to avoid need for explicit casts. **/
-inline double& clampInPlace(int low, double& v, int high) 
+inline double& clampInPlace(int low, double& v, int high)
 {   return clampInPlace((double)low,v,(double)high); }
+#ifdef SimTK_REAL_IS_ADOUBLE
+    inline Recorder& clampInPlace(int low, Recorder& v, int high)
+    {	return clampInPlace((double)low, v, (double)high); }
+#endif
 /** @copydoc SimTK::clampInPlace(double,double&,double) 
 Takes integer bounds to avoid need for explicit casts. **/
 inline float& clampInPlace(int low, float& v, int high) 
 {   return clampInPlace((float)low,v,(float)high); }
+/** @copydoc SimTK::clampInPlace(double,double&,double) 
+Takes integer bounds to avoid need for explicit casts. **/
+inline long double& clampInPlace(int low, long double& v, int high) 
+{   return clampInPlace((long double)low,v,(long double)high); }
 
 /** @copydoc SimTK::clampInPlace(double,double&,double) 
 Takes an integer bound to avoid need for explicit casts. **/
-inline double& clampInPlace(int low, double& v, double high) 
+inline double& clampInPlace(int low, double& v, double high)
 {   return clampInPlace((double)low,v,high); }
+#ifdef SimTK_REAL_IS_ADOUBLE
+    inline Recorder& clampInPlace(int low, Recorder& v, double high)
+    {	return clampInPlace((double)low, v, high); }
+#endif
 /** @copydoc SimTK::clampInPlace(double,double&,double) 
 Takes an integer bound to avoid need for explicit casts. **/
 inline float& clampInPlace(int low, float& v, float high) 
 {   return clampInPlace((float)low,v,high); }
+/** @copydoc SimTK::clampInPlace(double,double&,double) 
+Takes an integer bound to avoid need for explicit casts. **/
+inline long double& clampInPlace(int low, long double& v, long double high) 
+{   return clampInPlace((long double)low,v,high); }
 
 /** @copydoc SimTK::clampInPlace(double,double&,double) 
 Takes an integer bound to avoid need for explicit casts. **/
 inline double& clampInPlace(double low, double& v, int high) 
 {   return clampInPlace(low,v,(double)high); }
+#ifdef SimTK_REAL_IS_ADOUBLE
+    inline Recorder& clampInPlace(double low, Recorder& v, int high)
+    { return clampInPlace(low, v, (double)high); }
+#endif
 /** @copydoc SimTK::clampInPlace(double,double&,double) 
 Takes an integer bound to avoid need for explicit casts. **/
 inline float& clampInPlace(float low, float& v, int high) 
 {   return clampInPlace(low,v,(float)high); }
+/** @copydoc SimTK::clampInPlace(double,double&,double) 
+Takes an integer bound to avoid need for explicit casts. **/
+inline long double& clampInPlace(long double low, long double& v, int high) 
+{   return clampInPlace(low,v,(long double)high); }
 
 /** @copydoc SimTK::clampInPlace(double,double&,double) **/
 inline unsigned char& clampInPlace(unsigned char low, unsigned char& v, unsigned char high) 
@@ -606,7 +687,16 @@ inline long long& clampInPlace(long long low, long long& v, long long high)
 inline negator<float>& clampInPlace(float low, negator<float>& v, float high) 
 {   assert(low<=high); if (v<low) v=low; else if (v>high) v=high; return v; }
 /** @copydoc SimTK::clampInPlace(double,double&,double) **/
-inline negator<double>& clampInPlace(double low, negator<double>& v, double high) 
+inline negator<double>& clampInPlace(double low, negator<double>& v, double high)
+{   assert(low<=high); if (v<low) v=low; else if (v>high) v=high; return v; }
+#ifdef SimTK_REAL_IS_ADOUBLE
+    inline negator<Recorder>& clampInPlace(double low, negator<Recorder>& v, double high)
+    {	assert(low<=high); if (v<low) v=low; else if (v>high) v=high; return v; }
+    inline negator<Recorder>& clampInPlace(Recorder low, negator<Recorder>& v, Recorder high)
+    {   assert(low<=high); if (v<low) v=low; else if (v>high) v=high; return v; }
+#endif
+/** @copydoc SimTK::clampInPlace(double,double&,double) **/
+inline negator<long double>& clampInPlace(long double low, negator<long double>& v, long double high) 
 {   assert(low<=high); if (v<low) v=low; else if (v>high) v=high; return v; }
 
 
@@ -633,35 +723,68 @@ just two flops.
 @see clampInPlace() **/
 inline double clamp(double low, double v, double high) 
 {   return clampInPlace(low,v,high); }
+#ifdef SimTK_REAL_IS_ADOUBLE
+    inline Recorder clamp(double low, Recorder v, double high)
+    {	return clampInPlace(low, v, high); }
+    inline Recorder clamp(Recorder low, Recorder v, Recorder high)
+    {    return clampInPlace(low, v, high); }
+#endif
 /** @copydoc SimTK::clamp(double,double,double) **/
 inline float clamp(float low, float v, float high) 
+{   return clampInPlace(low,v,high); }
+/** @copydoc SimTK::clamp(double,double,double) **/
+inline long double clamp(long double low, long double v, long double high) 
 {   return clampInPlace(low,v,high); }
 
 /** @copydoc SimTK::clamp(double,double,double) 
 Takes integer bounds to avoid need for explicit casts. **/
-inline double clamp(int low, double v, int high) 
+inline double clamp(int low, double v, int high)
 {   return clampInPlace(low,v,high); }
+#ifdef SimTK_REAL_IS_ADOUBLE
+    inline Recorder clamp(int low, Recorder v, int high)
+    {	return clampInPlace(low, v, high); }
+#endif
 /** @copydoc SimTK::clamp(double,double,double) 
 Takes integer bounds to avoid need for explicit casts. **/
 inline float clamp(int low, float v, int high) 
 {   return clampInPlace(low,v,high); }
+/** @copydoc SimTK::clamp(double,double,double)
+Takes integer bounds to avoid need for explicit casts. **/
+inline long double clamp(int low, long double v, int high) 
+{   return clampInPlace(low,v,high); }
 
 /** @copydoc SimTK::clamp(double,double,double) 
 Takes an integer bound to avoid need for explicit casts. **/
-inline double clamp(int low, double v, double high) 
+inline double clamp(int low, double v, double high)
 {   return clampInPlace(low,v,high); }
+#ifdef SimTK_REAL_IS_ADOUBLE
+    inline Recorder clamp(int low, Recorder v, double high)
+    {	return clampInPlace(low, v, high); }
+#endif
 /** @copydoc SimTK::clamp(double,double,double) 
 Takes an integer bound to avoid need for explicit casts. **/
 inline float clamp(int low, float v, float high) 
+{   return clampInPlace(low,v,high); }
+/** @copydoc SimTK::clamp(double,double,double)
+Takes an integer bound to avoid need for explicit casts. **/
+inline long double clamp(int low, long double v, long double high) 
 {   return clampInPlace(low,v,high); }
 
 /** @copydoc SimTK::clamp(double,double,double) 
 Takes an integer bound to avoid need for explicit casts. **/
 inline double clamp(double low, double v, int high) 
 {   return clampInPlace(low,v,high); }
+#ifdef SimTK_REAL_IS_ADOUBLE
+    inline Recorder clamp(double low, Recorder v, int high)
+    {	return clampInPlace(low, v, high); }
+#endif
 /** @copydoc SimTK::clamp(double,double,double) 
 Takes an integer bound to avoid need for explicit casts. **/
 inline float clamp(float low, float v, int high) 
+{   return clampInPlace(low,v,high); }
+/** @copydoc SimTK::clamp(double,double,double)
+Takes an integer bound to avoid need for explicit casts. **/
+inline long double clamp(long double low, long double v, int high) 
 {   return clampInPlace(low,v,high); }
 
 /** @copydoc SimTK::clamp(double,double,double) **/
@@ -719,6 +842,18 @@ right overload, but the negation is performed (1 extra flop) and the result
 type is an ordinary double. **/
 inline double clamp(double low, negator<double> v, double high) 
 {   return clamp(low,(double)v,high); }
+#ifdef SimTK_REAL_IS_ADOUBLE
+    inline Recorder clamp(double low, negator<Recorder> v, double high)
+    {	return clamp(low, (Recorder)v, high); }
+    inline Recorder clamp(Recorder low, negator<Recorder> v, Recorder high)
+    {    return clamp(low, (Recorder)v, high); }
+#endif
+/** @copydoc SimTK::clamp(double,double,double)
+Explicitly takes a negator<long double> argument to help the compiler find the
+right overload, but the negation is performed (1 extra flop) and the result 
+type is an ordinary long double. **/
+inline long double clamp(long double low, negator<long double> v, long double high) 
+{   return clamp(low,(long double)v,high); }
 /*@}*/
 
 
@@ -777,7 +912,11 @@ Cost is 7 flops.
 inline double stepUp(double x)
 {   assert(0 <= x && x <= 1);
     return x*x*x*(10+x*(6*x-15)); }  //10x^3-15x^4+6x^5
-
+#ifdef SimTK_REAL_IS_ADOUBLE
+inline Recorder stepUp(Recorder x)
+    {	assert(0 <= x && x <= 1);
+	    return x*x*x*(10 + x*(6 * x - 15));}  //10x^3-15x^4+6x^5
+#endif
 
 /** Interpolate smoothly from 1 down to 0 as the input argument goes from 
 0 to 1, with first and second derivatives zero at either end of the interval.
@@ -794,6 +933,9 @@ This function is overloaded for all the floating point precisions.
 Cost is 8 flops.
 @see stepUp(), stepAny() **/
 inline double stepDown(double x) {return 1.0 -stepUp(x);}
+#ifdef SimTK_REAL_IS_ADOUBLE
+    inline Recorder stepDown(Recorder x) { return 1.0 - stepUp(x); }
+#endif
 
 
 /** Interpolate smoothly from y0 to y1 as the input argument goes from x0 to x1,
@@ -871,14 +1013,26 @@ It would be extremely rare for these few flops to matter at all; you should
 almost always choose based on what looks better and/or is less error prone
 instead. **/
 inline double stepAny(double y0, double yRange,
-                      double x0, double oneOverXRange,
-                      double x) 
-{   double xadj = (x-x0)*oneOverXRange;    
+	double x0, double oneOverXRange,
+	double x)
+{
+	double xadj = (x-x0)*oneOverXRange;
     assert(-NTraits<double>::getSignificant() <= xadj
            && xadj <= 1 + NTraits<double>::getSignificant());
     clampInPlace(0.0,xadj,1.0);
     return y0 + yRange*stepUp(xadj); }
-
+#ifdef SimTK_REAL_IS_ADOUBLE
+    inline Recorder stepAny(Recorder y0, Recorder yRange,
+	    Recorder x0, Recorder oneOverXRange,
+	    Recorder x)
+    {
+	    Recorder xadj = (x - x0)*oneOverXRange;
+	    assert(-NTraits<Recorder>::getSignificant() <= xadj
+		    && xadj <= 1 + NTraits<Recorder>::getSignificant());
+	    clampInPlace(0.0, xadj, 1.0);
+	    return y0 + yRange*stepUp(xadj);
+    }
+#endif
 /** First derivative of stepUp(): d/dx stepUp(x). 
 @param[in] x    Control parameter in range [0,1]. 
 @return First derivative of stepUp() at x. **/
@@ -887,23 +1041,44 @@ inline double dstepUp(double x) {
     const double xxm1=x*(x-1);
     return 30*xxm1*xxm1;        //30x^2-60x^3+30x^4
 }
-
+#ifdef SimTK_REAL_IS_ADOUBLE
+    inline Recorder dstepUp(Recorder x) {
+	    assert(0 <= x && x <= 1);
+	    const Recorder xxm1 = x*(x - 1);
+	    return 30 * xxm1*xxm1;        //30x^2-60x^3+30x^4
+    }
+#endif
 /** First derivative of stepDown(): d/dx stepDown(x). 
 @param[in] x    Control parameter in range [0,1]. 
 @return First derivative of stepDown() at x. **/
 inline double dstepDown(double x) {return -dstepUp(x);}
-
+#ifdef SimTK_REAL_IS_ADOUBLE
+    inline Recorder dstepDown(Recorder x) { return -dstepUp(x); }
+#endif
 /** First derivative of stepAny(): d/dx stepAny(x). 
 See stepAny() for parameter documentation. 
 @return First derivative of stepAny() at x. **/
 inline double dstepAny(double yRange,
-                       double x0, double oneOverXRange,
+	double x0, double oneOverXRange,
                        double x) 
-{   double xadj = (x-x0)*oneOverXRange;    
+{
+	double xadj = (x-x0)*oneOverXRange;
     assert(-NTraits<double>::getSignificant() <= xadj
            && xadj <= 1 + NTraits<double>::getSignificant());
     clampInPlace(0.0,xadj,1.0);
     return yRange*oneOverXRange*dstepUp(xadj); }
+#ifdef SimTK_REAL_IS_ADOUBLE
+    inline Recorder dstepAny(Recorder yRange,
+	    Recorder x0, Recorder oneOverXRange,
+	    Recorder x)
+    {
+	    Recorder xadj = (x - x0)*oneOverXRange;
+	    assert(-NTraits<Recorder>::getSignificant() <= xadj
+		    && xadj <= 1 + NTraits<Recorder>::getSignificant());
+	    clampInPlace(0.0, xadj, 1.0);
+	    return yRange*oneOverXRange*dstepUp(xadj);
+    }
+#endif
 
 /** Second derivative of stepUp(): d^2/dx^2 stepUp(x). 
 @param[in] x    Control parameter in range [0,1]. 
@@ -912,23 +1087,43 @@ inline double d2stepUp(double x) {
     assert(0 <= x && x <= 1);
     return 60*x*(1+x*(2*x-3));  //60x-180x^2+120x^3
 }
-
+#ifdef SimTK_REAL_IS_ADOUBLE
+    inline Recorder d2stepUp(Recorder x) {
+	    assert(0 <= x && x <= 1);
+	    return 60 * x*(1 + x*(2 * x - 3));  //60x-180x^2+120x^3
+    }
+#endif
 /** Second derivative of stepDown(): d^2/dx^2 stepDown(x). 
 @param[in] x    Control parameter in range [0,1]. 
 @return Second derivative of stepDown() at x. **/
 inline double d2stepDown(double x) {return -d2stepUp(x);}
-
+#ifdef SimTK_REAL_IS_ADOUBLE
+    inline Recorder d2stepDown(Recorder x) { return -d2stepUp(x); }
+#endif
 /** Second derivative of stepAny(): d^2/dx^2 stepAny(x). 
 See stepAny() for parameter documentation. 
 @return Second derivative of stepAny() at x. **/
 inline double d2stepAny(double yRange,
-                        double x0, double oneOverXRange,
-                        double x) 
-{   double xadj = (x-x0)*oneOverXRange;    
+	double x0, double oneOverXRange,
+	double x)
+{
+	double xadj = (x-x0)*oneOverXRange;
     assert(-NTraits<double>::getSignificant() <= xadj
            && xadj <= 1 + NTraits<double>::getSignificant());
     clampInPlace(0.0,xadj,1.0);
     return yRange*square(oneOverXRange)*d2stepUp(xadj); }
+#ifdef SimTK_REAL_IS_ADOUBLE
+    inline Recorder d2stepAny(Recorder yRange,
+	    Recorder x0, Recorder oneOverXRange,
+	    Recorder x)
+    {
+	    Recorder xadj = (x - x0)*oneOverXRange;
+	    assert(-NTraits<Recorder>::getSignificant() <= xadj
+		    && xadj <= 1 + NTraits<Recorder>::getSignificant());
+	    clampInPlace(0.0, xadj, 1.0);
+	    return yRange*square(oneOverXRange)*d2stepUp(xadj);
+    }
+#endif
 
 /** Third derivative of stepUp(): d^3/dx^3 stepUp(x). 
 @param[in] x    Control parameter in range [0,1]. 
@@ -937,24 +1132,43 @@ inline double d3stepUp(double x) {
     assert(0 <= x && x <= 1);
     return 60+360*x*(x-1);      //60-360*x+360*x^2
 }
-
+#ifdef SimTK_REAL_IS_ADOUBLE
+    inline Recorder d3stepUp(Recorder x) {
+	    assert(0 <= x && x <= 1);
+	    return 60 + 360 * x*(x - 1);      //60-360*x+360*x^2
+    }
+#endif
 /** Third derivative of stepDown(): d^3/dx^3 stepDown(x). 
 @param[in] x    Control parameter in range [0,1]. 
 @return Third derivative of stepDown() at x. **/
 inline double d3stepDown(double x) {return -d3stepUp(x);}
-
+#ifdef SimTK_REAL_IS_ADOUBLE
+    inline Recorder d3stepDown(Recorder x) { return -d3stepUp(x); }
+#endif
 /** Third derivative of stepAny(): d^3/dx^3 stepAny(x).
 See stepAny() for parameter documentation. 
 @return Third derivative of stepAny() at x. **/
 inline double d3stepAny(double yRange,
-                        double x0, double oneOverXRange,
-                        double x) 
-{   double xadj = (x-x0)*oneOverXRange;    
+	double x0, double oneOverXRange,
+	double x)
+{
+	double xadj = (x-x0)*oneOverXRange;
     assert(-NTraits<double>::getSignificant() <= xadj
            && xadj <= 1 + NTraits<double>::getSignificant());
     clampInPlace(0.0,xadj,1.0);
     return yRange*cube(oneOverXRange)*d3stepUp(xadj); }
-
+#ifdef SimTK_REAL_IS_ADOUBLE
+    inline Recorder d3stepAny(Recorder yRange,
+	    Recorder x0, Recorder oneOverXRange,
+	    Recorder x)
+    {
+	    Recorder xadj = (x - x0)*oneOverXRange;
+	    assert(-NTraits<Recorder>::getSignificant() <= xadj
+		    && xadj <= 1 + NTraits<Recorder>::getSignificant());
+	    clampInPlace(0.0, xadj, 1.0);
+	    return yRange*cube(oneOverXRange)*d3stepUp(xadj);
+    }
+#endif
             // float
 
 /** @copydoc SimTK::stepUp(double) **/
@@ -1022,13 +1236,83 @@ inline float d3stepAny(float yRange,
     clampInPlace(0.0f,xadj,1.0f);
     return yRange*cube(oneOverXRange)*d3stepUp(xadj); }
 
+            // long double
+
+/** @copydoc SimTK::stepUp(double) **/
+inline long double stepUp(long double x) 
+{   assert(0 <= x && x <= 1);
+    return x*x*x*(10+x*(6*x-15)); }  //10x^3-15x^4+6x^5
+/** @copydoc SimTK::stepDown(double) **/
+inline long double stepDown(long double x) {return 1.0L-stepUp(x);}
+/** @copydoc SimTK::stepAny(double,double,double,double,double) **/
+inline long double stepAny(long double y0, long double yRange,
+                           long double x0, long double oneOverXRange,
+                           long double x) 
+{   long double xadj = (x-x0)*oneOverXRange;    
+    assert(-NTraits<long double>::getSignificant() <= xadj
+           && xadj <= 1 + NTraits<long double>::getSignificant());
+    clampInPlace(0.0L,xadj,1.0L);
+    return y0 + yRange*stepUp(xadj); }
+
+
+/** @copydoc SimTK::dstepUp(double) **/
+inline long double dstepUp(long double x) 
+{   assert(0 <= x && x <= 1);
+    const long double xxm1=x*(x-1);
+    return 30*xxm1*xxm1; }          //30x^2-60x^3+30x^4
+/** @copydoc SimTK::dstepDown(double) **/
+inline long double dstepDown(long double x) {return -dstepUp(x);}
+/** @copydoc SimTK::dstepAny(double,double,double,double) **/
+inline long double dstepAny(long double yRange,
+                            long double x0, long double oneOverXRange,
+                            long double x) 
+{   long double xadj = (x-x0)*oneOverXRange;    
+    assert(-NTraits<long double>::getSignificant() <= xadj
+           && xadj <= 1 + NTraits<long double>::getSignificant());
+    clampInPlace(0.0L,xadj,1.0L);
+    return yRange*oneOverXRange*dstepUp(xadj); }
+
+/** @copydoc SimTK::d2stepUp(double) **/
+inline long double d2stepUp(long double x) 
+{   assert(0 <= x && x <= 1);
+    return 60*x*(1+x*(2*x-3)); }    //60x-180x^2+120x^3
+/** @copydoc SimTK::d2stepDown(double) **/
+inline long double d2stepDown(long double x) {return -d2stepUp(x);}
+/** @copydoc SimTK::d2stepAny(double,double,double,double) **/
+inline long double d2stepAny(long double yRange,
+                             long double x0, long double oneOverXRange,
+                             long double x) 
+{   long double xadj = (x-x0)*oneOverXRange;    
+    assert(-NTraits<long double>::getSignificant() <= xadj
+           && xadj <= 1 + NTraits<long double>::getSignificant());
+    clampInPlace(0.0L,xadj,1.0L);
+    return yRange*square(oneOverXRange)*d2stepUp(xadj); }
+
+
+/** @copydoc SimTK::d3stepUp(double) **/
+inline long double d3stepUp(long double x) 
+{   assert(0 <= x && x <= 1);
+    return 60+360*x*(x-1); }        //60-360*x+360*x^2
+/** @copydoc SimTK::d3stepDown(double) **/
+inline long double d3stepDown(long double x) {return -d3stepUp(x);}
+/** @copydoc SimTK::d3stepAny(double,double,double,double) **/
+inline long double d3stepAny(long double yRange,
+                             long double x0, long double oneOverXRange,
+                             long double x) 
+{   long double xadj = (x-x0)*oneOverXRange;    
+    assert(-NTraits<long double>::getSignificant() <= xadj
+           && xadj <= 1 + NTraits<long double>::getSignificant());
+    clampInPlace(0.0L,xadj,1.0L);
+    return yRange*cube(oneOverXRange)*d3stepUp(xadj); }
+
         // int converts to double; only supplied for stepUp(), stepDown()
 /** @copydoc SimTK::stepUp(double)
 Treats int argument as a double (avoids ambiguity). **/
-inline double stepUp(int x) {return stepUp((double)x);}
+inline Real stepUp(int x) { return stepUp((Real)x); }
+
 /** @copydoc SimTK::stepDown(double)
 Treats int argument as a double (avoids ambiguity). **/
-inline double stepDown(int x) {return stepDown((double)x);}
+inline Real stepDown(int x) { return stepDown((Real)x); }
 
 
 /*@}*/

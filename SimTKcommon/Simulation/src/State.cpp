@@ -47,7 +47,7 @@ State::State() {
 
 // Restore state to default-constructed condition
 void State::clear() {
-    delete impl; impl = new StateImpl();
+	    delete impl; impl = new StateImpl();
 }
 State::~State() {
     delete impl; impl=0;

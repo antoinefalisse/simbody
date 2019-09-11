@@ -123,7 +123,7 @@ void HuntCrossleyForceImpl::calcForce(const State& state, Vector_<SpatialVec>& b
         const Real k = param1.stiffness*s1;
         const Real c = param1.dissipation*s1 + param2.dissipation*s2;
         const Real radius = contact.getEffectiveRadiusOfCurvature();
-        const Real fH = Real(4./3.)*k*depth*std::sqrt(radius*k*depth);
+        const Real fH = Real(4./3.)*k*depth*NTraits<Real>::sqrt(radius*k*depth);
         pe += Real(2./5.)*fH*depth;
         
         // Calculate the relative velocity of the two bodies at the contact point.
@@ -153,11 +153,29 @@ void HuntCrossleyForceImpl::calcForce(const State& state, Vector_<SpatialVec>& b
             const bool hasStatic = (param1.staticFriction != 0 || param2.staticFriction != 0);
             const bool hasDynamic= (param1.dynamicFriction != 0 || param2.dynamicFriction != 0);
             const bool hasViscous = (param1.viscousFriction != 0 || param2.viscousFriction != 0);
-            const Real us = hasStatic ? 2*param1.staticFriction*param2.staticFriction/(param1.staticFriction+param2.staticFriction) : 0;
-            const Real ud = hasDynamic ? 2*param1.dynamicFriction*param2.dynamicFriction/(param1.dynamicFriction+param2.dynamicFriction) : 0;
-            const Real uv = hasViscous ? 2*param1.viscousFriction*param2.viscousFriction/(param1.viscousFriction+param2.viscousFriction) : 0;
+            /*const Real us = hasStatic ? 2*param1.staticFriction*param2.staticFriction/(param1.staticFriction+param2.staticFriction) : 0;*/
+			Real us;
+			if (hasStatic) { us = 2.0 * param1.staticFriction*param2.staticFriction / (param1.staticFriction + param2.staticFriction);}
+			else { us = 0; }
+
+            /*const Real ud = hasDynamic ? 2*param1.dynamicFriction*param2.dynamicFriction/(param1.dynamicFriction+param2.dynamicFriction) : 0;*/
+			Real ud;
+			if (hasDynamic) { 
+				ud = 2.0*param1.dynamicFriction*param2.dynamicFriction / (param1.dynamicFriction + param2.dynamicFriction); 
+			}
+			else { ud = 0;
+			}
+
+
+            /*const Real uv = hasViscous ? 2*param1.viscousFriction*param2.viscousFriction/(param1.viscousFriction+param2.viscousFriction) : 0;*/
+			Real uv;
+			if (hasViscous) { uv = 2.0 * param1.viscousFriction*param2.viscousFriction / (param1.viscousFriction + param2.viscousFriction); }
+			else { uv = 0; }
+
             const Real vrel = vslip/getTransitionVelocity();
-            const Real ffriction = f*(std::min(vrel, Real(1))*(ud+2*(us-ud)/(1+vrel*vrel))+uv*vslip);
+			Real aux = 1.0;
+			Real vrel_aux = vrel;
+            const Real ffriction = f*(NTraits<Real>::min(vrel, Real(1.0))*(ud+2*(us-ud)/(1+vrel*vrel))+uv*vslip);
             force += ffriction*vtangent/vslip;
         }
         

@@ -12,7 +12,7 @@
 #include "IpIpoptNLP.hpp"
 #include "IpIpoptData.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   /** Norm types */

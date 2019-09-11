@@ -103,7 +103,11 @@ Vec<K> GCVSPLUtil::splder(int derivOrder, int degree, Real t, const Vector& x, c
     Vec<K> result;
     int m = (degree+1)/2;
     int n = x.size();
-    int interval = (int) ceil(n*(t-x[0])/(x[n-1]-x[0]));
+#ifndef SimTK_REAL_IS_ADOUBLE
+    int interval = (int)ceil(n*(t - x[0]) / (x[n - 1] - x[0]));
+#else
+    int interval = (int) ceil(n*(t.getValue()-x[0].getValue())/(x[n-1].getValue()-x[0].getValue()));
+#endif
 
     const int MaxCheapM = 32;
     Real qbuf[2*MaxCheapM];

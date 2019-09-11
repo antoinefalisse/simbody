@@ -60,6 +60,7 @@ RBNodeSlider(const MassProperties&    mProps_B,
 
     // Implementations of virtual methods.
 
+#ifndef SimTK_REAL_IS_ADOUBLE
 void setQToFitRotationImpl(const SBStateDigest& sbs, const Rotation& R_FM, 
                            Vector& q) const {
     // The only rotation a slider can represent is identity.
@@ -75,6 +76,7 @@ void setUToFitAngularVelocityImpl(const SBStateDigest& sbs, const Vector&,
                                   const Vec3& w_FM, Vector& u) const {
     // The only angular velocity a slider can represent is zero.
 }
+#endif
 
 void setUToFitLinearVelocityImpl(const SBStateDigest& sbs, const Vector&, 
                                  const Vec3& v_FM, Vector& u) const

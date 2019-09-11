@@ -22,6 +22,9 @@
  * -------------------------------------------------------------------------- */
 
 #include "SimTKmath.h"
+
+#ifndef SimTK_REAL_IS_ADOUBLE
+
 #include "simbody/internal/MobilizedBody.h"
 #include "simbody/internal/MobilizedBody_Ground.h"
 #include "simbody/internal/MobilizedBody_Free.h"
@@ -366,12 +369,14 @@ Real ObservedPointFitter::findBestFit
     Real error;
     optimizer.objectiveFunc(q, true, error);
     if (UseWeighted)
-        return std::sqrt(error - MinimumShift); // already weighted; this makes WRMS
+        return NTraits<Real>::sqrt(error - MinimumShift); // already weighted; this makes WRMS
 
     Real totalWeight = 0;
     for (int i = 0; i < (int)weights.size(); ++i)
         for (int j = 0; j < (int)weights[i].size(); ++j)
             totalWeight += weights[i][j];
 
-    return std::sqrt((error-MinimumShift)/totalWeight);
+    return NTraits<Real>::sqrt((error-MinimumShift)/totalWeight);
 }
+
+#endif

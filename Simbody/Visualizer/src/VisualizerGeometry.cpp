@@ -165,7 +165,11 @@ unsigned short VisualizerGeometry::
 getResolution(const DecorativeGeometry& geom) const {
     if (geom.getResolution() <= 0)
         return 2;
-    return std::max((unsigned short) 1, (unsigned short) (geom.getResolution()*2));
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        return std::max((unsigned short)1, (unsigned short)(geom.getResolution() * 2));
+    #else
+        return fmax((unsigned short) 1, (unsigned short) (geom.getResolution().getValue() *2));
+    #endif
 }
 
 Vec3 VisualizerGeometry::getScaleFactors(const DecorativeGeometry& geom) const {

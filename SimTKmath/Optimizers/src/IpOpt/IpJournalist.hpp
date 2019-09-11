@@ -27,7 +27,7 @@
 #include <string>
 #include <vector>
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   // forward declarations

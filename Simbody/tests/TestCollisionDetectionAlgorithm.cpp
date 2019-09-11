@@ -34,13 +34,13 @@ const Real TOL = 1e-10;
 
 template <class T>
 void assertEqual(T val1, T val2) {
-    ASSERT(abs(val1-val2) < TOL);
+    ASSERT(NTraits<Real>::abs(val1-val2) < TOL);
 }
 
 template <int N>
 void assertEqual(Vec<N> val1, Vec<N> val2) {
     for (int i = 0; i < N; ++i)
-        ASSERT(abs(val1[i]-val2[i]) < TOL);
+        ASSERT(NTraits<Real>::abs(val1[i]-val2[i]) < TOL);
 }
 
 void verifyPointContact(const Array_<Contact>& contacts, int surface1, int surface2, const Vec3& normal, const Vec3& location, Real depth, Real r1, Real r2) {
@@ -53,7 +53,9 @@ void verifyPointContact(const Array_<Contact>& contacts, int surface1, int surfa
     assertEqual(c.getDepth(), depth);
     assertEqual(min(c.getRadiusOfCurvature1(), c.getRadiusOfCurvature2()), min(r1, r2));
     assertEqual(max(c.getRadiusOfCurvature1(), c.getRadiusOfCurvature2()), max(r1, r2));
+#ifndef SimTK_REAL_IS_ADOUBLE
     assertEqual(c.getEffectiveRadiusOfCurvature(), sqrt(r1*r2));
+#endif
     assertEqual(c.getLocation(), location);
 }
 
@@ -131,10 +133,12 @@ void testSphereSphere() {
             int body2 = c.getSurface2();
             Vec3 delta = centerInGround[body2]-centerInGround[body1];
             assertEqual(delta.normalize(), c.getNormal());
+#ifndef SimTK_REAL_IS_ADOUBLE
             assertEqual(delta.norm(), radius[body1]+radius[body2]-c.getDepth());
             double r = radius[body1]*radius[body2]/(radius[body1]+radius[body2]);
             assertEqual(r, c.getRadiusOfCurvature1());
             assertEqual(r, c.getRadiusOfCurvature2());
+#endif
         }
 
         // Make sure no contacts were missed.
@@ -163,7 +167,7 @@ void testHalfSpaceEllipsoid() {
     State state = system.realizeTopology();
 
     // Test a variety of positions.
-
+#ifndef SimTK_REAL_IS_ADOUBLE
     ellipsoid.setQToFitTransform(state, Transform(Rotation(), Vec3(0, 2.9, 0))); // [-0.7, 0.9], [1.1, 4.1], [-1.8, 2.4]
     system.realize(state, Stage::Dynamics);
     ASSERT(contacts.getContacts(state, setIndex).size() == 0);
@@ -174,15 +178,18 @@ void testHalfSpaceEllipsoid() {
     system.realize(state, Stage::Dynamics);
     verifyPointContact(contacts.getContacts(state, setIndex), 1, 0, Vec3(0, 1, 0), Vec3(0.3, 0.95, 0.3), 0.1, 1.5, 2.1);
     ellipsoid.setQToFitTransform(state, Transform(Rotation(SimTK_PI/4, XAxis), Vec3(0, 3.1, 0)));
+#endif
     system.realize(state, Stage::Dynamics);
     ASSERT(contacts.getContacts(state, setIndex).size() == 1);
     const PointContact& c = static_cast<const PointContact&>(contacts.getContacts(state, setIndex)[0]);
     assertEqual(c.getNormal(), Vec3(0, 1, 0));
     ASSERT(c.getDepth() < 0.3);
+#ifndef SimTK_REAL_IS_ADOUBLE
     assertEqual(min(c.getRadiusOfCurvature1(), c.getRadiusOfCurvature2()), 0.8);
     ASSERT(max(c.getRadiusOfCurvature1(), c.getRadiusOfCurvature2()) > 1.5 && max(c.getRadiusOfCurvature1(), c.getRadiusOfCurvature2()) < 2.1);
     assertEqual(c.getLocation()[0], 0.1);
     assertEqual(c.getLocation()[1], 1-c.getDepth()/2);
+#endif
     ASSERT(c.getLocation()[2] > 0);
 }
 
@@ -191,12 +198,14 @@ bool verifyEllipsoidContact(const Contact& contact, const Vec3& radii1, const Ve
     const PointContact& c = static_cast<const PointContact&>(contact);
 
     // The "contact point" should be midway between the two surfaces along the normal direction.  Verify that.
-
     Vec3 loc1 = ~t1*(c.getLocation()+0.5*c.getDepth()*c.getNormal())-center1;
+#ifndef SimTK_REAL_IS_ADOUBLE
     assertEqual(loc1[0]*loc1[0]/(radii1[0]*radii1[0])+loc1[1]*loc1[1]/(radii1[1]*radii1[1])+loc1[2]*loc1[2]/(radii1[2]*radii1[2]), 1.0);
+#endif
     Vec3 loc2 = ~t2*(c.getLocation()-0.5*c.getDepth()*c.getNormal())-center2;
+#ifndef SimTK_REAL_IS_ADOUBLE
     assertEqual(loc2[0]*loc2[0]/(radii2[0]*radii2[0])+loc2[1]*loc2[1]/(radii2[1]*radii2[1])+loc2[2]*loc2[2]/(radii2[2]*radii2[2]), 1.0);
-
+#endif
     // Check that the normals are correct.  This test may occasionally fail (when points of very high
     // curvate cause the Newton iteration not to converge), so instead of an assertion, which just return
     // whether the normals were correct.
@@ -229,13 +238,14 @@ void testEllipsoidEllipsoid() {
     State state = system.realizeTopology();
 
     // Test a variety of positions.
-
+#ifndef SimTK_REAL_IS_ADOUBLE
     ellipsoid1.setQToFitTransform(state, Transform(Rotation(), Vec3(0))); // [-0.8, 0.8], [-1.7, 1.3], [-1.6, 2.6]
     ellipsoid2.setQToFitTransform(state, Transform(Rotation(), Vec3(2, 0, 0))); // [1.1, 3.1], [-1.2, 1.2], [-1.1, 1.7]
     system.realize(state, Stage::Dynamics);
     ASSERT(contacts.getContacts(state, setIndex).size() == 0);
     ellipsoid1.setQToFitTransform(state, Transform(Rotation(), Vec3(0))); // [-0.8, 0.8], [-1.7, 1.3], [-1.6, 2.6]
     ellipsoid2.setQToFitTransform(state, Transform(Rotation(), Vec3(1.5, 0, 0))); // [0.6, 2.6], [-1.2, 1.2], [-1.1, 1.7]
+#endif
     system.realize(state, Stage::Dynamics);
     ASSERT(contacts.getContacts(state, setIndex).size() == 1);
     ASSERT(verifyEllipsoidContact(contacts.getContacts(state, setIndex)[0], radii1, radii2, center1, center2, ellipsoid1.getBodyTransform(state), ellipsoid2.getBodyTransform(state)));
@@ -256,7 +266,9 @@ void testEllipsoidEllipsoid() {
         Rotation rot;
         rot.setRotationToBodyFixedXYZ(Vec3(random.getValue()*SimTK_PI, random.getValue()*SimTK_PI, random.getValue()*SimTK_PI));
         Vec3 pos = 5*Vec3(random.getValue(), random.getValue(), random.getValue());
+    #ifndef SimTK_REAL_IS_ADOUBLE
         matter2.getMobilizedBody(i).setQToFitTransform(state2, Transform(rot, pos));
+    #endif
     }
     system2.realize(state2, Stage::Dynamics);
 
@@ -326,7 +338,9 @@ void testHalfSpaceTriangleMesh() {
     int bottomFaces[10] = {0, 1, 2, 3, 4, 5, 8, 9, 10, 11};
     for (Real depth = -0.25; depth < 1; depth += 0.1) {
         Vec3 center(0.1, 1-depth, 2.0);
+    #ifndef SimTK_REAL_IS_ADOUBLE
         b.setQToFitTranslation(state, center);
+    #endif
         system.realize(state, Stage::Dynamics);
         const Array_<Contact>& contact = contacts.getContacts(state, setIndex);
         if (depth < 0.0) {
@@ -379,7 +393,7 @@ void testSphereTriangleMesh() {
     State state = system.realizeTopology();
     
     // Try various positions and make sure the results are correct.
-    
+#ifndef SimTK_REAL_IS_ADOUBLE
     b.setQToFitTranslation(state, Vec3(0, -2, 0));
     system.realize(state, Stage::Dynamics);
     ASSERT(contacts.getContacts(state, setIndex).size() == 0);
@@ -416,6 +430,7 @@ void testSphereTriangleMesh() {
         int faces[] = {8, 9, 10, 11};
         verifyContactFaces(faces, 4, c.getSurface2Faces());
     }
+#endif
 }
 
 void testTriangleMeshTriangleMesh() {
@@ -449,7 +464,7 @@ void testTriangleMeshTriangleMesh() {
     State state = system.realizeTopology();
     
     // Try some configurations that should not intersect.
-    
+#ifndef SimTK_REAL_IS_ADOUBLE
     b1.setQToFitTranslation(state, Vec3(0));
     b2.setQToFitTranslation(state, Vec3(2));
     system.realize(state, Stage::Dynamics);
@@ -466,14 +481,16 @@ void testTriangleMeshTriangleMesh() {
     b2.setQToFitTranslation(state, Vec3(0, -1.01, 0));
     system.realize(state, Stage::Dynamics);
     ASSERT(contacts.getContacts(state, setIndex).size() == 0);
-    
+#endif
     // Now try ones that should intersect.
     
     int baseFaces[2] = {0, 1};
     int pointFaces[4] = {2, 3, 4, 5};
     {
+#ifndef SimTK_REAL_IS_ADOUBLE
         b1.setQToFitTranslation(state, Vec3(0));
         b2.setQToFitTranslation(state, Vec3(0, -0.99, 0));
+#endif
         system.realize(state, Stage::Dynamics);
         Array_<Contact> contact = contacts.getContacts(state, setIndex);;
         ASSERT(contact.size() == 1);
@@ -489,8 +506,10 @@ void testTriangleMeshTriangleMesh() {
         }
     }
     {
+#ifndef SimTK_REAL_IS_ADOUBLE
         b1.setQToFitTranslation(state, Vec3(0, -0.5, 0));
         b2.setQToFitTranslation(state, Vec3(0, 0.49, 0));
+#endif
         system.realize(state, Stage::Dynamics);
         Array_<Contact> contact = contacts.getContacts(state, setIndex);;
         ASSERT(contact.size() == 1);
@@ -506,16 +525,20 @@ void testTriangleMeshTriangleMesh() {
         }
     }
     {
+#ifndef SimTK_REAL_IS_ADOUBLE
         b1.setQToFitTranslation(state, Vec3(0.1, -0.5, 0));
         b2.setQToFitTranslation(state, Vec3(0, 0.49, 0.1));
+#endif
         system.realize(state, Stage::Dynamics);
         Array_<Contact> contact = contacts.getContacts(state, setIndex);;
         ASSERT(contact.size() == 1);
         ASSERT(TriangleMeshContact::isInstance(contact[0]));
     }
     {
+#ifndef SimTK_REAL_IS_ADOUBLE
         b1.setQToFitTransform(state, Transform(Rotation(-0.5*Pi, ZAxis), Vec3(0, 0.5, 0)));
         b2.setQToFitTransform(state, Transform(Rotation(0.5*Pi, ZAxis), Vec3(1.9, -0.5, 0)));
+#endif
         system.realize(state, Stage::Dynamics);
         Array_<Contact> contact = contacts.getContacts(state, setIndex);;
         ASSERT(contact.size() == 1);
@@ -533,6 +556,9 @@ void testTriangleMeshTriangleMesh() {
 }
 
 int main() {
+
+#ifndef SimTK_REAL_IS_ADOUBLE
+
     try {
         testHalfSpaceSphere();
         testSphereSphere();
@@ -548,4 +574,11 @@ int main() {
     }
     cout << "Done" << endl;
     return 0;
+
+#else
+
+    std::cout << "This test is not supported with ADOL-C" << std::endl;
+
+#endif
 }
+

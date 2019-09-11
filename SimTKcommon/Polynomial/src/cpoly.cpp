@@ -676,5 +676,6 @@ void CPoly<T>::mcon( T *eta, T *infiny, T *smalno, T *base )
 
 template class CPoly<float>;
 template class CPoly<double>;
+template class CPoly<long double>;
 
 } // namespace SimTK

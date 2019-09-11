@@ -245,14 +245,18 @@ public:
 
 
     // Invalidate Stage::Position.
-    void setQToFitTransform(State& s, const Transform& X_FM) const;
-    void setQToFitRotation(State& s, const Rotation& R_FM) const;
-    void setQToFitTranslation(State& s, const Vec3& p_FM) const;
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        void setQToFitTransform(State& s, const Transform& X_FM) const;
+        void setQToFitRotation(State& s, const Rotation& R_FM) const;
+        void setQToFitTranslation(State& s, const Vec3& p_FM) const;
+    #endif
 
     // Invalidate Stage::Velocity.
-    void setUToFitVelocity(State& s, const SpatialVec& V_FM) const;
-    void setUToFitAngularVelocity(State& s, const Vec3& w_FM) const;
-    void setUToFitLinearVelocity(State& s, const Vec3& v_FM)  const;
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        void setUToFitVelocity(State& s, const SpatialVec& V_FM) const;
+        void setUToFitAngularVelocity(State& s, const Vec3& w_FM) const;
+        void setUToFitLinearVelocity(State& s, const Vec3& v_FM)  const;
+    #endif
 
     const MassProperties& getBodyMassProperties(const State& s) const {
         // TODO: these should come from the state if the body has variable mass props
@@ -292,7 +296,9 @@ public:
         return getMyRigidBodyNode().getV_GB(vc);
     }
     const SpatialVec& getBodyAcceleration(const State& s) const {
+		std::cout << "start getTreeAccelerationCache" << std::endl;
         const SBTreeAccelerationCache& ac = getMyMatterSubsystemRep().getTreeAccelerationCache(s);
+		std::cout << "getBodyAcc in MobilizedBodyImpl.h" << std::endl;
         return getMyRigidBodyNode().getA_GB(ac);
     }
 

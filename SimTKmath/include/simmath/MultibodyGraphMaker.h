@@ -195,7 +195,7 @@ public:
         structure containing body information.
     @see deleteBody() **/
     void addBody(const std::string&  name, 
-                 double              mass, 
+                 SimTK::Real              mass, 
                  bool                mustBeBaseBody,
                  void*               userRef = 0);
 
@@ -401,7 +401,7 @@ private:
 class MultibodyGraphMaker::Body {
 public:
     explicit Body(const std::string&    name, 
-                    double              mass, 
+                    SimTK::Real              mass, 
                     bool                mustBeBaseBody,
                     void*               userRef) 
     :   name(name), mass(mass), mustBeBaseBody(mustBeBaseBody), 
@@ -418,7 +418,7 @@ public:
 
     // Inputs
     std::string name;
-    double      mass;
+    SimTK::Real      mass;
     bool        mustBeBaseBody;
     void*       userRef;
 
@@ -568,8 +568,6 @@ public:
     defined in the input joint. In that case you should use a reverse joint
     when you build the system. **/
     bool isReversedFromJoint() const {return isReversed;}
-    /** Return the level of the outboard body (Ground is level 0) **/
-    int getLevel() const {return level;}
 
 private:
 friend class MultibodyGraphMaker;

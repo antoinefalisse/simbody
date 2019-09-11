@@ -522,7 +522,7 @@ void ContactGeometry::TriangleMesh::Impl::init
                                   - vertices[f.vertices[j]].pos);
         }
         for (int j = 0; j < 3; j++) {
-            Real angle = std::acos(~edgeDir[j]*edgeDir[(j+2)%3]);
+            Real angle = NTraits<Real>::acos(~edgeDir[j]*edgeDir[(j+2)%3]);
             vertNorm[f.vertices[j]] += f.normal*angle;
         }
     }
@@ -687,25 +687,32 @@ Vec3 ContactGeometry::TriangleMesh::Impl::findNearestPointToFace
                 // Region 4
 
                 if (d < 0) {
-                    s = (-d >= a ? 1 : -d/a);
+                   	if (-d >= a) { s = 1; }
+					else { s = -d / a; }
                     t = 0;
                 }
                 else {
                     s = 0;
-                    t = (e >= 0 ? 0 : (-e >= c ? 1 : -e/c));
+					if (e >= 0) { t = 0; }
+					else if (-e >= c) { t = 1; }
+					else { t = -e / c; }
                 }
             }
             else {
                 // Region 3
 
                 s = 0;
-                t = (e >= 0 ? 0 : (-e >= c ? 1 : -e/c));
+				if (e >= 0) { t = 0; }
+				else if (-e >= c) { t = 1; }
+				else { t = -e / c; }
             }
         }
         else if (t < 0) {
             // Region 5
 
-            s = (d >= 0 ? 0 : (-d >= a ? 1 : -d/a));
+			if (d >= 0) { s = 0; }
+			else if (-d >= a) { s = 1; }
+			else { s = -d / a; }
             t = 0;
         }
         else {
@@ -725,12 +732,15 @@ Vec3 ContactGeometry::TriangleMesh::Impl::findNearestPointToFace
             if (temp1 > temp0) {
                 Real numer = temp1-temp0;
                 Real denom = a-2*b+c;
-                s = (numer >= denom ? 1 : numer/denom);
+				if (numer >= denom) { s = 1; }
+				else {s = numer / denom;}
                 t = 1-s;
             }
             else {
                 s = 0;
-                t = (temp1 <= 0 ? 1 : (e >= 0 ? 0 : -e/c));
+				if (temp1 <= 0) { t = 1; }
+				else if (e >= 0) { t = 0; }
+				else { t = -e / c; }
             }
         }
         else if (t < 0) {
@@ -741,11 +751,14 @@ Vec3 ContactGeometry::TriangleMesh::Impl::findNearestPointToFace
             if (temp1 > temp0) {
                 Real numer = temp1-temp0;
                 Real denom = a-2*b+c;
-                t = (numer >= denom ? 1 : numer/denom);
+				if (numer >= denom) { t = 1; }
+				else { t = numer / denom; }
                 s = 1-t;
             }
             else {
-                s = (temp1 <= 0 ? 1 : (e >= 0 ? 0 : -d/a));
+				if (temp1 <= 0) { s = 1; }
+				else if (e >= 0) { s = 0; }
+				else { s = -d / a; }
                 t = 0;
             }
         }
@@ -757,7 +770,8 @@ Vec3 ContactGeometry::TriangleMesh::Impl::findNearestPointToFace
                 s = 0;
             else {
                 const Real denom = a-2*b+c;
-                s = (numer >= denom ? 1 : numer/denom);
+				if (numer >= denom) { s = 1; }
+				else { s = numer / denom; }
             }
             t = 1-s;
         }
@@ -827,8 +841,8 @@ Vec3 OBBTreeNodeImpl::findNearestPoint
             && child2distance2 <= child1distance2*(1+tol)) {
             // Decide based on angle which one to use.
             
-            if (  std::abs(~(child1point-position)*mesh.faces[child1face].normal) 
-                > std::abs(~(child2point-position)*mesh.faces[child2face].normal))
+            if (  fabs(~(child1point-position)*mesh.faces[child1face].normal) 
+                > fabs(~(child2point-position)*mesh.faces[child2face].normal))
                 child2distance2 = MostPositiveReal;
             else
                 child1distance2 = MostPositiveReal;
@@ -855,8 +869,12 @@ Vec3 OBBTreeNodeImpl::findNearestPoint
         Vec3 p = mesh.findNearestPointToFace(position, triangles[i], triangleUV);
         Vec3 offset = p-position;
         // TODO: volatile to work around compiler bug
-        volatile Real d2 = offset.normSqr(); 
-        if (d2 < distance2 || (d2 < distance2*(1+tol) && std::abs(~offset*mesh.faces[triangles[i]].normal) > std::abs(~offset*mesh.faces[face].normal))) {
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			volatile Real d2 = offset.normSqr(); 
+		#else	
+			Real d2 = offset.normSqr();
+		#endif
+        if (d2 < distance2 || (d2 < distance2*(1+tol) && fabs(~offset*mesh.faces[triangles[i]].normal) > fabs(~offset*mesh.faces[face].normal))) {
             nearestPoint = p;
             distance2 = d2;
             face = triangles[i];
@@ -940,8 +958,8 @@ intersectsRay(const ContactGeometry::TriangleMesh::Impl& mesh,
         const Vec3& vert2 = mesh.vertices[mesh.faces[triangles[i]].vertices[1]].pos;
         const Vec3& vert3 = mesh.vertices[mesh.faces[triangles[i]].vertices[2]].pos;
         int axis1, axis2;
-        if (std::abs(faceNormal[1]) > std::abs(faceNormal[0])) {
-            if (std::abs(faceNormal[2]) > std::abs(faceNormal[1])) {
+        if (fabs(faceNormal[1]) > fabs(faceNormal[0])) {
+            if (fabs(faceNormal[2]) > fabs(faceNormal[1])) {
                 axis1 = 0;
                 axis2 = 1;
             }
@@ -951,7 +969,7 @@ intersectsRay(const ContactGeometry::TriangleMesh::Impl& mesh,
             }
         }
         else {
-            if (std::abs(faceNormal[2]) > std::abs(faceNormal[0])) {
+            if (fabs(faceNormal[2]) > fabs(faceNormal[0])) {
                 axis1 = 0;
                 axis2 = 1;
             }

@@ -117,8 +117,8 @@ bool VerletIntegratorRep::attemptDAEStep
     // Consider position constraint projection. (See AbstractIntegratorRep
     // for how we decide not to project.)
     const Real projectionLimit = 
-        std::max(2*getConstraintToleranceInUse(), 
-                    std::sqrt(getConstraintToleranceInUse()));
+        fmax(2*getConstraintToleranceInUse(), 
+                    NTraits<Real>::sqrt(getConstraintToleranceInUse()));
 
     bool anyChangesQ;
     if (!localProjectQAndQErrEstNoThrow(advanced, dummyErrEst, anyChangesQ, 
@@ -142,7 +142,7 @@ bool VerletIntegratorRep::attemptDAEStep
     // this equation is acceptably satisfied. We're using functional iteration 
     // here which has a very limited radius of convergence.
     
-    const Real tol = std::min(Real(1e-4), Real(0.1)*getAccuracyInUse());
+    const Real tol = fmin(Real(1e-4), Real(0.1)*getAccuracyInUse());
     Vector usave(nu), zsave(nz); // temporaries
     bool converged = false;
     Real prevChange = Infinity; // use this to quit early

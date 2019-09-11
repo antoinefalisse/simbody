@@ -18,7 +18,7 @@
 #include "IpAlgTypes.hpp"
 #include "IpReturnCodes.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
   // forward declarations
   class IpoptData;

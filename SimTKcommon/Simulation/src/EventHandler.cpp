@@ -73,7 +73,7 @@ public:
 };
 
 PeriodicEventHandler::PeriodicEventHandler(Real eventInterval) {
-    impl = new PeriodicEventHandlerImpl(eventInterval);
+	impl = new PeriodicEventHandlerImpl(eventInterval);
 }
 
 PeriodicEventHandler::~PeriodicEventHandler() {
@@ -81,8 +81,12 @@ PeriodicEventHandler::~PeriodicEventHandler() {
 }
 
 Real PeriodicEventHandler::getNextEventTime(const State& state, bool includeCurrentTime) const {
-    Real currentTime = state.getTime();
-    long long count = (long long)std::floor(currentTime/impl->eventInterval);
+    Real currentTime = state.getTime();	
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        long long count = (long long)std::floor((currentTime / impl->eventInterval));
+    #else
+        long long count = (long long)std::floor((currentTime / impl->eventInterval).getValue());
+    #endif
     Real eventTime = count*impl->eventInterval;
     while (eventTime < currentTime || (eventTime == currentTime && !includeCurrentTime)) {
         count++;

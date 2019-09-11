@@ -446,10 +446,6 @@ string Pathname::getThisExecutablePath() {
         SimTK_ERRCHK_ALWAYS(status==0,
                 "Pathname::getThisExecutablePath()",
                 "2048-byte buffer is not big enough to store executable path.");
-    #elif defined(__FreeBSD__) || defined(__DragonFly__)
-        // This isn't automatically null terminated.
-        const size_t nBytes = readlink("/proc/curproc/file", buf, sizeof(buf));
-        buf[nBytes] = '\0';
     #else // Linux
         // This isn't automatically null terminated.
         const size_t nBytes = readlink("/proc/self/exe", buf, sizeof(buf));
@@ -467,27 +463,27 @@ string Pathname::getThisExecutableDirectory() {
 }
 
 bool Pathname::getFunctionLibraryDirectory(void* func,
-                                           std::string& path) {
-    #if defined(_WIN32)
-        return false;
-    #else
-        // Dl_info and dladdr are defined in dlfcn.h. dladdr() is not POSIX,
-        // but is provided on macOS and in Glibc (at least on Ubuntu). It is
-        // likely not available on all UNIX variants.
-        Dl_info dl_info;
-        int status = dladdr(func, &dl_info);
-        // Returns 0 on error, non-zero on success.
-        if (status == 0) return false;
+    std::string& path) {
+#if defined(_WIN32)
+    return false;
+#else
+    // Dl_info and dladdr are defined in dlfcn.h. dladdr() is not POSIX,
+    // but is provided on macOS and in Glibc (at least on Ubuntu). It is
+    // likely not available on all UNIX variants.
+    Dl_info dl_info;
+    int status = dladdr(func, &dl_info);
+    // Returns 0 on error, non-zero on success.
+    if (status == 0) return false;
 
-        // Convert the path to an absolute path and get rid of the filename.
-        // On macOS, dli_fname is an absolute path; on Ubuntu, it's relative to
-        // the working directory.
-        bool dontApplySearchPath;
-        std::string filename, extension;
-        deconstructPathname(dl_info.dli_fname, dontApplySearchPath, path,
-                            filename, extension);
-        return true;
-    #endif
+    // Convert the path to an absolute path and get rid of the filename.
+    // On macOS, dli_fname is an absolute path; on Ubuntu, it's relative to
+    // the working directory.
+    bool dontApplySearchPath;
+    std::string filename, extension;
+    deconstructPathname(dl_info.dli_fname, dontApplySearchPath, path,
+        filename, extension);
+    return true;
+#endif
 }
 
 string Pathname::getCurrentDriveLetter() {

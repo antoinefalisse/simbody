@@ -15,7 +15,7 @@
 #include "IpOptionsList.hpp"
 #include "IpRegOptions.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
   /** This is the abstract base class for problem scaling.
    *  It is repsonsible for determining the scaling factors

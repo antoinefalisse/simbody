@@ -89,23 +89,39 @@ using std::printf;
 using std::cout;
 using std::endl;
 
-Real A[24] = {    2.27,   0.28,  -0.48,   1.07,  -2.35,   0.62,
-                 -1.54,  -1.67,  -3.09,   1.22,   2.93,  -7.39,
-                  1.15,   0.94,   0.99,   0.79,  -1.45,   1.03,
-                 -1.94,  -0.78,  -0.21,   0.63,   2.30,  -2.57 };
-Real X[4] =  { 9.9966,  3.6831,  1.3569,  0.5000 };
+#ifndef SimTK_REAL_IS_ADOUBLE
+	Real A[24] = {    2.27,   0.28,  -0.48,   1.07,  -2.35,   0.62,
+					 -1.54,  -1.67,  -3.09,   1.22,   2.93,  -7.39,
+					  1.15,   0.94,   0.99,   0.79,  -1.45,   1.03,
+					 -1.94,  -0.78,  -0.21,   0.63,   2.30,  -2.57 };
+	Real X[4] =  { 9.9966,  3.6831,  1.3569,  0.5000 };
+#else
+	double A[24] = { 2.27,   0.28,  -0.48,   1.07,  -2.35,   0.62,
+	-1.54,  -1.67,  -3.09,   1.22,   2.93,  -7.39,
+	1.15,   0.94,   0.99,   0.79,  -1.45,   1.03,
+	-1.94,  -0.78,  -0.21,   0.63,   2.30,  -2.57 };
+	double X[4] = { 9.9966,  3.6831,  1.3569,  0.5000 };
+#endif
 
 
 int main () {
     
     try { 
            // Default precision (Real, normally double) test.
-
-        Matrix a(4,6, A);
-        Vector singularValues( 4 );
-        Vector expectedValues( 4, X );
-        Matrix rightVectors;
-        Matrix leftVectors;
+		
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			Matrix a(4,6, A);
+			Vector singularValues( 4 );
+			Vector expectedValues( 4, X );
+			Matrix rightVectors;
+			Matrix leftVectors;
+		#else
+			Matrix_<double> a(4, 6, A);
+			Vector_<double> singularValues(4);
+			Vector_<double> expectedValues(4, X);
+			Matrix_<double> rightVectors;
+			Matrix_<double> leftVectors;
+		#endif
 
         FactorSVD  svd(a, 0.01);   // setup the eigen system 
 
@@ -130,33 +146,57 @@ int main () {
              for(int j=0;j<rightVectors.nrow();j++)  printf("%f  ",rightVectors(i,j) );
              printf("\n");
          }
+		
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			Real C[4] = { 1.0,   2.0,
+				  1.0,   3.0  };
+			Matrix c(2,2, C);
+			FactorSVD csvd(c);
+			Matrix invSVD;
+		#else
+			 double C[4] = { 1.0,   2.0,
+				 1.0,   3.0};
+			 Matrix_<double> c(2, 2, C);
+			 FactorSVD csvd(c);
+			 Matrix_<double> invSVD;
+		#endif
 
-       Real C[4] = { 1.0,   2.0,
-              1.0,   3.0  };
-
-        Matrix c(2,2, C);
-        FactorSVD csvd(c);
-        Matrix invSVD;
         csvd.inverse(invSVD);
         cout << " FactorSVD.inverse : " << endl;
         cout << invSVD[0] << endl;
         cout << invSVD[1] << endl;
 
-        Real Z[4] = { 0.0,   0.0,
-                     0.0,   0.0  };
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			Real Z[4] = { 0.0,   0.0,
+						 0.0,   0.0  };
 
-        Matrix z(2,2, Z);
-        FactorSVD zsvd(z);
-        Vector_<double> xz;
-        Vector_<double> bz(2);
+			Matrix z(2,2, Z);
+			FactorSVD zsvd(z);
+			Vector_<SimTK::Real> xz;
+			Vector_<SimTK::Real> bz(2);
+		#else
+			double Z[4] = { 0.0,   0.0,
+				0.0,   0.0 };
+
+			Matrix_<double> z(2, 2, Z);
+			FactorSVD zsvd(z);
+			Vector_<double> xz;
+			Vector_<double> bz(2);
+		#endif
         bz(1) = bz(0) = 0.0;
         zsvd.solve( bz, xz );
         cout << " solve with mat all zeros : " << endl;
         for(int i=0;i<xz.size();i++) printf("%f ", xz(i) );  printf("\n");
-
-        Matrix_<double> z0;
-        FactorSVD z0svd(z0);
-        Vector_<double> bz0(0);
+		
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			Matrix_<SimTK::Real> z0;
+			FactorSVD z0svd(z0);
+			Vector_<SimTK::Real> bz0(0);
+		#else
+			Matrix_<double> z0;
+			FactorSVD z0svd(z0);
+			Vector_<double> bz0(0);
+		#endif
         z0svd.solve( bz0, xz );
         cout << " solve with mat(0,0) : " << endl;
         for(int i=0;i<xz.size();i++) printf("%f ", xz(i) );  printf("\n");

@@ -80,7 +80,6 @@ bool operator!=(const SymMat<M,EL,RSL>& l, const Mat<M,M,ER,CSR,RSR>& r) {
 // (or complex conjugate for scalars) of the first item times
 // the unchanged elements of the second item.
 
-
 template <int M, class E1, int S1, class E2, int S2> inline
 typename CNT<typename CNT<E1>::THerm>::template Result<E2>::Mul 
 dot(const Vec<M,E1,S1>& r, const Vec<M,E2,S2>& v) {

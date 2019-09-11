@@ -252,24 +252,26 @@ const SpatialVec& MobilizedBody::getMobilizerVelocity(const State& s) const {
     return getImpl().getMobilizerVelocity(s);
 }
 
-void MobilizedBody::setQToFitTransform(State& s, const Transform& X_MbM) const { 
-    getImpl().setQToFitTransform(s,X_MbM); 
-}
-void MobilizedBody::setQToFitRotation(State& s, const Rotation& R_MbM) const { 
-    getImpl().setQToFitRotation(s,R_MbM); 
-}
-void MobilizedBody::setQToFitTranslation(State& s, const Vec3& p_MbM) const { 
-    getImpl().setQToFitTranslation(s,p_MbM);
-}
-void MobilizedBody::setUToFitVelocity(State& s, const SpatialVec& V_MbM) const { 
-    getImpl().setUToFitVelocity(s,V_MbM);
-}
-void MobilizedBody::setUToFitAngularVelocity(State& s, const Vec3& w_MbM) const { 
-    getImpl().setUToFitAngularVelocity(s,w_MbM);
-}
-void MobilizedBody::setUToFitLinearVelocity(State& s, const Vec3& v_MbM) const { 
-    getImpl().setUToFitLinearVelocity(s,v_MbM);
-}
+#ifndef SimTK_REAL_IS_ADOUBLE
+    void MobilizedBody::setQToFitTransform(State& s, const Transform& X_MbM) const {
+        getImpl().setQToFitTransform(s,X_MbM); 
+    }
+    void MobilizedBody::setQToFitRotation(State& s, const Rotation& R_MbM) const { 
+        getImpl().setQToFitRotation(s,R_MbM); 
+    }
+    void MobilizedBody::setQToFitTranslation(State& s, const Vec3& p_MbM) const { 
+        getImpl().setQToFitTranslation(s,p_MbM);
+    }
+    void MobilizedBody::setUToFitVelocity(State& s, const SpatialVec& V_MbM) const { 
+        getImpl().setUToFitVelocity(s,V_MbM);
+    }
+    void MobilizedBody::setUToFitAngularVelocity(State& s, const Vec3& w_MbM) const { 
+        getImpl().setUToFitAngularVelocity(s,w_MbM);
+    }
+    void MobilizedBody::setUToFitLinearVelocity(State& s, const Vec3& v_MbM) const { 
+        getImpl().setUToFitLinearVelocity(s,v_MbM);
+    }
+#endif
 
 SpatialVec MobilizedBody::getHCol(const State& s, MobilizerUIndex ux) const {
     SimTK_INDEXCHECK(ux, getNumU(s), "MobilizedBody::getHCol()");
@@ -737,48 +739,50 @@ copyOutDefaultQ(const State& s, Vector& qDefault) const {
     // Probably most of this functionality should be handled directly
     // by the MobilizedBody objects.
 
-void MobilizedBodyImpl::setQToFitTransform(State& s, const Transform& X_MbM) const {
-    const SimbodyMatterSubsystemRep& matterRep = getMyMatterSubsystemRep();
-    const SBStateDigest digest(s, matterRep, Stage::Instance);
-    Vector& q = matterRep.updQ(s);
-    return getMyRigidBodyNode().setQToFitTransform(digest, X_MbM, q);
-}
-void MobilizedBodyImpl::setQToFitRotation(State& s, const Rotation& R_MbM) const {
-    const SimbodyMatterSubsystemRep& matterRep = getMyMatterSubsystemRep();
-    const SBStateDigest digest(s, matterRep, Stage::Instance);
-    Vector& q = matterRep.updQ(s);
-    return getMyRigidBodyNode().setQToFitRotation(digest, R_MbM, q);
-}
-void MobilizedBodyImpl::setQToFitTranslation(State& s, const Vec3& p_MbM) const
-{
-    const SimbodyMatterSubsystemRep& matterRep = getMyMatterSubsystemRep();
-    const SBStateDigest digest(s, matterRep, Stage::Instance);
-    Vector& q = matterRep.updQ(s);
-    return getMyRigidBodyNode().setQToFitTranslation(digest, p_MbM, q);
-}
+#ifndef SimTK_REAL_IS_ADOUBLE
+    void MobilizedBodyImpl::setQToFitTransform(State& s, const Transform& X_MbM) const {
+        const SimbodyMatterSubsystemRep& matterRep = getMyMatterSubsystemRep();
+        const SBStateDigest digest(s, matterRep, Stage::Instance);
+        Vector& q = matterRep.updQ(s);
+        return getMyRigidBodyNode().setQToFitTransform(digest, X_MbM, q);
+    }
+    void MobilizedBodyImpl::setQToFitRotation(State& s, const Rotation& R_MbM) const {
+        const SimbodyMatterSubsystemRep& matterRep = getMyMatterSubsystemRep();
+        const SBStateDigest digest(s, matterRep, Stage::Instance);
+        Vector& q = matterRep.updQ(s);
+        return getMyRigidBodyNode().setQToFitRotation(digest, R_MbM, q);
+    }
+    void MobilizedBodyImpl::setQToFitTranslation(State& s, const Vec3& p_MbM) const
+    {
+        const SimbodyMatterSubsystemRep& matterRep = getMyMatterSubsystemRep();
+        const SBStateDigest digest(s, matterRep, Stage::Instance);
+        Vector& q = matterRep.updQ(s);
+        return getMyRigidBodyNode().setQToFitTranslation(digest, p_MbM, q);
+    }
 
-void MobilizedBodyImpl::setUToFitVelocity(State& s, const SpatialVec& V_MbM) const {
-    const SimbodyMatterSubsystemRep& matterRep = getMyMatterSubsystemRep();
-    const SBStateDigest digest(s, matterRep, Stage::Instance);
-    const Vector& q = matterRep.updQ(s);
-    Vector&       u = matterRep.updU(s);
-    return getMyRigidBodyNode().setUToFitVelocity(digest, q, V_MbM, u);
-}
-void MobilizedBodyImpl::setUToFitAngularVelocity(State& s, const Vec3& w_MbM) const {
-    const SimbodyMatterSubsystemRep& matterRep = getMyMatterSubsystemRep();
-    const SBStateDigest digest(s, matterRep, Stage::Instance);
-    const Vector& q = matterRep.updQ(s);
-    Vector&       u = matterRep.updU(s);
-    return getMyRigidBodyNode().setUToFitAngularVelocity(digest, q, w_MbM, u);
-}
-void MobilizedBodyImpl::setUToFitLinearVelocity(State& s, const Vec3& v_MbM)  const
-{
-    const SimbodyMatterSubsystemRep& matterRep = getMyMatterSubsystemRep();
-    const SBStateDigest digest(s, matterRep, Stage::Instance);
-    const Vector& q = matterRep.updQ(s);
-    Vector&       u = matterRep.updU(s);
-    return getMyRigidBodyNode().setUToFitLinearVelocity(digest, q, v_MbM, u);
-}
+    void MobilizedBodyImpl::setUToFitVelocity(State& s, const SpatialVec& V_MbM) const {
+        const SimbodyMatterSubsystemRep& matterRep = getMyMatterSubsystemRep();
+        const SBStateDigest digest(s, matterRep, Stage::Instance);
+        const Vector& q = matterRep.updQ(s);
+        Vector&       u = matterRep.updU(s);
+        return getMyRigidBodyNode().setUToFitVelocity(digest, q, V_MbM, u);
+    }
+    void MobilizedBodyImpl::setUToFitAngularVelocity(State& s, const Vec3& w_MbM) const {
+        const SimbodyMatterSubsystemRep& matterRep = getMyMatterSubsystemRep();
+        const SBStateDigest digest(s, matterRep, Stage::Instance);
+        const Vector& q = matterRep.updQ(s);
+        Vector&       u = matterRep.updU(s);
+        return getMyRigidBodyNode().setUToFitAngularVelocity(digest, q, w_MbM, u);
+    }
+    void MobilizedBodyImpl::setUToFitLinearVelocity(State& s, const Vec3& v_MbM)  const
+    {
+        const SimbodyMatterSubsystemRep& matterRep = getMyMatterSubsystemRep();
+        const SBStateDigest digest(s, matterRep, Stage::Instance);
+        const Vector& q = matterRep.updQ(s);
+        Vector&       u = matterRep.updU(s);
+        return getMyRigidBodyNode().setUToFitLinearVelocity(digest, q, v_MbM, u);
+    }
+#endif
 
     // REALIZE TOPOLOGY
 const RigidBodyNode& MobilizedBodyImpl::realizeTopology
@@ -786,10 +790,8 @@ const RigidBodyNode& MobilizedBodyImpl::realizeTopology
 {
     delete myRBnode;
     myRBnode = createRigidBodyNode(nxtU,nxtUSq,nxtQ);
-
     assert(myMobilizedBodyIndex.isValid());
     assert(myParentIndex.isValid() || myMobilizedBodyIndex == GroundIndex);
-
     if (myParentIndex.isValid()) {
         // not ground
         const MobilizedBodyImpl& parent = 
@@ -798,17 +800,15 @@ const RigidBodyNode& MobilizedBodyImpl::realizeTopology
         parent.myRBnode->addChild(myRBnode);
         myRBnode->setParent(parent.myRBnode);
     }
-
     myRBnode->setLevel(myLevel);
     myRBnode->setNodeNum(myMobilizedBodyIndex);
-
     // Realize Motion topology.
     if (hasMotion())
         getMotion().getImpl().realizeTopology(s);
-
     // Realize MobilizedBody-specific topology.
     realizeTopologyVirtual(s);
     return *myRBnode;
+
 }
 
 //------------------------------------------------------------------------------
@@ -2905,85 +2905,87 @@ multiplyByNDot(const State& s, bool transposeMatrix,
     for (int i=0; i<nu; ++i) out[i] = 0;
 }
 
-void MobilizedBody::Custom::Implementation::
-setQToFitTransform(const State& state, const Transform& X_FM, 
-                   int nq, Real* q) const 
-{
-    class OptimizerFunction : public OptimizerSystem {
-    public:
-        OptimizerFunction(const MobilizedBody::Custom::Implementation& impl, 
-                          const State& state, int nq, const Transform& X_FM) 
-        :   OptimizerSystem(nq), impl(impl), state(state), X_FM(X_FM) {}
+#ifndef SimTK_REAL_IS_ADOUBLE
+    void MobilizedBody::Custom::Implementation::
+    setQToFitTransform(const State& state, const Transform& X_FM, 
+                       int nq, Real* q) const 
+    {
+        class OptimizerFunction : public OptimizerSystem {
+        public:
+            OptimizerFunction(const MobilizedBody::Custom::Implementation& impl, 
+                              const State& state, int nq, const Transform& X_FM) 
+            :   OptimizerSystem(nq), impl(impl), state(state), X_FM(X_FM) {}
 
-        int objectiveFunc(const Vector& params, bool new_params, Real& f) const override {
-            Transform transform = impl.calcMobilizerTransformFromQ
-                                            (state, params.size(), &params[0]);
-            f = (transform.p()-X_FM.p()).norm();
-            f += std::abs((~transform.R()*X_FM.R()).convertRotationToAngleAxis()[0]);
-            return 0;
-        }
-    private:
-        const MobilizedBody::Custom::Implementation& impl;
-        const State& state;
-        const Transform& X_FM;
-    };
-    OptimizerFunction function(*this, state, nq, X_FM);
-    Optimizer opt(function);
-    opt.useNumericalJacobian(true);
-    opt.useNumericalGradient(true);
-    opt.setLimitedMemoryHistory(100);
-    Vector qvec(nq);
+            int objectiveFunc(const Vector& params, bool new_params, Real& f) const override {
+                Transform transform = impl.calcMobilizerTransformFromQ
+                                                (state, params.size(), &params[0]);
+                f = (transform.p()-X_FM.p()).norm();
+                f += fabs((~transform.R()*X_FM.R()).convertRotationToAngleAxis()[0]);
+                return 0;
+            }
+        private:
+            const MobilizedBody::Custom::Implementation& impl;
+            const State& state;
+            const Transform& X_FM;
+        };
+        OptimizerFunction function(*this, state, nq, X_FM);
+        Optimizer opt(function);
+        opt.useNumericalJacobian(true);
+        opt.useNumericalGradient(true);
+        opt.setLimitedMemoryHistory(100);
+        Vector qvec(nq);
     
-    // Pick initial values which are 1) deterministic and 2) unlikely to 
-    // correspond to a local maximum or inflection point, which could cause the 
-    // optimizer to fail.
+        // Pick initial values which are 1) deterministic and 2) unlikely to 
+        // correspond to a local maximum or inflection point, which could cause the 
+        // optimizer to fail.
     
-    for (int i = 0; i < nq; i++)
-        qvec[i] = i+Real(0.12354);
-    opt.optimize(qvec);
-    for (int i = 0; i < nq; i++)
-        q[i] = qvec[i];
-}
+        for (int i = 0; i < nq; i++)
+            qvec[i] = i+Real(0.12354);
+        opt.optimize(qvec);
+        for (int i = 0; i < nq; i++)
+            q[i] = qvec[i];
+    }
 
-void MobilizedBody::Custom::Implementation::
-setUToFitVelocity(const State& state, const SpatialVec& V_FM, 
-                  int nu, Real* u) const 
-{
-    class OptimizerFunction : public OptimizerSystem {
-    public:
-        OptimizerFunction(const MobilizedBody::Custom::Implementation& impl, 
-                          const State& state, int nu, const SpatialVec& V_FM) 
-        :   OptimizerSystem(nu), impl(impl), state(state), V_FM(V_FM) {}
+    void MobilizedBody::Custom::Implementation::
+    setUToFitVelocity(const State& state, const SpatialVec& V_FM, 
+                      int nu, Real* u) const 
+    {
+        class OptimizerFunction : public OptimizerSystem {
+        public:
+            OptimizerFunction(const MobilizedBody::Custom::Implementation& impl, 
+                              const State& state, int nu, const SpatialVec& V_FM) 
+            :   OptimizerSystem(nu), impl(impl), state(state), V_FM(V_FM) {}
 
-        int objectiveFunc(const Vector& params, bool new_params, Real& f) const override {
-            SpatialVec v = impl.multiplyByHMatrix
-                                            (state, params.size(), &params[0]);
-            f = (v[0]-V_FM[0]).norm();
-            f += (v[1]-V_FM[1]).norm();
-            return 0;
-        }
-    private:
-        const MobilizedBody::Custom::Implementation& impl;
-        const State& state;
-        const SpatialVec& V_FM;
-    };
-    OptimizerFunction function(*this, state, nu, V_FM);
-    Optimizer opt(function);
-    opt.useNumericalJacobian(true);
-    opt.useNumericalGradient(true);
-    opt.setLimitedMemoryHistory(100);
-    Vector uvec(nu);
+            int objectiveFunc(const Vector& params, bool new_params, Real& f) const override {
+                SpatialVec v = impl.multiplyByHMatrix
+                                                (state, params.size(), &params[0]);
+                f = (v[0]-V_FM[0]).norm();
+                f += (v[1]-V_FM[1]).norm();
+                return 0;
+            }
+        private:
+            const MobilizedBody::Custom::Implementation& impl;
+            const State& state;
+            const SpatialVec& V_FM;
+        };
+        OptimizerFunction function(*this, state, nu, V_FM);
+        Optimizer opt(function);
+        opt.useNumericalJacobian(true);
+        opt.useNumericalGradient(true);
+        opt.setLimitedMemoryHistory(100);
+        Vector uvec(nu);
     
-    // Pick initiial values which are 1) deterministic and 2) unlikely to 
-    // correspond to a local maximum or inflection point, which could cause the 
-    // optimizer to fail.
+        // Pick initiial values which are 1) deterministic and 2) unlikely to 
+        // correspond to a local maximum or inflection point, which could cause the 
+        // optimizer to fail.
     
-    for (int i = 0; i < nu; i++)
-        uvec[i] = i+Real(0.12354);
-    opt.optimize(uvec);
-    for (int i = 0; i < nu; i++)
-        u[i] = uvec[i];
-}
+        for (int i = 0; i < nu; i++)
+            uvec[i] = i+Real(0.12354);
+        opt.optimize(uvec);
+        for (int i = 0; i < nu; i++)
+            u[i] = uvec[i];
+    }
+#endif
 
 // Constructors without user-specified axes for function-based mobilized body
 MobilizedBody::FunctionBased::FunctionBased

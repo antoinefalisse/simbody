@@ -190,7 +190,7 @@ findParaboloidAtPointWithNormal(const Vec3& Q, const UnitVec3& nn,
                C = square(curvatures[2]);
 
     // Sanity checks in debug.
-    SimTK_ERRCHK(std::abs(A*Q[0]*Q[0]+B*Q[1]*Q[1]+C*Q[2]*Q[2]-1) < SqrtEps,
+    SimTK_ERRCHK(fabs(A*Q[0]*Q[0]+B*Q[1]*Q[1]+C*Q[2]*Q[2]-1) < SqrtEps,
         "ContactGeometry::Ellipsoid::findParaboloidAtPointWithNormal()",
         "The given point was not on the surface of the ellipsoid.");
     SimTK_ERRCHK((nn-findUnitNormalAtPoint(Q)).normSqr() < SqrtEps,
@@ -213,15 +213,15 @@ findParaboloidAtPointWithNormal(const Vec3& Q, const UnitVec3& nn,
     // I *believe* R==S -> T==0 but I don't have a proof.
     Real kmax2, kmin2; // squared curvatures of ellipse
     UnitVec3 dmax;
-    if (std::abs(R-S) < SignificantReal*std::max(R,S)) {
+    if (fabs(R-S) < SignificantReal*std::max(R,S)) {
         kmax2 = kmin2 = (R+S)/2;
         dmax = tu;
-    } else if (std::abs(T) < SignificantReal) {
+    } else if (fabs(T) < SignificantReal) {
         if (R < S) kmax2=S, dmax=tv, kmin2=R;
         else       kmax2=R, dmax=tu, kmin2=S;
     } else { // T,R-S both nonzero
         Real tan2t = T/(R-S);       // ~20 flops
-        Real cos2t = 1/std::sqrt(1 + square(tan2t)); // ~40 flops
+        Real cos2t = 1/ NTraits<Real>::sqrt(1 + square(tan2t)); // ~40 flops
         Real sin2t = tan2t*cos2t;   //   1 flop
         // 11 flops here
         Real term = R*cos2t-S*cos2t+T*sin2t;
@@ -292,12 +292,27 @@ findNearestPoint(const Vec3& position, bool& inside, UnitVec3& normal) const {
     coeff[4] = -a2*(b4+4*b2c2+c4)*px2-b2*(a4+4*a2c2+c4)*py2-c2*(a4+4*a2b2+b4)*pz2 + 4*(a2+b2+c2)*a2b2c2 + a4*b4+a4*c4+b4*c4;
     coeff[5] = 2*a2b2c2*(-(b2+c2)*px2-(a2+c2)*py2-(a2+b2)*pz2 + a2b2+b2c2+a2c2);
     coeff[6] = a2b2c2*(-b2c2*px2-a2c2*py2-a2b2*pz2+a2b2c2);
-    Vector_<complex<Real> > roots(6);
-    PolynomialRootFinder::findRoots(coeff, roots);
-    Real root = NTraits<Real>::getMostNegative();
-    for (int i = 0; i < 6; i++)
-        if (fabs(roots[i].imag()) < 1e-10 && (roots[i].real()) > (root))
-            root = roots[i].real();
+	#ifndef SimTK_REAL_IS_ADOUBLE
+		Vector_<complex<Real> > roots(6);
+		PolynomialRootFinder::findRoots(coeff, roots);
+		Real root = NTraits<Real>::getMostNegative();
+		for (int i = 0; i < 6; i++)
+			if (std::abs(roots[i].imag()) < 1e-10 && (roots[i].real()) > (root))
+				root = roots[i].real();
+	#else
+		std::cout << "start finding roots" << std::endl;
+		Vector_<Recorder> roots(6);
+		Vector_<Recorder> coeff_aux(7);
+		for (int i = 0; i < 7; ++i) {
+			coeff_aux[i] = coeff[i];
+		}
+		PolynomialRootFinder::findRoots(coeff_aux, roots);
+		//Real root = NTraits<Real>::getMostNegative();
+		Real root = -Recorder(DBL_MAX);
+		for (int i = 0; i < 6; i++)
+			if ((roots[i].value()) > (root.value()))
+				root = roots[i];
+	#endif
     Vec3 result(position[0]*a2/(root+a2), position[1]*b2/(root+b2), position[2]*c2/(root+c2));
     Vec3 ri2(1/a2, 1/b2, 1/c2);
     inside = (position[0]*position[0]*ri2[0] + position[1]*position[1]*ri2[1] + position[2]*position[2]*ri2[2] < 1.0);
@@ -330,7 +345,7 @@ bool ContactGeometry::Ellipsoid::Impl::intersectsRay
         Real d = b*b - a*c;
         if (d < 0)
           return false;
-        distance = (b - std::sqrt(d))/a;
+        distance = (b - NTraits<Real>::sqrt(d))/a;
     }
     else {
         // Ray origin is inside ellipsoid.
@@ -339,7 +354,7 @@ bool ContactGeometry::Ellipsoid::Impl::intersectsRay
         Real d = b*b - a*c;
         if (d < 0)
           return false;
-        distance = (b + std::sqrt(d))/a;
+        distance = (b + NTraits<Real>::sqrt(d))/a;
     }
     Vec3 pos = origin+distance*direction;
     normal = UnitVec3(pos[0], pos[1]*sy, pos[2]*sz);

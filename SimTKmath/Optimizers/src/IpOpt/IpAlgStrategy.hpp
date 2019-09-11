@@ -13,7 +13,7 @@
 #include "IpJournalist.hpp"
 #include "IpIpoptCalculatedQuantities.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   /** This is the base class for all algorithm strategy objects.  The

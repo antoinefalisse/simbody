@@ -22,6 +22,9 @@
  * -------------------------------------------------------------------------- */
 
 #include "SimTKmath.h"
+
+#ifndef SimTK_REAL_IS_ADOUBLE
+
 #include "simbody/internal/MobilizedBody.h"
 #include "simbody/internal/MultibodySystem.h"
 #include "simbody/internal/LocalEnergyMinimizer.h"
@@ -100,3 +103,5 @@ void LocalEnergyMinimizer::minimizeEnergy(const MultibodySystem& system, State& 
     }
     system.realize(state, Stage::Dynamics);
 }
+
+#endif

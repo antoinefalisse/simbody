@@ -765,7 +765,7 @@ static void calcHertzContactForce
     const Real k = k1*s1; // (==k2*s2) == E^(2/3)
     const Real c = c1*s1 + c2*s2;
     // fH = 4/3 e R^1/2 k^3/2 x^3/2
-    const Real fH = e*Real(4./3.)*k*x*std::sqrt(R*k*x); // always >= 0
+    const Real fH = e*Real(4./3.)*k*x*NTraits<Real>::sqrt(R*k*x); // always >= 0
     
     // Calculate the relative velocity of the two bodies at the contact point.
     // We're considering S1 fixed, so we just need the velocity in S1 of
@@ -813,7 +813,7 @@ static void calcHertzContactForce
     Real powerFriction = 0;
     const Real vslipSq = velTangent.normSqr();
     if (vslipSq > square(SignificantReal)) {
-        const Real vslip = std::sqrt(vslipSq); // expensive
+        const Real vslip = NTraits<Real>::sqrt(vslipSq); // expensive
         const Real us1=mat1.getStaticFriction(), us2=mat2.getStaticFriction();
         const Real ud1=mat1.getDynamicFriction(), ud2=mat2.getDynamicFriction();
         const Real uv1=mat1.getViscousFriction(), uv2=mat2.getViscousFriction();
@@ -976,11 +976,11 @@ static Real approxContactEllipseRatio(Real kmax, Real kmin) {
         (Real)2.7868927e-6 };
 
     Real BoA = kmax/kmin; // ~20 flops
-    Real q = square(std::log10(BoA)), q2=q*q, q3=q2*q, q4=q3*q; // ~50 flops?
+    Real q = square(NTraits<Real>::log10(BoA)), q2=q*q, q3=q2*q, q4=q3*q; // ~50 flops?
     Real n = 1 + u[0]*q + u[1]*q2 + u[2]*q3 + u[3]*q4; // 8 flops
     Real d = 1 + v[0]*q + v[1]*q2 + v[2]*q3 + v[3]*q4; // 8 flops
     Real p = (2*n)/(3*d); // ~20 flops
-    Real k = std::pow(BoA, p); // ellipse ratio k=a/b, >50 flops?
+    Real k = NTraits<Real>::pow(BoA, p); // ellipse ratio k=a/b, >50 flops?
     return k;
 }
 
@@ -1011,21 +1011,26 @@ static Real numContactEllipseRatio
 {
     // See Dyson.
     Real lambda = kmin/kmax; // A/B
-    Real kp = std::pow(lambda, Real(2./3.)); // note inverted k'=b/a
+    Real kp = NTraits<Real>::pow(lambda, Real(2./3.)); // note inverted k'=b/a
     Real k2 = kp*kp;
     Real lambda1;
     for(;;) {
         if (k2 > 1) k2 = 1;
         Real m = 1-k2;
-        KE = completeEllipticIntegralsKE(m); // K,E
+        #ifndef SimTK_REAL_IS_ADOUBLE
+            KE = completeEllipticIntegralsKE(m); // K,E
+        #else
+            KE = completeEllipticIntegralsKE(m.getValue()); // K,E
+        #endif
+
         if (k2==1) return 1;
         lambda1 = (KE.first - KE.second) / (KE.second/k2 - KE.first);
-        if (std::abs(lambda-lambda1) < 10*lambda*SignificantReal) 
+        if (NTraits<Real>::abs(lambda-lambda1) < 10*lambda*SignificantReal)
             break;
         Real den = lambda1*lambda1+2*m*lambda1-k2;
         k2 += (2*m*k2*(lambda-lambda1))/den; // might make k2 slightly >1
     };
-    kp = std::sqrt(k2);
+    kp = NTraits<Real>::sqrt(k2);
     return 1/kp; // return k
 }
 
@@ -1051,7 +1056,7 @@ static void calcContactInfo
     Real Estar, Vec2& ab, Real& P, Real& p0)
 {
     Real Km = KE.first, Em = KE.second;
-    Real b = std::sqrt((d*Em)/((A+B)*Km)); // ~ 50 flops
+    Real b = NTraits<Real>::sqrt((d*Em)/((A+B)*Km)); // ~ 50 flops
     Real a = b*k;
     ab = Vec2(a,b);
     // The rest is about 50 more flops
@@ -1098,11 +1103,15 @@ static Real calcHertzForceEccentricityCorrection(Real kmax, Real kmin) {
 
     Real k = approxContactEllipseRatio(kmax,kmin); // ~160 flops
     Real m = 1 - square(1/k); // ~20 flops
-    std::pair<Real,Real> KE = approxCompleteEllipticIntegralsKE(m); // ~90 flops
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        std::pair<Real,Real> KE = approxCompleteEllipticIntegralsKE(m); // ~90 flops
+    #else
+	    std::pair<double, double> KE = approxCompleteEllipticIntegralsKE(m.getValue()); // ~90 flops
+    #endif
 
     Real Km = KE.first, Em = KE.second;
     // Slightly twisted computation here to save one square root.
-    Real e = Pi * k * std::sqrt(Em*Km) / (2 * Km*Km); // ~50 flops
+    Real e = Pi * k * NTraits<Real>::sqrt(Em*Km) / (2 * Km*Km); // ~50 flops
 
     return e;
 }
@@ -1356,7 +1365,7 @@ static void calcPointHalfSpacePenaltyForce
             Real powerFriction = 0;
             const Real vslipSq = velTangent.normSqr();  //   5 flops
             if (vslipSq > square(SignificantReal)) {    //   2
-                const Real vslip = std::sqrt(vslipSq);  // ~20
+                const Real vslip = NTraits<Real>::sqrt(vslipSq);  // ~20
 
                 // Express slip velocity as unitless multiple of transition velocity.
                 const Real v = vslip * ooVtrans;
@@ -1964,7 +1973,7 @@ processOneMesh
         Real powerFriction = 0;
         const Real vslipSq = velTangent.normSqr();  // 5 flops
         if (vslipSq > square(SignificantReal)) {
-            const Real vslip = std::sqrt(vslipSq); // expensive: ~25 flops
+            const Real vslip = NTraits<Real>::sqrt(vslipSq); // expensive: ~25 flops
             // Express slip velocity as unitless multiple of transition velocity.
             const Real v = vslip * ooVtrans;
             // Must scale viscous coefficient to match unitless velocity.

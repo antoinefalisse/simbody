@@ -1482,4 +1482,3 @@ char *CPodeGetReturnFlagName(int flag)
 
   return(name);
 }
-

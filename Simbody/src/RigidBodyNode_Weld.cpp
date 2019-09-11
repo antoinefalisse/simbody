@@ -93,22 +93,25 @@ public:
     {   assert(nq==0 && nQCache==0);
         X_FM.setToZero(); }
 
-    void setQToFitTransformImpl(const SBStateDigest& sbs, const Transform& X_FM, 
-                                Vector& q) const override {}
-    void setQToFitRotationImpl(const SBStateDigest& sbs, const Rotation& R_FM, 
-                               Vector& q) const override {}
-    void setQToFitTranslationImpl(const SBStateDigest& sbs, const Vec3& p_FM, 
-                                  Vector& q) const override {}
+    #ifndef SimTK_REAL_IS_ADOUBLE
 
-    void setUToFitVelocityImpl
-       (const SBStateDigest& sbs, const Vector& q, const SpatialVec& V_FM, 
-        Vector& u) const override {}
-    void setUToFitAngularVelocityImpl
-       (const SBStateDigest& sbs, const Vector& q, const Vec3& w_FM, 
-        Vector& u) const override {}
-    void setUToFitLinearVelocityImpl
-       (const SBStateDigest& sbs, const Vector& q, const Vec3& v_FM, 
-        Vector& u) const override {}
+	    void setQToFitTransformImpl(const SBStateDigest& sbs, const Transform& X_FM, 
+                                    Vector& q) const override {}
+        void setQToFitRotationImpl(const SBStateDigest& sbs, const Rotation& R_FM, 
+                                   Vector& q) const override {}
+        void setQToFitTranslationImpl(const SBStateDigest& sbs, const Vec3& p_FM, 
+                                      Vector& q) const override {}
+
+        void setUToFitVelocityImpl
+           (const SBStateDigest& sbs, const Vector& q, const SpatialVec& V_FM, 
+            Vector& u) const override {}
+        void setUToFitAngularVelocityImpl
+           (const SBStateDigest& sbs, const Vector& q, const Vec3& w_FM, 
+            Vector& u) const override {}
+        void setUToFitLinearVelocityImpl
+           (const SBStateDigest& sbs, const Vector& q, const Vec3& v_FM, 
+            Vector& u) const override {}
+    #endif
 
     
     void multiplyByN(const SBStateDigest&, bool matrixOnRight, 

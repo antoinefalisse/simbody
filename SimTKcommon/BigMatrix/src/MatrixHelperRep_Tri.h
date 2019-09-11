@@ -235,31 +235,41 @@ public:
 
         const bool shortFirst = (m_rowOrder&&!isUpper()) || (!m_rowOrder&&isUpper());
         const int  known = hasKnownDiagonal() ? 1 : 0;
-        const int  eltSize = this->m_eltSize;
+        //const int  eltBytes = this->m_eltSize*sizeof(S);
+		const int  eltScalar = this->m_eltSize;
 
         // Copy 1/2 of a square of this size, possibly excluding diagonals.
         const int nToCopy = m_minmn;
         S*       const dest = p->m_data    + known*this->m_eltSize; // skip diag if known
         const S* const src  = this->m_data + known*this->m_eltSize;
         if (shortFirst) {
-            // column or row begins at (k,j) and has length (j+1)-k
-            int lengthElt = eltSize; // 1st row/col has 1 element to copy
-            // skip 0-length row or col if diag is known
-            for (ptrdiff_t j=known; j < nToCopy; ++j, lengthElt += eltSize) {
-                std::copy(src+j*this->m_leadingDim, src+j*this->m_leadingDim +
-                          lengthElt, dest+j*p->m_leadingDim);
-            }
+            //// column or row begins at (k,j) and has length (j+1)-k
+            //int lengthInBytes = eltBytes; // 1st row/col has 1 element to copy
+            //// skip 0-length row or col if diag is known
+            //for (ptrdiff_t j=known; j < nToCopy; ++j, lengthInBytes += eltBytes) {
+            //    std::memcpy(dest+j*p->m_leadingDim, src+j*this->m_leadingDim, lengthInBytes);
+            //}
+			int lengthInScalar = eltScalar;
+			for (ptrdiff_t j = known; j < nToCopy; ++j, lengthInScalar += eltScalar) {
+				std::copy(src + j*this->m_leadingDim, src + j*this->m_leadingDim + lengthInScalar, dest + j*p->m_leadingDim);
+			}
         } else { // longFirst
             // column or row begins at (j+k,j), length m-j-k
             int startInScalars = 0; // data was already shifted by 1 if needed
-            int lengthElt = (nToCopy-known)*eltSize;
+            /*int lengthInBytes = (nToCopy-known)*eltBytes;
             for (ptrdiff_t j=0; j < nToCopy-known; ++j) {
-                std::copy(src+j*m_leadingDim + startInScalars,
-                          src+j*m_leadingDim + startInScalars + lengthElt,
-                          dest+j*p->m_leadingDim + startInScalars);
+                std::memcpy(dest + j*p->m_leadingDim + startInScalars, 
+                            src  + j*m_leadingDim    + startInScalars, lengthInBytes);
                 startInScalars += this->m_eltSize;
-                lengthElt -= eltSize;
-            }
+                lengthInBytes  -= eltBytes;
+            }*/
+			int lengthInScalar = (nToCopy - known)*eltScalar;
+			for (ptrdiff_t j = 0; j < nToCopy - known; ++j) {
+				std::copy(src + j*m_leadingDim + startInScalars,
+					src + j*m_leadingDim + startInScalars + lengthInScalar, dest + j*p->m_leadingDim + startInScalars);
+				startInScalars += this->m_eltSize;
+				lengthInScalar -= eltScalar;
+			}
         }
         return p;
     }
@@ -290,7 +300,8 @@ public:
         const bool shortFirst = (m_rowOrder&&!isUpper()) || (!m_rowOrder&&isUpper());
         const int  newLeadingDim = newMinmn;
         const int  known = hasKnownDiagonal() ? 1 : 0;
-        const int  eltSize = this->m_eltSize;
+        //const int  eltBytes = this->m_eltSize*sizeof(S);
+		const int  eltScalar = this->m_eltSize;
 
         // Copy 1/2 of a square of this size, possibly excluding diagonals.
         S* const newData = this->allocateMemory(newMinmn, newMinmn);
@@ -298,24 +309,33 @@ public:
         S*       const dest = newData + known*this->m_eltSize; // skip diag if known
         const S* const src  = this->m_data  + known*this->m_eltSize;
         if (shortFirst) {
-            // column or row begins at (k,j) and has length (j+1)-k
-            int lengthElt = eltSize; // 1st row/col has 1 element to copy
-            // skip 0-length row or col if diag is known
-            for (ptrdiff_t j=known; j < nToCopy; ++j, lengthElt += eltSize) {
-                std::copy(src+j*this->m_leadingDim, src+j*this->m_leadingDim +
-                          lengthElt, dest+j*newLeadingDim);
-            }
+            //// column or row begins at (k,j) and has length (j+1)-k
+            //int lengthInBytes = eltBytes; // 1st row/col has 1 element to copy
+            //// skip 0-length row or col if diag is known
+            //for (ptrdiff_t j=known; j < nToCopy; ++j, lengthInBytes += eltBytes) {
+            //    std::memcpy(dest+j*newLeadingDim, src+j*this->m_leadingDim, lengthInBytes);
+            //}
+			int lengthInScalar = eltScalar; // 1st row/col has 1 element to copy
+			for (ptrdiff_t j = known; j < nToCopy; ++j, lengthInScalar += eltScalar) {
+				std::copy(src + j*this->m_leadingDim, src + j*this->m_leadingDim + lengthInScalar, dest + j*newLeadingDim);
+			}
         } else { // longFirst
             // column or row begins at (j+k,j), length m-j-k
             int startInScalars = 0; // data was already shifted by 1 if needed
-            int lengthElt = (nToCopy-known)*eltSize;
+            /*int lengthInBytes = (nToCopy-known)*eltBytes;
             for (ptrdiff_t j=0; j < nToCopy-known; ++j) {
-                std::copy(src+j*this->m_leadingDim + startInScalars,
-                          src+j*this->m_leadingDim + startInScalars + lengthElt,
-                          dest+j*newLeadingDim + startInScalars);
+                std::memcpy(dest + j*newLeadingDim + startInScalars, 
+                            src  + j*this->m_leadingDim  + startInScalars, lengthInBytes);
                 startInScalars += this->m_eltSize;
-                lengthElt -= eltSize;
-            }
+                lengthInBytes  -= eltBytes;
+            }*/
+			int lengthInScalar = (nToCopy - known)*eltScalar;
+			for (ptrdiff_t j = 0; j < nToCopy - known; ++j) {
+				std::copy(src + j*this->m_leadingDim + startInScalars,
+					src + j*this->m_leadingDim + startInScalars + lengthInScalar, dest + j*newLeadingDim + startInScalars);
+				startInScalars += this->m_eltSize;
+				lengthInScalar -= eltScalar;
+			}
         }
         this->clearData();
         this->setData(newData);

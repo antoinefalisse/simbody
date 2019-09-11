@@ -63,7 +63,7 @@ public:
         this->updateSlots(nextUSlot,nextUSqSlot,nextQSlot);
     }
 
-
+    #ifndef SimTK_REAL_IS_ADOUBLE
     void setQToFitRotationImpl(const SBStateDigest& sbs, const Rotation& R_FM, Vector& q) const {
         // The only rotation our cylinder joint can handle is about z.
         // TODO: this code is bad -- see comments for Torsion joint above.
@@ -91,6 +91,7 @@ public:
         // is that component which is along z.
         this->toU(u)[1] = v_FM[2];
     }
+    #endif
 
     enum {CosQ=0, SinQ=1};
     // We want space for cos(q0) and sin(q0).
@@ -103,8 +104,10 @@ public:
                                  Real* qErr,     int nQErr) const
     {
         assert(q && nq==2 && qCache && nQCache==2 && nQErr==0);
-        qCache[CosQ] = std::cos(q[0]);
-        qCache[SinQ] = std::sin(q[0]);
+        //qCache[CosQ] = NTraits<Real>::cos(q[0]);
+        //qCache[SinQ] = NTraits<Real>::sin(q[0]);
+        qCache[CosQ] = cos(q[0]);
+        qCache[SinQ] = sin(q[0]);
     }
 
     void calcX_FM(const SBStateDigest& sbs,

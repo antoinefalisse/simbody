@@ -798,4 +798,3 @@ static int cpNewtonIterationImpl(CPodeMem cp_mem)
 
   } /* end loop */
 }
-

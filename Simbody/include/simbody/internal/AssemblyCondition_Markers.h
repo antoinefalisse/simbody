@@ -442,7 +442,7 @@ computation time by using findCurrentMarkerErrorSquared() which avoids the
 square root needed to find the actual distance.
 @see findCurrentMarkerErrorSquared() **/
 Real findCurrentMarkerError(MarkerIx mx) const
-{   return std::sqrt(findCurrentMarkerErrorSquared(mx)); }
+{   return NTraits<Real>::sqrt(findCurrentMarkerErrorSquared(mx)); }
 
 /** Using the current value of the internal state, calculate the (unweighted)
 square of the distance between the given marker's current location and its 

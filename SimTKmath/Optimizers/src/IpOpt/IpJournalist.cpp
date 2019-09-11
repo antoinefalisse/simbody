@@ -27,7 +27,7 @@
 #pragma warning(disable:4996)
 #endif
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   Journalist::Journalist()

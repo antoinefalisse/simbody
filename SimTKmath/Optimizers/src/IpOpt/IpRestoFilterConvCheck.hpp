@@ -12,7 +12,7 @@
 #include "IpOptErrorConvCheck.hpp"
 #include "IpFilterLSAcceptor.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   /** Convergence check for the restoration phase as called by the

@@ -44,6 +44,9 @@ static int getLWork( float* work);
 static int getLWork( double* work);
 static int getLWork( std::complex<float>* work);
 static int getLWork( std::complex<double>* work);
+#ifdef SimTK_REAL_IS_ADOUBLE
+    static int getLWork(Recorder* work);
+#endif
 
 template <class T> static
 void gelss( int m, int n,  int mn, int nrhs, 

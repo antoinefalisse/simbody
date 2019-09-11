@@ -79,7 +79,7 @@ Sphere_& stretchBoundary() {
     const RealP tol = Geo::getDefaultTol<P>();
     const RealP maxdim = max(getCenter().abs());
     const RealP scale = std::max(maxdim, getRadius());
-    updRadius() += std::max(scale*Geo::getEps<P>(), tol);
+    updRadius() += fmax(scale*Geo::getEps<P>(), tol);
     return *this; 
 }
 

@@ -72,25 +72,41 @@ using std::printf;
 using std::cout;
 using std::endl;
 
-Real A[30] = { -0.09,   0.14,  -0.46,    0.68,   1.29,       
-               -1.56,   0.20,   0.29,    1.09,   0.51,        
-               -1.48,  -0.43,   0.89,   -0.71,  -0.96,   
-               -1.09,   0.84,   0.77,    2.11,  -1.27,       
-                0.08,   0.55,  -1.13,    0.14,   1.74,        
-               -1.59,  -0.72,   1.06,    1.24,   0.34  };  
+#ifndef SimTK_REAL_IS_ADOUBLE
+	Real A[30] = { -0.09,   0.14,  -0.46,    0.68,   1.29,       
+				   -1.56,   0.20,   0.29,    1.09,   0.51,        
+				   -1.48,  -0.43,   0.89,   -0.71,  -0.96,   
+				   -1.09,   0.84,   0.77,    2.11,  -1.27,       
+					0.08,   0.55,  -1.13,    0.14,   1.74,        
+				   -1.59,  -0.72,   1.06,    1.24,   0.34  };  
 
-Real B[6] =  { 7.4, 4.2, -8.3, 1.8, 8.6, 2.1 };
-Real X[5] =  { 0.6344, 0.9699, -1.4402, 3.3678,  3.3992 };
+	Real B[6] =  { 7.4, 4.2, -8.3, 1.8, 8.6, 2.1 };
+	Real X[5] =  { 0.6344, 0.9699, -1.4402, 3.3678,  3.3992 };
+#else
+	double A[30] = { -0.09,   0.14,  -0.46,    0.68,   1.29,
+	-1.56,   0.20,   0.29,    1.09,   0.51,
+	-1.48,  -0.43,   0.89,   -0.71,  -0.96,
+	-1.09,   0.84,   0.77,    2.11,  -1.27,
+	0.08,   0.55,  -1.13,    0.14,   1.74,
+	-1.59,  -0.72,   1.06,    1.24,   0.34 };
 
+	double B[6] = { 7.4, 4.2, -8.3, 1.8, 8.6, 2.1 };
+	double X[5] = { 0.6344, 0.9699, -1.4402, 3.3678,  3.3992 };
+#endif
 int main () {
     try { 
            // Default precision (Real, normally double) test.
-
-        Matrix a(6,5, A);
-        Vector b(6, B);
-        Vector x_right(5, X);
-        Vector x; // should get sized automatically to 5 by solve()
-
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			Matrix a(6,5, A);
+			Vector b(6, B);
+			Vector x_right(5, X);
+			Vector x; // should get sized automatically to 5 by solve()
+		#else
+			Matrix_<double> a(6, 5, A);
+			Vector_<double> b(6, B);
+			Vector_<double> x_right(5, X);
+			Vector_<double> x; // should get sized automatically to 5 by solve()
+		#endif
         FactorQTZ qtz;  // perform QTZ factorization 
 
         qtz.factor(a);
@@ -107,12 +123,20 @@ int main () {
         ASSERT((x-x_right).norm() < 0.001);
 
         FactorQTZ qtzCopy( qtz );
-        Vector xc; // should get sized automatically to 5 by solve()
-        qtzCopy.solve(b, xc );
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			Vector xc; // should get sized automatically to 5 by solve()
+		#else
+			Vector_<double> xc; // should get sized automatically to 5 by solve()
+		#endif
+		qtzCopy.solve(b, xc );
         cout << " copy constructor SOLUTION:      " << xc << "  errnorm=" << (xc-x_right).norm() << endl;
 
         FactorQTZ qtzAssign = qtz;
-        Vector xa; // should get sized automatically to 5 by solve()
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			Vector xa; // should get sized automatically to 5 by solve()
+		#else
+			Vector_<double> xa; // should get sized automatically to 5 by solve()
+		#endif
         qtzCopy.solve(b, xa );
         cout << " copy assign SOLUTION:           " << xa << "  errnorm=" << (xa-x_right).norm() << endl;
 
@@ -131,20 +155,39 @@ int main () {
         // Underdetermined case adapted from 
         // http://idlastro.gsfc.nasa.gov/idl_html_help/LA_LEAST_SQUARES.html
         
-        Real Au[12] = { 2,     5,     3,     4,
-                        7,     1,     3,     5,
-                        4,     3,     6,     2   };
-        Real Bu[3] = { 3,     1,     6 };
-        Real Xu[4] = { -0.0376844,     0.350628,    0.986164,   -0.409066 };
-        Matrix au(3, 4, Au);
-        Vector bu(3, Bu);
-        Vector xu_right(4, Xu);
-        Vector xu; // should get sized automatically to 4 by solve()
+		#ifndef SimTK_REAL_IS_ADOUBLE
 
-        Matrix bu2(3,2);
-        bu2(0) = bu;
-        bu2(1) = 2*bu;
-        Matrix xu2; // should get sized 4x2 by solve
+			Real Au[12] = { 2,     5,     3,     4,
+							7,     1,     3,     5,
+							4,     3,     6,     2   };
+			Real Bu[3] = { 3,     1,     6 };
+			Real Xu[4] = { -0.0376844,     0.350628,    0.986164,   -0.409066 };
+			Matrix au(3, 4, Au);
+			Vector bu(3, Bu);
+			Vector xu_right(4, Xu);
+			Vector xu; // should get sized automatically to 4 by solve()
+
+			Matrix bu2(3,2);
+			bu2(0) = bu;
+			bu2(1) = 2 * bu;
+			Matrix xu2; // should get sized 4x2 by solve
+		#else
+			double Au[12] = { 2,     5,     3,     4,
+				7,     1,     3,     5,
+				4,     3,     6,     2 };
+			double Bu[3] = { 3,     1,     6 };
+			double Xu[4] = { -0.0376844,     0.350628,    0.986164,   -0.409066 };
+			Matrix_<double> au(3, 4, Au);
+			Vector_<double> bu(3, Bu);
+			Vector_<double> xu_right(4, Xu);
+			Vector_<double> xu; // should get sized automatically to 4 by solve()
+
+			Matrix_<double> bu2(3, 2);
+			bu2(0) = bu;
+			bu2(1) = 2 * bu;
+			Matrix_<double> xu2; // should get sized 4x2 by solve
+		#endif
+        
 
         FactorQTZ qtzu(au);  // perform QTZ factorization
 
@@ -174,32 +217,58 @@ int main () {
         qtzfu.solve( bfu2, xfu2 );
         cout << " multiple rhs solution, float " << xfu2 << endl;
 
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			Real C[4] = { 1.0,   2.0,
+				  1.0,   3.0  };
+			Matrix c(2,2, C);
+		#else
+			double C[4] = { 1.0,   2.0,
+				1.0,   3.0 };
+			Matrix_<double> c(2, 2, C);
+		#endif
 
-       Real C[4] = { 1.0,   2.0,
-              1.0,   3.0  };
-        Matrix c(2,2, C);
         FactorQTZ cqtz(c);
-        Matrix invQTZ;
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			Matrix invQTZ;
+		#else
+			Matrix_<double> invQTZ;
+		#endif
         cqtz.inverse(invQTZ);
         cout << " FactorQTZ.inverse : " << endl;
         cout << invQTZ[0] << endl;
         cout << invQTZ[1] << endl;
   
-        Real Z[4] = { 0.0,   0.0,
-                     0.0,   0.0  };
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			Real Z[4] = { 0.0,   0.0,
+						 0.0,   0.0  };
 
-        Matrix z(2,2, Z);
-        FactorQTZ zqtz(z);
-        Vector_<double> xz;
-        Vector_<double> bz(2);
+			Matrix z(2,2, Z);
+			FactorQTZ zqtz(z);
+			Vector_<SimTK::Real> xz;
+			Vector_<SimTK::Real> bz(2);
+		#else
+			double Z[4] = { 0.0,   0.0,
+				0.0,   0.0 };
+
+			Matrix_<double> z(2, 2, Z);
+			FactorQTZ zqtz(z);
+			Vector_<double> xz;
+			Vector_<double> bz(2);
+		#endif
         bz(1) = bz(0) = 0.0;
         zqtz.solve( bz, xz );
         cout << " solve with mat all zeros : " << endl;
         for(int i=0;i<xz.size();i++) printf("%f ", xz(i) );  printf("\n");
         try {
-            Matrix_<double> z0;
-            FactorQTZ z0qtz(z0);
-            Vector_<double> bz0(0);
+			#ifndef SimTK_REAL_IS_ADOUBLE
+				Matrix_<SimTK::Real> z0;
+				FactorQTZ z0qtz(z0);
+				Vector_<SimTK::Real> bz0(0);
+			#else
+				Matrix_<double> z0;
+				FactorQTZ z0qtz(z0);
+				Vector_<double> bz0(0);
+			#endif
             z0qtz.solve( bz0, xz );
             cout << " solve with mat(0,0) : " << endl;
             for(int i=0;i<xz.size();i++) printf("%f ", xz(i) );  printf("\n");

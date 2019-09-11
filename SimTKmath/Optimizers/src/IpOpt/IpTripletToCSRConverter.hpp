@@ -11,7 +11,7 @@
 
 #include "IpUtils.hpp"
 #include "IpReferenced.hpp"
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   /** Class for converting symmetric matrices given in triplet format

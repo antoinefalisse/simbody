@@ -13,7 +13,7 @@
 #include "IpException.hpp"
 #include "IpTimingStatistics.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   /** enumeration for the Hessian information type. */

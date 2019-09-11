@@ -36,13 +36,13 @@ const Real TOL = 1e-10;
 
 template <class T>
 void assertEqual(T val1, T val2) {
-    ASSERT(abs(val1-val2) < TOL);
+    ASSERT(NTraits<Real>::abs(val1-val2) < TOL);
 }
 
 template <int N>
 void assertEqual(Vec<N> val1, Vec<N> val2) {
     for (int i = 0; i < N; ++i)
-        ASSERT(abs(val1[i]-val2[i]) < TOL);
+        ASSERT(NTraits<Real>::abs(val1[i]-val2[i]) < TOL);
 }
 
 static void compareToTranslate(bool prescribe, Motion::Level level) {
@@ -79,10 +79,12 @@ static void compareToTranslate(bool prescribe, Motion::Level level) {
         Vec3 vel(random.getValue(), random.getValue(), random.getValue());
         const MobilizedBody& body1 = matter.getMobilizedBody(MobilizedBodyIndex(2*i+1));
         const MobilizedBody& body2 = matter.getMobilizedBody(MobilizedBodyIndex(2*i+2));
+    #ifndef SimTK_REAL_IS_ADOUBLE
         body1.setQToFitTranslation(state, pos);
         body2.setQToFitTranslation(state, pos);
         body1.setUToFitLinearVelocity(state, vel);
         body2.setUToFitLinearVelocity(state, vel);
+    #endif
     }
     
     // Calculate lots of quantities from the MobilizedBodies.
@@ -160,10 +162,14 @@ static void testPrescribeAcceleration() {
 }
 
 int main() {
+#ifndef SimTK_REAL_IS_ADOUBLE
     SimTK_START_TEST("TestLoneParticle");
         SimTK_SUBTEST(testFree);
         SimTK_SUBTEST(testPrescribePosition);
         SimTK_SUBTEST(testPrescribeVelocity);
         SimTK_SUBTEST(testPrescribeAcceleration);
     SimTK_END_TEST();
+#else
+    std::cout << "This test is not supported with ADOL-C" << std::endl;
+#endif
 }

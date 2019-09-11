@@ -22,6 +22,9 @@
  * -------------------------------------------------------------------------- */
 
 #include "SimTKmath.h"
+
+#ifndef SimTK_REAL_IS_ADOUBLE
+
 #include "simbody/internal/MobilizedBody.h"
 #include "simbody/internal/MultibodySystem.h"
 #include "simbody/internal/SimbodyMatterSubsystem.h"
@@ -174,3 +177,4 @@ void Markers::uninitializeCondition() const {
     bodiesWithMarkers.clear();
 }
 
+#endif

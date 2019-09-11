@@ -98,11 +98,15 @@ or any other Index type to an argument expecting a certain Index type. **/
  * This compile-time constant determines the default precision used everywhere
  * in %SimTK Core code. Wherever a SimTK::Real, SimTK::Vector, SimTK::Matrix,
  * etc. appears with no precision specified, it will have this underlying precision.
- * We use 1==float, 2==double. Any other value will cause
+ * We use 1==float, 2==double, 4==long double. Any other value will cause
  * a compile time error. The default is 2, i.e., double precision.
  */
 #ifndef SimTK_DEFAULT_PRECISION
 #   define SimTK_DEFAULT_PRECISION 2
+#endif
+
+#if (SimTK_DEFAULT_PRECISION != 2) && SimTK_REAL_IS_ADOUBLE
+    #error MUST USE DOUBLE PRECISION WITH ADOL-C ADOUBLE.
 #endif
 
 #if   (SimTK_DEFAULT_PRECISION == 1)
@@ -110,7 +114,18 @@ or any other Index type to an argument expecting a certain Index type. **/
     typedef float SimTK_Real;
 #elif (SimTK_DEFAULT_PRECISION == 2)
 /** This type is for use in C; in C++ use SimTK::Real instead. */
-    typedef double SimTK_Real;
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        typedef double SimTK_Real;
+    #else
+        //#include <adolc/adouble.h>
+        //#include <adolc/adolc.h>
+        //#include <adolc/adtl.h>
+        #include <recorder.hpp>
+        typedef Recorder SimTK_Real;
+    #endif
+#elif (SimTK_DEFAULT_PRECISION == 4)
+/** This type is for use in C; in C++ use SimTK::Real instead. */
+    typedef long double SimTK_Real;
 #else
     #error ILLEGAL VALUE FOR DEFAULT PRECISION
 #endif
@@ -119,23 +134,23 @@ or any other Index type to an argument expecting a certain Index type. **/
     #if defined(__cplusplus)
         #include <cstdio>
         #define SimTK_DEBUG(s) std::printf("DBG: " s)
-        #define SimTK_DEBUG1(s,a1) std::printf("DBG: " s,a1)    
-        #define SimTK_DEBUG2(s,a1,a2) std::printf("DBG: " s,a1,a2)    
-        #define SimTK_DEBUG3(s,a1,a2,a3) std::printf("DBG: " s,a1,a2,a3)    
+        #define SimTK_DEBUG1(s,a1) std::printf("DBG: " s,a1)
+        #define SimTK_DEBUG2(s,a1,a2) std::printf("DBG: " s,a1,a2)
+        #define SimTK_DEBUG3(s,a1,a2,a3) std::printf("DBG: " s,a1,a2,a3)
         #define SimTK_DEBUG4(s,a1,a2,a3,a4) std::printf("DBG: " s,a1,a2,a3,a4)
     #else
         #include <stdio.h>
         #define SimTK_DEBUG(s) printf("DBG: " s)
-        #define SimTK_DEBUG1(s,a1) printf("DBG: " s,a1)    
-        #define SimTK_DEBUG2(s,a1,a2) printf("DBG: " s,a1,a2)    
-        #define SimTK_DEBUG3(s,a1,a2,a3) printf("DBG: " s,a1,a2,a3)    
+        #define SimTK_DEBUG1(s,a1) printf("DBG: " s,a1)
+        #define SimTK_DEBUG2(s,a1,a2) printf("DBG: " s,a1,a2)
+        #define SimTK_DEBUG3(s,a1,a2,a3) printf("DBG: " s,a1,a2,a3)
         #define SimTK_DEBUG4(s,a1,a2,a3,a4) printf("DBG: " s,a1,a2,a3,a4)
     #endif
 #else
     #define SimTK_DEBUG(s)
     #define SimTK_DEBUG1(s,a1)
     #define SimTK_DEBUG2(s,a1,a2)
-    #define SimTK_DEBUG3(s,a1,a2,a3)    
+    #define SimTK_DEBUG3(s,a1,a2,a3)
     #define SimTK_DEBUG4(s,a1,a2,a3,a4)
 #endif
 
@@ -168,18 +183,15 @@ or any other Index type to an argument expecting a certain Index type. **/
 
 
     /* Until VS2015 struct timespec was missing from <ctime> so is faked here 
-    if needed. When Simbody used pthreads and provided its own pthread.h for
-    Windows, we had to avoid a duplicate declaration with timespec in pthread.h
-    via the HAVE_STRUCT_TIMESPEC guard. In 2018, we removed pthread.h, but we
-    left in the HAVE_STRUCT_TIMESPEC guard in case a third party defines
-    timespec.
+    if needed. However, note that it is also defined in the pthread.h header on 
+    Windows, so the guard symbol must match here to avoid a duplicate declaration. 
     TODO: there is a potential problem here since VS2015's struct timespec 
     doesn't appear to match pthread's definition. */
     #ifndef HAVE_STRUCT_TIMESPEC
     #define HAVE_STRUCT_TIMESPEC 1
         #if _MSC_VER < 1900
         struct timespec {
-            long tv_sec; /* TODO(sherm1,chrisdembia) should be time_t? */
+            long tv_sec; /*TODO: should be time_t but must fix in pthreads too*/
             long tv_nsec;
         };
         #endif
@@ -749,6 +761,10 @@ types to specialize the IsFloatingType struct template for those types. **/
 
 SimTK_SPECIALIZE_FLOATING_TYPE(float); 
 SimTK_SPECIALIZE_FLOATING_TYPE(double); 
+SimTK_SPECIALIZE_FLOATING_TYPE(long double); 
+#ifdef SimTK_REAL_IS_ADOUBLE
+    SimTK_SPECIALIZE_FLOATING_TYPE(Recorder);
+#endif
 
 /** Compile-time type test: is this the void type?. **/
 template <class T> struct IsVoidType {
@@ -917,7 +933,6 @@ SimTK_NICETYPENAME_LITERAL(unsigned long);
 SimTK_NICETYPENAME_LITERAL(long long);
 SimTK_NICETYPENAME_LITERAL(unsigned long long);
 SimTK_NICETYPENAME_LITERAL(float);           
-SimTK_NICETYPENAME_LITERAL(double); 
 SimTK_NICETYPENAME_LITERAL(long double);
 SimTK_NICETYPENAME_LITERAL(std::string);
 SimTK_NICETYPENAME_LITERAL(std::complex<float>);
@@ -925,7 +940,15 @@ SimTK_NICETYPENAME_LITERAL(std::complex<double>);
 SimTK_NICETYPENAME_LITERAL(std::complex<long double>); 
 SimTK_NICETYPENAME_LITERAL(SimTK::FalseType);
 SimTK_NICETYPENAME_LITERAL(SimTK::TrueType); 
+#ifdef SimTK_REAL_IS_ADOUBLE
+    SimTK_NICETYPENAME_LITERAL(Recorder);
+#endif
 
+
+
+/// MACRO to throw exception related to ADOLC
+#define NotSupportedWithADOLC(ADOLCRelatedIssue)  \
+throw std::runtime_error(ADOLCRelatedIssue "currently not supported with ADOL-C"); \
 
 #endif /* C++ stuff */
 

@@ -3,8 +3,9 @@ add_subdirectory(src/IpOpt)
 add_subdirectory(src/c-cmaes)
 
 # add in local source and headers here
-file(GLOB src_files  ./src/*.cpp)
-file(GLOB incl_files ./src/*.h)
+# TODOautodiff file(GLOB src_files  ./src/*.cpp)
+file(GLOB src_files src/*.cpp)
+file(GLOB incl_files src/*.h)
 
 # append to the local scope copy, and then copy up to parent scope
 list(APPEND SOURCE_FILES ${src_files})

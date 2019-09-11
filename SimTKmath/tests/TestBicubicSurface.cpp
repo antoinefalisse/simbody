@@ -322,14 +322,14 @@ void testBicubicAgainstAnalyticFcn(Real xmin, Real xmax, Real ymin,
             fxxyk(i,j)   = bcsf.calcDerivative(fxxy,XY);
             fxyyk(i,j)   = bcsf.calcDerivative(fxyy,XY);
 
-            if( errV(0) < abs(fk(i,j) - z(i,j)) )
-                errV(0) = abs(fk(i,j) - z(i,j));
-            if( errV(1) < abs(fxk(i,j) - zx(i,j)) )
-                errV(1) = abs(fxk(i,j) - zx(i,j));
-            if( errV(2) < abs(fyk(i,j) - zy(i,j)) )
-                errV(2) = abs(fyk(i,j) - zy(i,j));
-            if( errV(3) < abs(fxyk(i,j) - zxy(i,j)) )
-                errV(3) = abs(fxyk(i,j) - zxy(i,j));
+            if( errV(0) < fabs(fk(i,j) - z(i,j)) )
+                errV(0) = fabs(fk(i,j) - z(i,j));
+            if( errV(1) < fabs(fxk(i,j) - zx(i,j)) )
+                errV(1) = fabs(fxk(i,j) - zx(i,j));
+            if( errV(2) < fabs(fyk(i,j) - zy(i,j)) )
+                errV(2) = fabs(fyk(i,j) - zy(i,j));
+            if( errV(3) < fabs(fxyk(i,j) - zxy(i,j)) )
+                errV(3) = fabs(fxyk(i,j) - zxy(i,j));
                         
                 /*if(abs(errV(0)) > 1e-4 ){
                     printf("Analytic (x,y),f,fx,fy,fxy: (%g,%g),%g, %g, %g, %g\n",
@@ -354,14 +354,14 @@ void testBicubicAgainstAnalyticFcn(Real xmin, Real xmax, Real ymin,
                 fxxyMk(i,j)   = bcsf.calcDerivative(fxxy,XYM);
                 fxyyMk(i,j)   = bcsf.calcDerivative(fxyy,XYM);
 
-                if( errVM(0) < abs(fMk(i,j) - zM(i,j)) )
-                    errVM(0) = abs(fMk(i,j) - zM(i,j));
-                if( errVM(1) < abs(fxMk(i,j) - zMx(i,j)) )
-                    errVM(1) = abs(fxMk(i,j) - zMx(i,j));
-                if( errVM(2) < abs(fyMk(i,j) - zMy(i,j)) )
-                    errVM(2) = abs(fyMk(i,j) - zMy(i,j));
-                if( errVM(3) < abs(fxyMk(i,j) - zMxy(i,j)) )
-                    errVM(3) = abs(fxyMk(i,j) - zMxy(i,j));
+                if( errVM(0) < fabs(fMk(i,j) - zM(i,j)) )
+                    errVM(0) = fabs(fMk(i,j) - zM(i,j));
+                if( errVM(1) < fabs(fxMk(i,j) - zMx(i,j)) )
+                    errVM(1) = fabs(fxMk(i,j) - zMx(i,j));
+                if( errVM(2) < fabs(fyMk(i,j) - zMy(i,j)) )
+                    errVM(2) = fabs(fyMk(i,j) - zMy(i,j));
+                if( errVM(3) < fabs(fxyMk(i,j) - zMxy(i,j)) )
+                    errVM(3) = fabs(fxyMk(i,j) - zMxy(i,j));
                         
             }
         }
@@ -431,7 +431,9 @@ void testBicubicAgainstAnalyticFcn(Real xmin, Real xmax, Real ymin,
     SimTK_TEST_EQ(fyk,zy);
     SimTK_TEST_EQ_TOL(fxyk,zxy,1e-10);
     //See if the maximum error at the mid points are acceptable
-    SimTK_TEST_EQ_TOL(errVM(0),0,mid_tol);
+    //SimTK_TEST_EQ_TOL(errVM(0),0,mid_tol);
+    SimTK_TEST_EQ_TOL(errVM(0), 0, mid_tol.value());
+
     
 }
 
@@ -761,12 +763,12 @@ void testBicubicConsistencyContinuity(Real xmin, Real xmax, Real ymin,
                     numFxxy(i,j), numFxyy(i,j), numFxxx(i,j), numFyyy(i,j));
             }
            
-            SimTK_TEST_EQ_TOL(bcsFx(i,j),numFx(i,j),tol1);
-            SimTK_TEST_EQ_TOL(bcsFy(i,j),numFy(i,j),tol1);
+            SimTK_TEST_EQ_TOL(bcsFx(i,j),numFx(i,j),tol1.value());
+            SimTK_TEST_EQ_TOL(bcsFy(i,j),numFy(i,j),tol1.value());
             
-            SimTK_TEST_EQ_TOL(bcsFxy(i,j),numFxy(i,j),tol2);
-            SimTK_TEST_EQ_TOL(bcsFxx(i,j),numFxx(i,j),tol2);
-            SimTK_TEST_EQ_TOL(bcsFyy(i,j),numFyy(i,j),tol2);
+            SimTK_TEST_EQ_TOL(bcsFxy(i,j),numFxy(i,j),tol2.value());
+            SimTK_TEST_EQ_TOL(bcsFxx(i,j),numFxx(i,j),tol2.value());
+            SimTK_TEST_EQ_TOL(bcsFyy(i,j),numFyy(i,j),tol2.value());
 
             /*The numerical 3rd derivatives will not match at the boundaries
             between patches. They are discontinuous in this region in the 
@@ -787,32 +789,32 @@ void testBicubicConsistencyContinuity(Real xmin, Real xmax, Real ymin,
                 Real f0 = bcsF(i,j) -(bcsFx(i,j)*dirXY(0) 
                                       + bcsFy(i,j)*dirXY(1));
                 Real err0 =f0-bcsF(8,8);
-                Real errR0= abs(err0)/( abs(bcsF(8,8)) + 1e-10);
+                Real errR0= fabs(err0)/( fabs(bcsF(8,8)) + 1e-10);
                 
                 //Test for fx derivative continuity
                 Real f1x = bcsFx(i,j) -(bcsFxx(i,j)*dirXY(0));
                 Real err1x =f1x-bcsFx(8,8);
-                Real errR1x= abs(err1x)/( abs(bcsFx(8,8)) + 1e-10);
+                Real errR1x= fabs(err1x)/( fabs(bcsFx(8,8)) + 1e-10);
 
                 //Test for fy derivative continity
                 Real f1y = bcsFy(i,j) -(bcsFyy(i,j)*dirXY(1));
                 Real err1y =f1y-bcsFy(8,8);
-                Real errR1y= abs(err1y)/( abs(bcsFy(8,8)) + 1e-10);
+                Real errR1y= fabs(err1y)/( fabs(bcsFy(8,8)) + 1e-10);
 
                 //Test for fxx derivative continuity
                 Real f2x = bcsFxx(i,j) -(bcsFxxx(i,j)*dirXY(0));
                 Real err2x =f2x-bcsFxx(8,8);
-                Real errR2x= abs(err2x)/( abs(bcsFxx(8,8)) + 1e-10);
+                Real errR2x= fabs(err2x)/( fabs(bcsFxx(8,8)) + 1e-10);
 
                 //Test for fyy derivative continuity
                 Real f2y = bcsFyy(i,j) -(bcsFyyy(i,j)*dirXY(1));
                 Real err2y =f2y-bcsFyy(8,8);
-                Real errR2y= abs(err2y)/( abs(bcsFyy(8,8)) + 1e-10);
+                Real errR2y= fabs(err2y)/( fabs(bcsFyy(8,8)) + 1e-10);
 
                 //Test for fxy derivative continuity
                 Real fxy = bcsFxy(i,j) -(bcsFxxy(i,j)*dirXY(0) + bcsFxyy(i,j)*dirXY(1));
                 Real errxy =fxy-bcsFxy(8,8);
-                Real errRxy= abs(errxy)/( abs(bcsFxy(8,8)) + 1e-10);
+                Real errRxy= fabs(errxy)/( fabs(bcsFxy(8,8)) + 1e-10);
 
 
                 if(verbosePrint==true){
@@ -833,12 +835,12 @@ void testBicubicConsistencyContinuity(Real xmin, Real xmax, Real ymin,
                    
 
 
-                SimTK_TEST_EQ_TOL(errR0,0, dh);
-                SimTK_TEST_EQ_TOL(errR1x,0,dh*5);
-                SimTK_TEST_EQ_TOL(errR1y,0,dh*5);
-                SimTK_TEST_EQ_TOL(errR2x,0,dh*5);
-                SimTK_TEST_EQ_TOL(errR2y,0,dh*5);
-                SimTK_TEST_EQ_TOL(errRxy,0,dh*10);
+                SimTK_TEST_EQ_TOL(errR0,0, dh.value());
+                SimTK_TEST_EQ_TOL(errR1x,0,dh.value() *5);
+                SimTK_TEST_EQ_TOL(errR1y,0,dh.value() *5);
+                SimTK_TEST_EQ_TOL(errR2x,0,dh.value() *5);
+                SimTK_TEST_EQ_TOL(errR2y,0,dh.value() *5);
+                SimTK_TEST_EQ_TOL(errRxy,0,dh.value() *10);
             }
 
         }

@@ -67,7 +67,7 @@ void Force::calcForceContribution(const State&   state,
     bodyForces.setToZero();
     particleForces.setToZero();
     mobilityForces.setToZero();
-    if (isDisabled(state)) return;
+	if (isDisabled(state)) return;
 
     // Add in force element contributions.
     getImpl().calcForce(state,bodyForces,particleForces,mobilityForces);
@@ -653,13 +653,13 @@ calcForce(const State& state, Vector_<SpatialVec>& bodyForces,
         const Real fraw = param.k*x*(1+param.d*qdot); // should be >= 0
         mb.applyOneMobilityForce(state, 
             MobilizerUIndex(m_whichQ), // TODO: only works qdot & u match
-            std::min(Real(0), -fraw), mobilityForces);
+            NTraits<Real>::min(Real(0), -fraw), mobilityForces);
     } else if (q < param.qLow) {
         const Real x = q-param.qLow;    // x < 0
         const Real fraw = param.k*x*(1-param.d*qdot); // should be <= 0
         mb.applyOneMobilityForce(state, 
             MobilizerUIndex(m_whichQ), // TODO: only works qdot & u match
-            std::max(Real(0), -fraw), mobilityForces);
+            NTraits<Real>::max(Real(0), -fraw), mobilityForces);
     }
 }
 

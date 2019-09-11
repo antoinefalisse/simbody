@@ -46,18 +46,23 @@ namespace SimTK {
 
 template class Geo::LineSeg_<float>;
 template class Geo::LineSeg_<double>;
+template class Geo::LineSeg_<Real>;
 
 template class Geo::CubicHermiteCurve_<float>;
 template class Geo::CubicHermiteCurve_<double>;
+template class Geo::CubicHermiteCurve_<Real>;
 
 template class Geo::BicubicHermitePatch_<float>;
 template class Geo::BicubicHermitePatch_<double>;
+template class Geo::BicubicHermitePatch_<Real>;
 
 template class Geo::CubicBezierCurve_<float>;
 template class Geo::CubicBezierCurve_<double>;
+template class Geo::CubicBezierCurve_<Real>;
 
 template class Geo::BicubicBezierPatch_<float>;
 template class Geo::BicubicBezierPatch_<double>;
+template class Geo::BicubicBezierPatch_<Real>;
 
 
 }  // End of namespace SimTK

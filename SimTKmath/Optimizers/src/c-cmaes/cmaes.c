@@ -138,6 +138,7 @@
    like strncpy(), ctime(), sprintf(), fopen(), fscanf(), etc. "may be unsafe".
    This must come before the first #include.
 */
+
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS
 #endif
@@ -3128,5 +3129,3 @@ static char *szCat(const char *sz1, const char*sz2,
             (unsigned)intMin((int)strlen(sz4)+1, 698 - (int)strlen((char const *)szBuf)));
   return (char *) szBuf;
 }
-
-

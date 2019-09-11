@@ -14,7 +14,7 @@
 #include "IpBacktrackingLSAcceptor.hpp"
 #include "IpPDSystemSolver.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   /** Filter line search.  This class implements the filter line

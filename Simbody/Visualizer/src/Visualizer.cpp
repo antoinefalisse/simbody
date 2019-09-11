@@ -33,16 +33,16 @@
 
 #include <cstdlib>
 #include <cstdio>
+#include <pthread.h>
 #include <string>
 #include <ctime>
 #include <iostream>
 #include <limits>
-#include <condition_variable>
 
 using namespace SimTK;
 using namespace std;
 
-static void drawingThreadMain(Visualizer::Impl& vizImpl);
+static void* drawingThreadMain(void* visualizerAsVoidp);
 
 static const long long UsToNs = 1000LL;          // ns = us * UsToNs
 static const long long MsToNs = 1000LL * UsToNs; // ns = ms * MsToNs
@@ -104,16 +104,30 @@ public:
         m_mode(PassThrough), m_frameRateFPS(DefaultFrameRateFPS), 
         m_simTimeUnitsPerSec(1), 
         m_desiredBufferLengthInSec(DefaultDesiredBufferLengthInSec), 
-        m_timeBetweenFramesInNs(secToNs(1/DefaultFrameRateFPS)),
+        #ifndef SimTK_REAL_IS_ADOUBLE
+            m_timeBetweenFramesInNs(secToNs(1 / DefaultFrameRateFPS)),
+        #else
+            m_timeBetweenFramesInNs(secToNs(1/DefaultFrameRateFPS.getValue())),
+        #endif
         m_allowableFrameJitterInNs(DefaultAllowableFrameJitterInNs),
-        m_allowableFrameTimeSlopInNs(
-            secToNs(DefaultSlopAsFractionOfFrameInterval/DefaultFrameRateFPS)),
+        #ifndef SimTK_REAL_IS_ADOUBLE
+            m_allowableFrameTimeSlopInNs(
+                secToNs(DefaultSlopAsFractionOfFrameInterval / DefaultFrameRateFPS)),
+        #else
+            m_allowableFrameTimeSlopInNs(
+                secToNs(DefaultSlopAsFractionOfFrameInterval.getValue() /DefaultFrameRateFPS.getValue())),
+        #endif
         m_adjustedRealTimeBase(realTimeInNs()),
         m_prevFrameSimTime(-1), m_nextFrameDueAdjRT(-1), 
         m_oldest(0),m_nframe(0),
         m_drawThreadIsRunning(false), m_drawThreadShouldSuicide(false),
         m_refCount(0)
     {   
+        pthread_mutex_init(&m_queueLock, NULL); 
+        pthread_cond_init(&m_queueNotFull, NULL); 
+        pthread_cond_init(&m_queueNotEmpty, NULL); 
+        pthread_cond_init(&m_queueIsEmpty, NULL); 
+
         setMode(PassThrough);
         clearStats();
 
@@ -126,7 +140,7 @@ public:
     
     ~Impl() {
         if (m_mode==RealTime && m_pool.size()) {
-            killDrawThreadIfNecessary();
+            pthread_cancel(m_drawThread);
         }
         for (unsigned i = 0; i < m_controllers.size(); i++)
             delete m_controllers[i];
@@ -134,14 +148,13 @@ public:
             delete m_listeners[i];
         for (unsigned i = 0; i < m_generators.size(); i++)
             delete m_generators[i];
+        pthread_cond_destroy(&m_queueIsEmpty);
+        pthread_cond_destroy(&m_queueNotEmpty);
+        pthread_cond_destroy(&m_queueNotFull);
+        pthread_mutex_destroy(&m_queueLock);
 
-        if (m_shutdownWhenDestructed) {
-            try {
-                // This throws an exception if the pipe is broken (e.g., if the
-                // simbody-visualizer has already been shut down).
-                m_protocol.shutdownGUI();
-            } catch (...) {}
-        }
+        if (m_shutdownWhenDestructed)
+            m_protocol.shutdownGUI();
     }
 
     void setShutdownWhenDestructed(bool shouldShutdown)
@@ -155,7 +168,13 @@ public:
         SimTK_ASSERT_ALWAYS(!m_drawThreadIsRunning,
             "Tried to start the draw thread when it was already running.");
         m_drawThreadShouldSuicide = false;
-        m_drawThread = std::thread(drawingThreadMain, std::ref(*this));
+        // Make sure the thread is joinable, although that is probably
+        // the default.
+        pthread_attr_t attr;
+        pthread_attr_init(&attr);
+        pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+        pthread_create(&m_drawThread, &attr, drawingThreadMain, this);
+        pthread_attr_destroy(&attr);
         m_drawThreadIsRunning = true;
     }
 
@@ -168,10 +187,10 @@ public:
         // case we have to wake it up (see getOldestFrameInQueue()).
         // We'll do it twice 100ms apart to avoid a timing issue where
         // we signal just before the thread waits.
-        m_queueNotEmpty.notify_one(); // wake it if necessary
+        POST_QueueNotEmpty(); // wake it if necessary
         sleepInSec(0.1); 
-        m_queueNotEmpty.notify_one();
-        m_drawThread.join(); // wait for death
+        POST_QueueNotEmpty();
+        pthread_join(m_drawThread, 0); // wait for death
         m_drawThreadIsRunning = m_drawThreadShouldSuicide = false;
     }
 
@@ -194,9 +213,15 @@ public:
 
         // Frame rate.
         m_frameRateFPS               = framesPerSec;
-        m_timeBetweenFramesInNs      = secToNs(1/m_frameRateFPS);
-        m_allowableFrameTimeSlopInNs = 
-            secToNs(DefaultSlopAsFractionOfFrameInterval/m_frameRateFPS);
+        #ifndef SimTK_REAL_IS_ADOUBLE
+            m_timeBetweenFramesInNs = secToNs(1 / m_frameRateFPS);
+            m_allowableFrameTimeSlopInNs =
+                secToNs(DefaultSlopAsFractionOfFrameInterval / m_frameRateFPS);
+        #else
+            m_timeBetweenFramesInNs      = secToNs(1/m_frameRateFPS.getValue());
+            m_allowableFrameTimeSlopInNs = 
+                secToNs(DefaultSlopAsFractionOfFrameInterval.getValue() /m_frameRateFPS.getValue());
+        #endif
         m_allowableFrameJitterInNs   = DefaultAllowableFrameJitterInNs;
 
         // Time scale.
@@ -204,10 +229,15 @@ public:
 
         // Realtime buffer.
         m_desiredBufferLengthInSec = desiredBufLengthSec;
-
-        int numFrames = 
-            (int)(m_desiredBufferLengthInSec/nsToSec(m_timeBetweenFramesInNs) 
-                  + 0.5);
+        #ifndef SimTK_REAL_IS_ADOUBLE
+            int numFrames =
+                (int)(m_desiredBufferLengthInSec / nsToSec(m_timeBetweenFramesInNs)
+                    + 0.5);
+        #else
+            int numFrames = 
+                (int)(m_desiredBufferLengthInSec.getValue() /nsToSec(m_timeBetweenFramesInNs)
+                        + 0.5);
+        #endif
         if (numFrames==0 && m_desiredBufferLengthInSec > 0)
             numFrames = 1;
 
@@ -304,8 +334,9 @@ public:
 
     // Set the maximum number of frames in the buffer.
     void initializePool(int sz) {
-        std::lock_guard<std::mutex> lock(m_queueMutex);
+        pthread_mutex_lock(&m_queueLock);
         m_pool.resize(sz);m_oldest=m_nframe=0;
+        pthread_mutex_unlock(&m_queueLock);
     }
 
     int getNFramesInQueue() const {return m_nframe;}
@@ -315,6 +346,16 @@ public:
     bool queueIsFull() const {return m_nframe==m_pool.size();}
     bool queueIsEmpty() const {return m_nframe==0;}
 
+    // I'm capitalizing these methods because they are VERY important!
+    void LOCK_Queue()   {pthread_mutex_lock(&m_queueLock);}
+    void UNLOCK_Queue() {pthread_mutex_unlock(&m_queueLock);}
+    void WAIT_QueueNotFull() {pthread_cond_wait(&m_queueNotFull,&m_queueLock);}
+    void POST_QueueNotFull() {pthread_cond_signal(&m_queueNotFull);}
+    void WAIT_QueueNotEmpty() {pthread_cond_wait(&m_queueNotEmpty,&m_queueLock);}
+    void POST_QueueNotEmpty() {pthread_cond_signal(&m_queueNotEmpty);}
+    void WAIT_QueueIsEmpty() {pthread_cond_wait(&m_queueIsEmpty,&m_queueLock);}
+    void POST_QueueIsEmpty() {pthread_cond_signal(&m_queueIsEmpty);}
+
     // Called from simulation thread. Blocks until there is room in
     // the queue, then inserts this state unconditionally, with the indicated
     // desired rendering time in adjusted real time. We then update the 
@@ -323,13 +364,12 @@ public:
     void addFrameToQueueWithWait(const State& state, 
                                  const long long& desiredDrawTimeAdjRT)
     {
-        std::unique_lock<std::mutex> lock(m_queueMutex);
+        LOCK_Queue();
         ++numReportedFramesThatWereQueued;
         if (queueIsFull()) {
             ++numQueuedFramesThatHadToWait;
-            // atomic: unlock, long wait, relock
-            // Only wake up if queue is not full (ignore spurious wakeups).
-            m_queueNotFull.wait(lock, [&] {return !queueIsFull();});
+            do {WAIT_QueueNotFull();} // atomic: unlock, long wait, relock
+            while (queueIsFull()); // must recheck condition
         }
 
         // There is room in the queue now. We're holding the lock.
@@ -338,16 +378,19 @@ public:
         frame.desiredDrawTimeAdjRT = desiredDrawTimeAdjRT;
 
         // Record the frame time.
-        m_prevFrameSimTime = state.getTime();
+        #ifndef SimTK_REAL_IS_ADOUBLE
+            m_prevFrameSimTime = state.getTime();
+        #else
+            m_prevFrameSimTime = state.getTime().getValue();
+        #endif
 
         // Set the expected next frame time (in AdjRT).
         m_nextFrameDueAdjRT = desiredDrawTimeAdjRT + m_timeBetweenFramesInNs;
 
         if (++m_nframe == 1) 
-            // wake up rendering thread on first frame
-            m_queueNotEmpty.notify_one();
+            POST_QueueNotEmpty(); // wake up rendering thread on first frame
 
-        lock.unlock();
+        UNLOCK_Queue();
     }
 
     // Call from simulation thread to allow the drawing thread to flush
@@ -356,9 +399,9 @@ public:
         if (   !queuingIsEnabled() || m_nframe==0 
             || !m_drawThreadIsRunning || m_drawThreadShouldSuicide)
             return;
-        std::unique_lock<std::mutex> lock(m_queueMutex);
-        m_queueIsEmpty.wait(lock, [&] {return m_nframe == 0;});
-        lock.unlock();
+        LOCK_Queue();
+        while (m_nframe) {WAIT_QueueIsEmpty();}
+        UNLOCK_Queue();
     }
 
     // The drawing thread uses this to find the oldest frame in the buffer.
@@ -370,19 +413,18 @@ public:
     // operation since it waits until one is available), false if the draw
     // thread should quit.
     bool getOldestFrameInQueue(const Frame** fp) {
-        std::unique_lock<std::mutex> lock(m_queueMutex);
+        LOCK_Queue();
         if (m_nframe == 0 && !m_drawThreadShouldSuicide) {
             ++numTimesDrawThreadBlockedOnEmptyQueue;
-            // atomic: unlock, long wait, relock; ignore spurious wakeups.
-            m_queueNotEmpty.wait(lock,
-                    [&] {return m_nframe || m_drawThreadShouldSuicide;});
+            do {WAIT_QueueNotEmpty();} // atomic: unlock, long wait, relock
+            while (m_nframe==0 && !m_drawThreadShouldSuicide); // must recheck
         } else {
             sumOfQueueLengths        += double(m_nframe);
             sumSquaredOfQueueLengths += double(square(m_nframe));
         }
         // There is at least one frame available now, unless we're supposed
         // to quit. We are holding the lock.
-        lock.unlock();
+        UNLOCK_Queue();
         if (m_drawThreadShouldSuicide) {*fp=0; return false;}
         else {*fp=&m_pool[m_oldest]; return true;} // sim thread won't change oldest
     }
@@ -392,30 +434,40 @@ public:
     // condition is posted if there is a reasonable amount of room in the pool 
     // now.
     void noteThatOldestFrameIsNowAvailable() {
-        std::unique_lock<std::mutex> lock(m_queueMutex);
+        LOCK_Queue();
         m_oldest = (m_oldest+1)%m_pool.size(); // move to next-oldest
         --m_nframe; // there is now one fewer frame in use
         if (m_nframe == 0)
-            m_queueIsEmpty.notify_one(); // in case we're flushing
+            POST_QueueIsEmpty(); // in case we're flushing
         // Start the simulation again when the pool is about half empty.
         if (m_nframe <= m_pool.size()/2+1)
-            m_queueNotFull.notify_one();
-        lock.unlock();
+            POST_QueueNotFull();
+        UNLOCK_Queue();
     }
 
     // Given a time t in simulation time units, return the equivalent time r in
     // seconds of real time. That is the amount of real time that should have
     // elapsed since t=0 if this simulation were running at exactly the desired
     // real time rate.
-    long long convertSimTimeToNs(const double& t)
-    {   return secToNs(t / m_simTimeUnitsPerSec); }
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        long long convertSimTimeToNs(const double& t)
+        {   return secToNs(t / m_simTimeUnitsPerSec); }
+    #else
+        long long convertSimTimeToNs(const double& t)
+        {   return secToNs(t / m_simTimeUnitsPerSec.getValue()); }
+    #endif
 
     // same as ns; that's what AdjRT tries to be
     long long convertSimTimeToAdjRT(const double& t)
     {   return convertSimTimeToNs(t); } 
 
-    double convertAdjRTtoSimTime(const long long& a)
-    {   return nsToSec(a) * m_simTimeUnitsPerSec; }
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        double convertAdjRTtoSimTime(const long long& a)
+        {   return nsToSec(a) * m_simTimeUnitsPerSec; }
+    #else
+        double convertAdjRTtoSimTime(const long long& a)
+        {   return nsToSec(a) * m_simTimeUnitsPerSec.getValue(); }
+    #endif
 
     long long convertRTtoAdjRT(const long long& r)
     {   return r - m_adjustedRealTimeBase; }
@@ -495,12 +547,12 @@ public:
     // The frame buffer:
     Array_<Frame,int> m_pool; // fixed size, old to new order but circular
     int m_oldest, m_nframe;   // oldest is index into pool, nframe is #valid entries
-    std::mutex              m_queueMutex;
-    std::condition_variable m_queueNotFull;  // these must use m_queueMutex
-    std::condition_variable m_queueNotEmpty;
-    std::condition_variable m_queueIsEmpty;
+    pthread_mutex_t     m_queueLock;
+    pthread_cond_t      m_queueNotFull;   // these must use with m_queueLock
+    pthread_cond_t      m_queueNotEmpty;
+    pthread_cond_t      m_queueIsEmpty;
 
-    std::thread         m_drawThread;    // the rendering thread
+    pthread_t           m_drawThread;     // the rendering thread
     bool                m_drawThreadIsRunning;
     bool                m_drawThreadShouldSuicide;
 
@@ -694,7 +746,11 @@ void Visualizer::Impl::reportRealtime(const State& state) {
     }
 
     // scale, convert to ns (doesn't depend on real time base)
-    const long long t = convertSimTimeToAdjRT(state.getTime()); 
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        const long long t = convertSimTimeToAdjRT(state.getTime());
+    #else
+        const long long t = convertSimTimeToAdjRT(state.getTime().getValue());
+    #endif
 
     // If this is the first frame, or first since last setMode(), then
     // we synchronize Adjusted Real Time to match. Readjustments will occur
@@ -1149,7 +1205,9 @@ frame is ahead of AdjRT, we'll sleep to let real time catch up. If the
 frame is substantially behind, we'll render it now and then adjust the AdjRT 
 base to acknowledge that we have irretrievably slipped from real time and need 
 to adjust our expectations for the future. */
-static void drawingThreadMain(Visualizer::Impl& vizImpl) {
+static void* drawingThreadMain(void* visualizerRepAsVoidp) {
+    Visualizer::Impl& vizImpl = 
+        *reinterpret_cast<Visualizer::Impl*>(visualizerRepAsVoidp);
 
     do {
         // Grab the oldest frame in the queue.
@@ -1169,6 +1227,8 @@ static void drawingThreadMain(Visualizer::Impl& vizImpl) {
 
     // Attempt to wake up the simulation thread if it is waiting for
     // the draw thread since there won't be any more notices!
-    vizImpl.m_queueNotFull.notify_one(); // wake up if waiting for queue space
-    vizImpl.m_queueIsEmpty.notify_one(); // wake up if flushing
+    vizImpl.POST_QueueNotFull(); // wake up if waiting for queue space
+    vizImpl.POST_QueueIsEmpty(); // wake up if flushing
+
+    return 0;
 }

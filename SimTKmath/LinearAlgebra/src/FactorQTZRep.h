@@ -46,6 +46,13 @@ public:
         SimTK_APIARGCHECK_ALWAYS(false,"FactorQTZ","solve",
         "solve called with rhs of type <double>  which does not match type of original linear system \n");
    }
+   #ifdef SimTK_REAL_IS_ADOUBLE
+       virtual void solve(const Vector_<Recorder>& b, Vector_<Recorder>& x) const {
+	       checkIfFactored();
+	       SimTK_APIARGCHECK_ALWAYS(false, "FactorQTZ", "solve",
+		       "solve called with rhs of type <Recorder>  which does not match type of original linear system \n");
+       }
+   #endif
    virtual void solve( const Vector_<std::complex<float> >& b, Vector_<std::complex<float> >& x ) const {
         checkIfFactored();
         SimTK_APIARGCHECK_ALWAYS(false,"FactorQTZ","solve",
@@ -66,6 +73,13 @@ public:
         SimTK_APIARGCHECK_ALWAYS(false,"FactorQTZ","solve",
         "solve called with rhs of type <double>  which does not match type of original linear system \n");
    }
+   #ifdef SimTK_REAL_IS_ADOUBLE
+       virtual void solve(const Matrix_<Recorder>& b, Matrix_<Recorder>& x) const {
+	       checkIfFactored();
+	       SimTK_APIARGCHECK_ALWAYS(false, "FactorQTZ", "solve",
+		       "solve called with rhs of type <Recorder>  which does not match type of original linear system \n");
+       }
+   #endif  
    virtual void solve( const Matrix_<std::complex<float> >& b, Matrix_<std::complex<float> >& x ) const {
         checkIfFactored();
         SimTK_APIARGCHECK_ALWAYS(false,"FactorQTZ","solve",
@@ -80,6 +94,12 @@ public:
         SimTK_APIARGCHECK_ALWAYS(false,"FactorQTZ","inverse",
         "inverse(  <double> ) called with type that is inconsistent with the original matrix  \n");
     }
+    #ifdef SimTK_REAL_IS_ADOUBLE
+	    virtual void inverse(Matrix_<Recorder>& inverse) const {
+		    SimTK_APIARGCHECK_ALWAYS(false, "FactorQTZ", "inverse",
+			    "inverse(  <Recorder> ) called with type that is inconsistent with the original matrix  \n");
+	    }
+        #endif
     virtual void inverse(  Matrix_<float>& inverse ) const {
         SimTK_APIARGCHECK_ALWAYS(false,"FactorQTZ","inverse",
         "inverse(  <float> ) called with type that is inconsistent with the original matrix  \n");

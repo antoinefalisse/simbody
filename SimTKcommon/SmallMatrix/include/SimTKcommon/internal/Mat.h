@@ -1311,6 +1311,24 @@ template <int M, int N, class E, int CS, int RS> inline
 typename Mat<M,N,E,CS,RS>::template Result<double>::Mul
 operator*(const double& l, const Mat<M,N,E,CS,RS>& r) {return r*l;}
 
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template <int M, int N, class E, int CS, int RS> inline
+    typename Mat<M, N, E, CS, RS>::template Result<Recorder>::Mul
+    operator*(const Mat<M, N, E, CS, RS>& l, const Recorder& r)
+      {	return Mat<M, N, E, CS, RS>::template Result<Recorder>::MulOp::perform(l, r); }
+    template <int M, int N, class E, int CS, int RS> inline
+    typename Mat<M, N, E, CS, RS>::template Result<Recorder>::Mul
+    operator*(const Recorder& l, const Mat<M, N, E, CS, RS>& r) { return r*l; }
+#endif
+
+template <int M, int N, class E, int CS, int RS> inline
+typename Mat<M,N,E,CS,RS>::template Result<long double>::Mul
+operator*(const Mat<M,N,E,CS,RS>& l, const long double& r)
+  { return Mat<M,N,E,CS,RS>::template Result<long double>::MulOp::perform(l,r); }
+template <int M, int N, class E, int CS, int RS> inline
+typename Mat<M,N,E,CS,RS>::template Result<long double>::Mul
+operator*(const long double& l, const Mat<M,N,E,CS,RS>& r) {return r*l;}
+
 // m = m*int, int*m -- just convert int to m's precision float
 template <int M, int N, class E, int CS, int RS> inline
 typename Mat<M,N,E,CS,RS>::template Result<typename CNT<E>::Precision>::Mul
@@ -1372,6 +1390,27 @@ operator/(const Mat<M,N,E,CS,RS>& l, const double& r)
 template <int M, int N, class E, int CS, int RS> inline
 typename CNT<double>::template Result<Mat<M,N,E,CS,RS> >::Dvd
 operator/(const double& l, const Mat<M,N,E,CS,RS>& r)
+{   return l * r.invert(); }
+
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template <int M, int N, class E, int CS, int RS> inline
+    typename Mat<M, N, E, CS, RS>::template Result<Recorder>::Dvd
+    operator/(const Mat<M, N, E, CS, RS>& l, const Recorder& r)
+      { return Mat<M, N, E, CS, RS>::template Result<Recorder>::DvdOp::perform(l, r); }
+    template <int M, int N, class E, int CS, int RS> inline
+    typename CNT<Recorder>::template Result<Mat<M, N, E, CS, RS> >::Dvd
+    operator/(const Recorder& l, const Mat<M, N, E, CS, RS>& r)
+     { return l * r.invert(); }
+#endif
+
+template <int M, int N, class E, int CS, int RS> inline
+typename Mat<M,N,E,CS,RS>::template Result<long double>::Dvd
+operator/(const Mat<M,N,E,CS,RS>& l, const long double& r)
+{   return Mat<M,N,E,CS,RS>::template Result<long double>::DvdOp::perform(l,r); }
+
+template <int M, int N, class E, int CS, int RS> inline
+typename CNT<long double>::template Result<Mat<M,N,E,CS,RS> >::Dvd
+operator/(const long double& l, const Mat<M,N,E,CS,RS>& r)
 {   return l * r.invert(); }
 
 // m = m/int, int/m -- just convert int to m's precision float
@@ -1438,6 +1477,24 @@ template <int M, int N, class E, int CS, int RS> inline
 typename Mat<M,N,E,CS,RS>::template Result<double>::Add
 operator+(const double& l, const Mat<M,N,E,CS,RS>& r) {return r+l;}
 
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template <int M, int N, class E, int CS, int RS> inline
+    typename Mat<M, N, E, CS, RS>::template Result<Recorder>::Add
+    operator+(const Mat<M, N, E, CS, RS>& l, const Recorder& r)
+      { return Mat<M, N, E, CS, RS>::template Result<Recorder>::AddOp::perform(l, r); }
+    template <int M, int N, class E, int CS, int RS> inline
+    typename Mat<M, N, E, CS, RS>::template Result<Recorder>::Add
+    operator+(const Recorder& l, const Mat<M, N, E, CS, RS>& r) { return r + l; }
+#endif
+
+template <int M, int N, class E, int CS, int RS> inline
+typename Mat<M,N,E,CS,RS>::template Result<long double>::Add
+operator+(const Mat<M,N,E,CS,RS>& l, const long double& r)
+  { return Mat<M,N,E,CS,RS>::template Result<long double>::AddOp::perform(l,r); }
+template <int M, int N, class E, int CS, int RS> inline
+typename Mat<M,N,E,CS,RS>::template Result<long double>::Add
+operator+(const long double& l, const Mat<M,N,E,CS,RS>& r) {return r+l;}
+
 // m = m+int, int+m -- just convert int to m's precision float
 template <int M, int N, class E, int CS, int RS> inline
 typename Mat<M,N,E,CS,RS>::template Result<typename CNT<E>::Precision>::Add
@@ -1493,6 +1550,26 @@ template <int M, int N, class E, int CS, int RS> inline
 typename CNT<double>::template Result<Mat<M,N,E,CS,RS> >::Sub
 operator-(const double& l, const Mat<M,N,E,CS,RS>& r)
   { return CNT<double>::template Result<Mat<M,N,E,CS,RS> >::SubOp::perform(l,r); }
+
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template <int M, int N, class E, int CS, int RS> inline
+    typename Mat<M, N, E, CS, RS>::template Result<Recorder>::Sub
+    operator-(const Mat<M, N, E, CS, RS>& l, const Recorder& r)
+      {	return Mat<M, N, E, CS, RS>::template Result<Recorder>::SubOp::perform(l, r); }
+    template <int M, int N, class E, int CS, int RS> inline
+    typename CNT<Recorder>::template Result<Mat<M, N, E, CS, RS> >::Sub
+    operator-(const Recorder& l, const Mat<M, N, E, CS, RS>& r)
+      { return CNT<Recorder>::template Result<Mat<M, N, E, CS, RS> >::SubOp::perform(l, r); }
+#endif
+
+template <int M, int N, class E, int CS, int RS> inline
+typename Mat<M,N,E,CS,RS>::template Result<long double>::Sub
+operator-(const Mat<M,N,E,CS,RS>& l, const long double& r)
+  { return Mat<M,N,E,CS,RS>::template Result<long double>::SubOp::perform(l,r); }
+template <int M, int N, class E, int CS, int RS> inline
+typename CNT<long double>::template Result<Mat<M,N,E,CS,RS> >::Sub
+operator-(const long double& l, const Mat<M,N,E,CS,RS>& r)
+  { return CNT<long double>::template Result<Mat<M,N,E,CS,RS> >::SubOp::perform(l,r); }
 
 // m = m-int, int-m // just convert int to m's precision float
 template <int M, int N, class E, int CS, int RS> inline

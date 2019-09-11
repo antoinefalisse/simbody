@@ -14,7 +14,7 @@
 
 #include <list>
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   /** Psydo-class, from which everything has to inherit that wants to

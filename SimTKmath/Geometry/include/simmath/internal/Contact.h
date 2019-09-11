@@ -27,8 +27,6 @@
 #include "SimTKcommon.h"
 #include "simmath/internal/common.h"
 
-#include <set>
-
 namespace SimTK {
 
 

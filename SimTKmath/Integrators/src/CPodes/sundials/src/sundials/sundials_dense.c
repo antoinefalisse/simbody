@@ -393,4 +393,3 @@ void denseAddI(realtype **a, int n)
   
   for (i=0; i < n; i++) a[i][i] += ONE;
 }
-

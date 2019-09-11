@@ -12,7 +12,7 @@
 #include "IpIterateInitializer.hpp"
 #include "IpEqMultCalculator.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   /** Class implementing an initialization procedure for warm starts.

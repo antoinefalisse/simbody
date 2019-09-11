@@ -321,6 +321,7 @@ public:
         decorationSub = adoptSubsystem(d);
         return decorationSub;
     }
+
     SubsystemIndex setContactSubsystem(GeneralContactSubsystem& c) {
         assert(!contactSub.isValid());
         contactSub = adoptSubsystem(c);
@@ -369,6 +370,7 @@ public:
         assert(decorationSub.isValid());
         return DecorationSubsystem::updDowncast(updSubsystem(decorationSub));
     }
+
     GeneralContactSubsystem& updContactSubsystem() {
         assert(contactSub.isValid());
         return GeneralContactSubsystem::updDowncast(updSubsystem(contactSub));
@@ -454,20 +456,22 @@ public:
         return mech.getRep().prescribeU(state);
     }
 
-    void projectQImpl(State& state, Vector& qErrEst, 
-                      const ProjectOptions& options, 
-                      ProjectResults& results) const override {
-        const SimbodyMatterSubsystem& mech = getMatterSubsystem();
-        mech.getRep().projectQ(state, qErrEst, options, results);
-        realize(state, Stage::Position);  // realize the whole system now
-    }
-    void projectUImpl(State& state, Vector& uErrEst, 
-                      const ProjectOptions& options, 
-                      ProjectResults& results) const override {
-        const SimbodyMatterSubsystem& mech = getMatterSubsystem();
-        mech.getRep().projectU(state, uErrEst, options, results);
-        realize(state, Stage::Velocity);  // realize the whole system now
-    }
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        void projectQImpl(State& state, Vector& qErrEst, 
+                          const ProjectOptions& options, 
+                          ProjectResults& results) const override {
+            const SimbodyMatterSubsystem& mech = getMatterSubsystem();
+            mech.getRep().projectQ(state, qErrEst, options, results);
+            realize(state, Stage::Position);  // realize the whole system now
+        }
+        void projectUImpl(State& state, Vector& uErrEst, 
+                          const ProjectOptions& options, 
+                          ProjectResults& results) const override {
+            const SimbodyMatterSubsystem& mech = getMatterSubsystem();
+            mech.getRep().projectU(state, uErrEst, options, results);
+            realize(state, Stage::Velocity);  // realize the whole system now
+        }
+    #endif
 
     void getFreeQIndexImpl
        (const State& s, Array_<SystemQIndex>& freeQs) const override {

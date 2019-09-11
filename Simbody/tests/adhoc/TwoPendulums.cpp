@@ -244,16 +244,20 @@ int main(int argc, char** argv) {
     //leftPendulum.setQToFitRotation(s, Rotation(-60*Deg2Rad,ZAxis));
 
     //rightPendulum.setQToFitTranslation(s, Vec3(0,1,0));
-    leftPendulum.setQToFitRotation (s, Rotation(-.9*Pi/2,ZAxis));
-    rightPendulum.setQToFitRotation(s, Rotation(-.9*Pi/2,YAxis));
+    //leftPendulum.setQToFitRotation (s, Rotation(-.9*Pi/2,ZAxis));
+    //rightPendulum.setQToFitRotation(s, Rotation(-.9*Pi/2,YAxis));
 
 
     //TODO
     //rightPendulum.setUToFitLinearVelocity(s, Vec3(1.1,0,1.2));
 
-    leftPendulum.setUToFitAngularVelocity(s, 10*Vec3(.1,.2,.3));
-    rightPendulum.setUToFitAngularVelocity(s, 10*Vec3(.1,.2,.3));
-
+	#ifndef SimTK_REAL_IS_ADOUBLE
+		leftPendulum.setUToFitAngularVelocity(s, 10*Vec3(.1,.2,.3));
+		rightPendulum.setUToFitAngularVelocity(s, 10*Vec3(.1,.2,.3));
+	#else
+		leftPendulum.setU(s, 10 * Vec3(.1, .2, .3));
+		rightPendulum.setU(s, 10 * Vec3(.1, .2, .3));
+	#endif
 
     s.setTime(0);
 
@@ -318,7 +322,7 @@ int main(int argc, char** argv) {
         const Real leftPendulumAngle = leftPendulum.getBodyRotation(s).convertRotationToAngleAxis()[0] * Rad2Deg;
         
         if (status == Integrator::ReachedScheduledEvent
-            || std::abs(std::floor(s.getTime()+0.5)-s.getTime())<1e-4)
+            || fabs(floor(s.getTime()+0.5)-s.getTime())<1e-4)
         {
             printf("%5g %10.4g E=%10.8g h%3d=%g %s%s\n", s.getTime(), 
                 leftPendulumAngle,
@@ -332,7 +336,7 @@ int main(int argc, char** argv) {
                 twoPends.getUDotErr(s).normRMS());
 
             cout << "t=" << s.getTime() << "sint=" << sint.getValue(s) << "a*sin(wt+p)=" 
-                << amp*std::sin(freq*s.getTime() + phase) << endl;
+                << amp*sin(freq*s.getTime() + phase) << endl;
 
             cout << "20+10t=" << twentyPlus10t.getValue(s) << endl;
 

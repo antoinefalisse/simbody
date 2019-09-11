@@ -45,7 +45,7 @@ void verifyForces(const Force& force, const State& state, Vector_<SpatialVec> bo
     for (int i = 0; i < particleForces.size(); ++i)
         ASSERT((particleForces[i]-actualParticleForces[i]).norm() < 1e-10);
     for (int i = 0; i < mobilityForces.size(); ++i)
-        ASSERT(std::abs(mobilityForces[i]-actualMobilityForces[i]) < 1e-10);
+        ASSERT(fabs(mobilityForces[i]-actualMobilityForces[i]) < 1e-10);
 }
 
 class MyForceImpl : public Force::Custom::Implementation {
@@ -281,7 +281,7 @@ void testEnergyConservation() {
     ts.stepTo(10.0);
     system.realize(state, Stage::Dynamics);
     Real finalEnergy = system.calcEnergy(ts.getState());
-    ASSERT(std::abs(initialEnergy/finalEnergy-1.0) < 0.005);
+    ASSERT(fabs(initialEnergy/finalEnergy-1.0) < 0.005);
 }
 
 /**
@@ -307,6 +307,8 @@ void testCustomRealization() {
  */
 
 void testDisabling() {
+#ifndef SimTK_REAL_IS_ADOUBLE
+
     MultibodySystem system;
     SimbodyMatterSubsystem matter(system);
     GeneralForceSubsystem forces(system);
@@ -354,14 +356,21 @@ void testDisabling() {
     ASSERT((springForce-system.getRigidBodyForces(state, Stage::Dynamics)[1]).norm() < 1e-10);
     ASSERT(forces.isForceDisabled(state, gravity.getForceIndex()));
     ASSERT(!forces.isForceDisabled(state, spring.getForceIndex()));
+#endif
 }
 
 int main() {
     try {
-        testStandardForces();
-        testEnergyConservation();
+        testStandardForces();        
         testCustomRealization();
-        testDisabling();
+        #ifndef SimTK_REAL_IS_ADOUBLE
+            testEnergyConservation();
+            testDisabling();
+        #else
+            std::cout << "testEnergyConservation not supported with ADOL-C" << std::endl;
+            std::cout << "testDisabling not supported with ADOL-C" << std::endl;
+        #endif
+
     }
     catch(const std::exception& e) {
         cout << "exception: " << e.what() << endl;

@@ -162,7 +162,7 @@ bool AbstractIntegratorRep::attemptDAEStep
     // norm is eStep then a half step would have given us an error of
     // eHalf = eStep/(2^p). We want to try the projection as long as 
     // eHalf <= accuracy, i.e., eStep <= 2^p * accuracy.
-    if (errNorm > std::pow(Real(2),errOrder)*getAccuracyInUse())
+    if (errNorm > pow(Real(2),errOrder)*getAccuracyInUse())
         return true; // this step converged, but isn't worth projecting
 
     // The ODE error estimate is good enough or at least worth trying
@@ -181,9 +181,9 @@ bool AbstractIntegratorRep::attemptDAEStep
     //        0.5               1
     //        1                 2
     const Real projectionLimit = 
-        std::max(2*getConstraintToleranceInUse(), 
-                    std::sqrt(getConstraintToleranceInUse()));
-
+        fmax(2*getConstraintToleranceInUse(), 
+                    NTraits<Real>::sqrt(getConstraintToleranceInUse()));
+	
     bool anyChanges;
     if (!localProjectQAndQErrEstNoThrow(advanced, yErrEst, anyChanges,
                                         projectionLimit))
@@ -461,7 +461,7 @@ bool AbstractIntegratorRep::adjustStepSize
         newStepSize = MaxGrow * currentStepSize;
     else // choose best step for skating just below the desired accuracy
         newStepSize = Safety * currentStepSize
-                             * std::pow(getAccuracyInUse()/err, 1/Real(errOrder));
+                             * pow(getAccuracyInUse()/err, 1/Real(errOrder));
 
     // If the new step is bigger than the old, don't make the change if the
     // old one was small for some unimportant reason (like reached a reporting
@@ -481,12 +481,12 @@ bool AbstractIntegratorRep::adjustStepSize
     if (newStepSize < currentStepSize) {
         if (err <= getAccuracyInUse())
              newStepSize = currentStepSize; // not this time
-        else newStepSize = std::min(newStepSize, HysteresisLow*currentStepSize);
+        else newStepSize = fmin(newStepSize, HysteresisLow*currentStepSize);
     }
 
     // Keep the size change within the allowable bounds.
-    newStepSize = std::min(newStepSize, MaxGrow*currentStepSize);
-    newStepSize = std::max(newStepSize, MinShrink*currentStepSize);
+    newStepSize = fmin(newStepSize, MaxGrow*currentStepSize);
+    newStepSize = fmax(newStepSize, MinShrink*currentStepSize);
 
     // Apply user-requested limits on min and max step size.
     if (userMinStepSize != -1)
@@ -655,7 +655,7 @@ bool AbstractIntegratorRep::takeOneStep(Real tMax, Real tReport)
     // think the first event is triggering.
 
     Vector eLow = e0, eHigh = e1;
-    Real bias = 1; // neutral
+    double bias = 1; // neutral
 
     // There is an event in (tLow,tHigh], with the eariest occurrence
     // estimated at tMid=earliestTimeEst, tLow<tMid<tHigh. 

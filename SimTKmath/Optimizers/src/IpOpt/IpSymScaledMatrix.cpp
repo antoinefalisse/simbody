@@ -8,7 +8,7 @@
 
 #include "IpSymScaledMatrix.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   SymScaledMatrix::SymScaledMatrix(const SymScaledMatrixSpace* owner_space)

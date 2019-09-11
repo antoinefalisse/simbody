@@ -27,22 +27,34 @@
 using namespace SimTK;
 using namespace std;
 
-const Real TOL = 1e-10;
+//const Real TOL = 1e-10;
+const double TOL = 1e-10;
+
 const Real BOND_LENGTH = 0.5;
 
 #define ASSERT(cond) {SimTK_ASSERT_ALWAYS(cond, "Assertion failed");}
 
 template <class T>
 void assertEqual(T val1, T val2, double tol=TOL) {
-    ASSERT(abs(val1-val2) < tol);
+    ASSERT(NTraits<Real>::abs(val1-val2) < tol);
 }
 
+#ifndef SimTK_REAL_IS_ADOUBLE
 template <int N>
 void assertEqual(Vec<N> val1, Vec<N> val2, double tol) {
-    double norm = max(val1.norm(), 1.0);
+    double norm = NTraits<Real>::max(val1.norm(), 1.0);
     for (int i = 0; i < N; ++i)
-        ASSERT(abs(val1[i]-val2[i]) < tol*norm);
+        ASSERT(NTraits<Real>::abs(val1[i]-val2[i]) < tol*norm);
 }
+#else
+template <int N>
+void assertEqual(Vec<N> val1, Vec<N> val2, double tol) {
+    Real norm = NTraits<Real>::max(val1.norm(), 1.0);
+    for (int i = 0; i < N; ++i)
+        ASSERT(NTraits<Real>::abs(val1[i] - val2[i]) < tol*norm.value());
+}
+#endif
+
 
 template<>
 void assertEqual(Vector val1, Vector val2, double tol) {
@@ -131,6 +143,7 @@ void testByComparingToConstraints() {
     Transform t2transform = t2.getMobilizerTransform(state);
     SpatialVec t1velocity = t1.MobilizedBody::getMobilizerVelocity(state);
     SpatialVec t2velocity = t2.MobilizedBody::getMobilizerVelocity(state);
+    #ifndef SimTK_REAL_IS_ADOUBLE
     fb1.setQToFitTransform(state, b1transform);
     fb2.setQToFitTransform(state, b2transform);
     fb1.setUToFitVelocity(state, b1velocity);
@@ -139,6 +152,7 @@ void testByComparingToConstraints() {
     ft2.setQToFitTransform(state, t2transform);
     ft1.setUToFitVelocity(state, t1velocity);
     ft2.setUToFitVelocity(state, t2velocity);
+    #endif
 
     system.project(state, TOL);
     system.realize(state, Stage::Acceleration);
@@ -250,11 +264,12 @@ void testByComparingToConstraints2() {
 
     pendulum1b.setOneU(state, 0, 1.0); // initial velocity 1 rad/sec
     pendulum1b.setOneQ(state, 0, Pi/4);
-
+    #ifndef SimTK_REAL_IS_ADOUBLE
     pendulum2.setQToFitRotation(state, Rotation(Pi/4, ZAxis));
     pendulum2.setUToFitAngularVelocity(state, Vec3(0,0,1));
     pendulum2b.setQToFitRotation(state, Rotation(Pi/4, ZAxis));
     pendulum2b.setUToFitAngularVelocity(state, Vec3(0,0,1));
+    #endif
 
     system.realize(state);
     //viz.report(state);
@@ -375,7 +390,9 @@ void testByComparingToSDFAST() {
     body2.setAngle(state, 0.5);
     Rotation r;
     r.setRotationFromThreeAnglesThreeAxes(BodyRotationSequence, 0.2, ZAxis, -0.1, XAxis, 2.0, YAxis);
+    #ifndef SimTK_REAL_IS_ADOUBLE
     body3.setQToFitRotation(state, r);
+    #endif
     body4.setAngle(state, -0.5);
     system.realize(state, Stage::Acceleration);
     matter.calcMobilizerReactionForces(state, reaction);
@@ -388,7 +405,9 @@ void testByComparingToSDFAST() {
 
     state.updQ() = 0.0;
     body2.setOneU(state, 0, 1);
+    #ifndef SimTK_REAL_IS_ADOUBLE
     body3.setUToFitAngularVelocity(state, Vec3(3, 4, 2));
+    #endif
     body4.setOneU(state, 0, 5);
     system.realize(state, Stage::Acceleration);
     matter.calcMobilizerReactionForces(state, reaction);
@@ -496,6 +515,7 @@ void testByComparingToSDFASTWithConstraint() {
     // Now set it to a different configuration and try again.
     
     Rotation r;
+    #ifndef SimTK_REAL_IS_ADOUBLE
     r.setRotationFromThreeAnglesThreeAxes(BodyRotationSequence, 1.0, ZAxis, 1.0, XAxis, 1.0, YAxis);
     body1.setQToFitRotation(state, r);
     r.setRotationFromThreeAnglesThreeAxes(BodyRotationSequence, 0.433843, ZAxis, 0.647441, XAxis, 0.500057, YAxis);
@@ -506,6 +526,7 @@ void testByComparingToSDFASTWithConstraint() {
     body4.setQToFitRotation(state, r);
     r.setRotationFromThreeAnglesThreeAxes(BodyRotationSequence, 1.008746, ZAxis, 0.951972, XAxis, 1.0, YAxis);
     body5.setQToFitRotation(state, r);
+    #endif
     system.realize(state, Stage::Acceleration);
     matter.calcMobilizerReactionForces(state, reaction);
     assertEqual(~body1.getBodyTransform(state).R()*reaction[body1.getMobilizedBodyIndex()], SpatialVec(Vec3(0, 0, 0), Vec3(99.121319, 139.500095, 95.065409)), 1e-5);
@@ -542,11 +563,13 @@ void testFreeMobilizer() {
     Force::ConstantTorque(fwdForces, fwdA, Vec3(-5.5,1.6,-1.1));
 
     State fwdState  = forward.realizeTopology();
+    #ifndef SimTK_REAL_IS_ADOUBLE
     fwdA.setQToFitTransform(fwdState, Transform(Rotation(Pi/9,Vec3(-1.8,4,2.2)), Vec3(.1,.2,.7)));
 
     forward.realize (fwdState,  Stage::Position);
 
     fwdA.setUToFitVelocity(fwdState, SpatialVec(Vec3(.99,2,4), Vec3(-1.2,4,.000333)));
+    #endif
     forward.realize (fwdState,  Stage::Velocity);
     forward.realize (fwdState,  Stage::Acceleration);
 
@@ -560,11 +583,16 @@ void testFreeMobilizer() {
 
 int main() {
     SimTK_START_TEST("TestMobilizerReactionForces");
+    SimTK_SUBTEST(testByComparingToSDFAST2);
+    #ifndef SimTK_REAL_IS_ADOUBLE
         SimTK_SUBTEST(testByComparingToConstraints);
         SimTK_SUBTEST(testByComparingToConstraints2);
         SimTK_SUBTEST(testByComparingToSDFAST);
-        SimTK_SUBTEST(testByComparingToSDFAST2);
+        
         SimTK_SUBTEST(testByComparingToSDFASTWithConstraint);
         SimTK_SUBTEST(testFreeMobilizer);
+    #else
+    std::cout << "This test is not supported with ADOL-C" << std::endl;
+    #endif
     SimTK_END_TEST();
 }

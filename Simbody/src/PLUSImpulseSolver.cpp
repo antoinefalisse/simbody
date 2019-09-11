@@ -22,6 +22,9 @@
  * -------------------------------------------------------------------------- */
 
 #include "simbody/internal/common.h"
+
+#ifndef SimTK_REAL_IS_ADOUBLE
+
 #include "simbody/internal/ImpulseSolver.h"
 #include "simbody/internal/PLUSImpulseSolver.h"
 
@@ -90,34 +93,34 @@ inline void sort3(int& a, int& b, int& c) {
 // Smooth, convex approximation to max(z,0); small eps is smoother.
 inline Real softmax0(Real z, Real eps) {
     assert(eps>0);
-    return (z+std::sqrt(z*z+eps))/2;
+    return (z+sqrt(z*z+eps))/2;
 }
 // Partial derivative of softmax0 with respect to z.
 inline Real dsoftmax0(Real z, Real eps) {
     assert(eps>0);
-    return (1+z/std::sqrt(z*z+eps))/2;
+    return (1+z/sqrt(z*z+eps))/2;
 }
 
 // Smooth, concave approximation to min(z,0); small eps is smoother.
 inline Real softmin0(Real z, Real eps) {
     assert(eps>0);
-    return (z-std::sqrt(z*z+eps))/2;
+    return (z-sqrt(z*z+eps))/2;
 }
 // Partial derivative of softmin0 with respect to z.
 inline Real dsoftmin0(Real z, Real eps) {
     assert(eps>0);
-    return (1-z/std::sqrt(z*z+eps))/2;
+    return (1-z/sqrt(z*z+eps))/2;
 }
 
 // Smooth, convex approximation to abs(z); small eps is smoother.
 inline Real softabs(Real z, Real eps) {
     assert(eps>0);
-    return std::sqrt(z*z+eps);
+    return sqrt(z*z+eps);
 }
 // Partial derivative of softabs with respect to z.
 inline Real dsoftabs(Real z, Real eps) {
     assert(eps>0);
-    return z/std::sqrt(z*z+eps);
+    return z/sqrt(z*z+eps);
 }
 
 }
@@ -415,7 +418,7 @@ solve(int                                 phase,
                 // Only the in-bounds value gets saved in piGuess in case we
                 // need to use it for an initial guess on the next iteration.
                 piGuess[mx] = clamp(rt.m_lb, m_piActive[ax], rt.m_ub);
-                const Real err=std::abs(m_piActive[ax] - piGuess[mx]);
+                const Real err=fabs(m_piActive[ax] - piGuess[mx]);
                 if (err>worstBoundedValue) 
                     worstBounded=k, worstBoundedValue=err;
             }
@@ -440,7 +443,7 @@ solve(int                                 phase,
                 const Real piAdj = rt.m_sign*m_piActive[ax] < 0 ? m_piActive[ax] 
                                                                 : Real(0);
                 piGuess[mx] = piAdj; 
-                const Real err=std::abs(m_piActive[ax] - piAdj);
+                const Real err=fabs(m_piActive[ax] - piAdj);
                 if (err>worstUniNormalValue) 
                     worstUniNormal=k, worstUniNormalValue=err;
             }
@@ -470,11 +473,11 @@ solve(int                                 phase,
                         const ActiveIndex ax = m_mult2active[mx];
                         tmag += square(m_piActive[ax]);
                     }
-                    tmag = std::sqrt(tmag);
+                    tmag = NTraits<Real>::sqrt(tmag);
 
                     // "Sucking" normal forces are zero already in piGuess,
                     // and known normal force has been inserted if needed.
-                    nmag = std::abs(piGuess[Nk] + piELeft[Nk]); 
+                    nmag = fabs(piGuess[Nk] + piELeft[Nk]); 
                     if (tmag > mu*nmag) {
                         scale = mu*nmag/tmag;
                         const Real err = tmag - mu*nmag;
@@ -871,7 +874,7 @@ calcSlidingStepLengthToMaxChange(const Vec2& A, const Vec2& B) const
     t1 *= t1;
     t2 = t1 - 1;
     t3 = A[0]*v[1] - A[1]*v[0];
-    t3 = std::sqrt(-t1*t2*t3*t3);
+    t3 = NTraits<Real>::sqrt(-t1*t2*t3*t3);
     t4 = t2*v[0]*A[0];
     t5 = A[1]*v[1];
     t2 *= t5;
@@ -917,7 +920,7 @@ calcSlidingStepLengthToMaxChange(const Vec3& A, const Vec3& B) const
     t7 = A[1] * A[1];
     t8 = A[1] * v[1];
     t9 = A[0] * v[0];
-    t10 = std::sqrt(-(t1 * t2 * (t3 * t6 + t4 * t7 + t5 * (t6 + t4) 
+    t10 = NTraits<Real>::sqrt(-(t1 * t2 * (t3 * t6 + t4 * t7 + t5 * (t6 + t4)
           + (-2 * A[2] * (t9 + t8) + (t7 + t3) * v[2]) * v[2] - 2 * t8 * t9)));
     t11 = t9 * t2;
     t12 = t8 * t2;
@@ -981,7 +984,7 @@ classifyFrictionals(Array_<UniContactRT>& uniContact) const {
                 rt.m_slipVel[i] = m_verrLeft[mx];
                 tmag += square(m_verrLeft[mx]);
             }
-            tmag = std::sqrt(tmag);
+            tmag = NTraits<Real>::sqrt(tmag);
             rt.m_slipMag = tmag;
             rt.m_frictionCond = tmag > m_maxRollingTangVel ? Sliding : Rolling;
         }
@@ -1306,3 +1309,5 @@ updateJacobianForSliding(const Matrix& A,
 
 
 } // namespace SimTK
+
+#endif

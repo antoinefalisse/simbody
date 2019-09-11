@@ -39,8 +39,19 @@ foreach(TEST_PROG ${REGR_TESTS})
         target_link_libraries(${TEST_ROOT} 
                     ${TEST_SHARED_TARGET})
         add_test(${TEST_ROOT} ${EXECUTABLE_OUTPUT_PATH}/${TEST_ROOT})
+		
+		if(BUILD_ADOLC_LIBRARIES)
+            set(TEST_ADOLC ${TEST_ROOT}ADOLC)
+            add_executable(${TEST_ADOLC} ${TEST_PROG})
+            set_target_properties(${TEST_ADOLC}
+                    PROPERTIES
+                    PROJECT_LABEL "Test_Regr - ${TEST_ADOLC}")
+            target_link_libraries(${TEST_ADOLC}
+                    ${TEST_ADOLC_TARGET})
+            add_test(${TEST_ADOLC} ${EXECUTABLE_OUTPUT_PATH}/${TEST_ADOLC})
+        endif()
     endif(BUILD_TESTS_AND_EXAMPLES_SHARED)
-
+		
     if(BUILD_STATIC_LIBRARIES AND BUILD_TESTS_AND_EXAMPLES_STATIC)
         # Link with static library
         set(TEST_STATIC ${TEST_ROOT}Static)
@@ -52,7 +63,7 @@ foreach(TEST_PROG ${REGR_TESTS})
         target_link_libraries(${TEST_STATIC}
                     ${TEST_STATIC_TARGET})
         add_test(${TEST_STATIC} ${EXECUTABLE_OUTPUT_PATH}/${TEST_STATIC})
+		
     endif()
 
 endforeach(TEST_PROG ${REGR_TESTS})
-

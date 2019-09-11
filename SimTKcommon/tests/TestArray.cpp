@@ -29,7 +29,6 @@
 #include "SimTKcommon/Testing.h"
 
 #include <vector>
-#include <set>
 #include <sstream>
 #include <iterator>
 #include <iostream>
@@ -214,9 +213,9 @@ template Array_<float,int>::Array_(const float*,const float*);
 template void 
 Array_<float,int>::assign(const float*,const float*);
 template void
-Array_<double,int>::assign(const inputIt&, const inputIt&);
-template Array_<double,int>& 
-Array_<double,int>::operator=(const std::vector<float>&);
+Array_<SimTK::Real,int>::assign(const inputIt&, const inputIt&);
+template Array_<SimTK::Real,int>& 
+Array_<SimTK::Real,int>::operator=(const std::vector<float>&);
 
 
 
@@ -871,49 +870,49 @@ void testMemoryFootprint() {
 // Create a local array and return it along with the original data location.
 // With move construction the caller should end up with our local data without
 // having to copy it.
-static std::pair<Array_<double,char>, double*> returnByValue(double d) {
-    Array_<double,char> local{1,2,3,4,5.5};
+static std::pair<Array_<SimTK::Real,char>, SimTK::Real*> returnByValue(SimTK::Real d) {
+    Array_<SimTK::Real,char> local{1,2,3,4,5.5};
     local.push_back(d);
-    double* localData = local.data();
+    SimTK::Real* localData = local.data();
     return {std::move(local),localData};
 }
 
 void testMoveConstructionAndAssignment() {
-    Array_<double> ad1{1,2,3.5,4};
-    const double* p1 = ad1.data();
-    Array_<double> ad2{.01,.02};
-    const double* p2 = ad2.data();
+    Array_<SimTK::Real> ad1{1,2,3.5,4};
+    const SimTK::Real* p1 = ad1.data();
+    Array_<SimTK::Real> ad2{.01,.02};
+    const SimTK::Real* p2 = ad2.data();
 
-    Array_<double> ad3(ad1); // copy construction
-    const double* p3 = ad3.data();
+    Array_<SimTK::Real> ad3(ad1); // copy construction
+    const SimTK::Real* p3 = ad3.data();
     SimTK_TEST(p3 != p2);
     ad3 = std::move(ad1);    // move assignment
     SimTK_TEST(ad3.data() == p1 && ad1.data() == p3);
 
-    Array_<double> ad4(std::move(ad2)); // move construction
+    Array_<SimTK::Real> ad4(std::move(ad2)); // move construction
     SimTK_TEST(ad4.data()==p2 && ad2.empty());
 
     auto returned = returnByValue(3.25); // construction
-    SimTK_TEST(returned.first == std::vector<double>({1,2,3,4,5.5,3.25}));
+    SimTK_TEST(returned.first == std::vector<SimTK::Real>({1,2,3,4,5.5,3.25}));
     SimTK_TEST(returned.first.data() == returned.second);
 
     returned = returnByValue(-1);       // assignment
-    SimTK_TEST(returned.first == std::vector<double>({1,2,3,4,5.5,-1}));
+    SimTK_TEST(returned.first == std::vector<SimTK::Real>({1,2,3,4,5.5,-1}));
     SimTK_TEST(returned.first.data() == returned.second);
 
     // std::unique_ptr has only move construction so this won't compile if
     // Array_ requires copy construction
-    Array_<std::unique_ptr<double>> aud;
-    aud.push_back(std::unique_ptr<double>(new double(5.125)));
-    aud.push_back(std::unique_ptr<double>(new double(3.5)));
-    aud.push_back(std::unique_ptr<double>(new double(-2.25)));
+    Array_<std::unique_ptr<SimTK::Real>> aud;
+    aud.push_back(std::unique_ptr<SimTK::Real>(new SimTK::Real(5.125)));
+    aud.push_back(std::unique_ptr<SimTK::Real>(new SimTK::Real(3.5)));
+    aud.push_back(std::unique_ptr<SimTK::Real>(new SimTK::Real(-2.25)));
     SimTK_TEST(aud.size()==3);
     SimTK_TEST(*aud[0]==5.125 && *aud[1]==3.5 && *aud[2]==-2.25);
 
-    aud.emplace_back(new double(123.));
+    aud.emplace_back(new SimTK::Real(123.));
     SimTK_TEST(aud.size()==4 && *aud[3]==123.);
 
-    aud.emplace(&aud[2], new double(100));
+    aud.emplace(&aud[2], new SimTK::Real(100));
     SimTK_TEST(aud.size()==5 && *aud[2]==100. && *aud[3]==-2.25);
 }
 
@@ -927,19 +926,19 @@ static void takeAnArray(const Array_<T>& arr) {
 // T(T2) works (the compiler takes care of that while building the initializer
 // list).
 void testInitializerList() {
-    Array_<double> ad1{}; // Should call default constructor
+    Array_<SimTK::Real> ad1{}; // Should call default constructor
     SimTK_TEST(ad1.empty());
-    Array_<double> ad2{3}; // Should be 1-element initializer list
+    Array_<SimTK::Real> ad2{3}; // Should be 1-element initializer list
     SimTK_TEST(ad2.size()==1 && ad2.front()==3);
-    Array_<double> ad3(3); // Should be a 3-element uninitialized list
+    Array_<SimTK::Real> ad3(3); // Should be a 3-element uninitialized list
     SimTK_TEST(ad3.size()==3);
 
-    Array_<double> ad4 = {1,2,2.5,.125}; // initlist construction
-    SimTK_TEST(ad4 == std::vector<double>({1,2,2.5,.125}));
+    Array_<SimTK::Real> ad4 = {1,2,2.5,.125}; // initlist construction
+    SimTK_TEST(ad4 == std::vector<SimTK::Real>({1,2,2.5,.125}));
     ad4 = {2,4,5};                   // implicit conversion, then move
-    SimTK_TEST(ad4 == std::vector<double>({2.,4.,5.}));
+    SimTK_TEST(ad4 == std::vector<SimTK::Real>({2.,4.,5.}));
     takeAnArray<int>({2,3,4}); // implicit conversion to Array_<int>
-    takeAnArray<double>({1.2,3,4}); // implicit conversion to Array_<double>
+    takeAnArray<SimTK::Real>({1.2,3,4}); // implicit conversion to Array_<SimTK::Real>
 }
 
 namespace {

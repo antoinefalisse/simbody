@@ -64,7 +64,7 @@ RBNodeBendStretch(const MassProperties&   mProps_B,
     this->updateSlots(nextUSlot,nextUSqSlot,nextQSlot);
 }
 
-
+#ifndef SimTK_REAL_IS_ADOUBLE
 void setQToFitRotationImpl(const SBStateDigest& sbs, const Rotation& R_FM, 
                            Vector& q) const {
     // The only rotation our bend-stretch joint can handle is about z.
@@ -83,7 +83,7 @@ void setQToFitTranslationImpl(const SBStateDigest& sbs, const Vec3& p_FM,
     // If there is no translation worth mentioning, we'll leave the rotational
     // coordinate alone, otherwise rotate so M's x axis is aligned with r.
     if (d >= 4*Eps) {
-        const Real angle = std::atan2(r[1],r[0]);
+        const Real angle = atan2(r[1],r[0]);
         this->toQ(q)[0] = angle;
         this->toQ(q)[1] = d;
     } else
@@ -95,11 +95,13 @@ void setUToFitAngularVelocityImpl(const SBStateDigest& sbs, const Vector& q,
     // We can only represent an angular velocity along z with this joint.
     this->toU(u)[0] = w_FM[2];
 }
+#endif
 
-// If the translational coordinate is zero, we can only represent a linear 
-// velocity of Mo in F which is along M's current x axis direction. Otherwise, 
-// we can represent any velocity in the x-y plane by introducing angular 
-// velocity about z. We can never represent a linear velocity along z.
+ //If the translational coordinate is zero, we can only represent a linear 
+ //velocity of Mo in F which is along M's current x axis direction. Otherwise, 
+ //we can represent any velocity in the x-y plane by introducing angular 
+ //velocity about z. We can never represent a linear velocity along z.
+#ifndef SimTK_REAL_IS_ADOUBLE
 void setUToFitLinearVelocityImpl
    (const SBStateDigest& sbs, const Vector& q, const Vec3& v_FM, Vector& u) const
 {
@@ -110,7 +112,7 @@ void setUToFitLinearVelocityImpl
     this->toU(u)[1] = v_FM_M[0]; // velocity along Mx we can represent directly
 
     const Real x = this->fromQ(q)[1]; // translation along Mx (signed)
-    if (std::abs(x) < SignificantReal) {
+    if (fabs(x) < SignificantReal) {
         // No translation worth mentioning; we can only do x velocity, which 
         // we just set above.
         return;
@@ -119,6 +121,7 @@ void setUToFitLinearVelocityImpl
     // significant translation
     this->toU(u)[0] = v_FM_M[1] / x; // set angular velocity about z to produce vy
 }
+#endif
 
 enum {PoolSize=2}; // number of Reals
 enum {CosQ=0, SinQ=1};
@@ -133,8 +136,10 @@ void performQPrecalculations(const SBStateDigest& sbs,
                              Real* qErr,    int nQErr) const
 {
     assert(q && nq==2 && qCache && nQCache==PoolSize && nQErr==0);
-    qCache[CosQ] = std::cos(q[0]);
-    qCache[SinQ] = std::sin(q[0]);
+    //qCache[CosQ] = NTraits<Real>::cos(q[0]);
+    //qCache[SinQ] = NTraits<Real>::sin(q[0]);
+    qCache[CosQ] = cos(q[0]);
+    qCache[SinQ] = sin(q[0]);
 }
 
 // This is about 15 flops.

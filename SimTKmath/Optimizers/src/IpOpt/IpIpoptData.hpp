@@ -15,7 +15,7 @@
 #include "IpRegOptions.hpp"
 #include "IpTimingStatistics.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   /* Forward declaration */

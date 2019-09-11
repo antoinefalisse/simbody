@@ -34,7 +34,7 @@
 #include "simmath/RungeKuttaMersonIntegrator.h"
 #include "simmath/RungeKuttaFeldbergIntegrator.h"
 #include "simmath/VerletIntegrator.h"
-#include "simmath/CPodesIntegrator.h"
+//#include "simmath/CPodesIntegrator.h"
 #include "simmath/TimeStepper.h"
 #include "simmath/internal/ContactGeometry.h"
 #include "simmath/internal/GeodesicIntegrator.h"
@@ -199,7 +199,7 @@ evalParametricCurvature(const Vec3& P, const UnitVec3& nn,
 
     Real kmax, kmin;
     UnitVec3 dmax;
-    if (std::abs(F) < SignificantReal) {
+    if (fabs(F) < SignificantReal) {
         Real ku = e/E, kv = g/G; // two divides ~20 flops
         if (ku < kv) {
             kmax=kv, kmin=ku;
@@ -213,7 +213,7 @@ evalParametricCurvature(const Vec3& P, const UnitVec3& nn,
         // t = (-b +/- sqrt(b^2-4ac)) / 2a
         // Discriminant must be nonnegative for real surfaces
         // but could be slightly negative due to numerical noise.
-        Real sqrtd = std::sqrt(std::max(B*B - 4*A*C, Real(0)));
+        Real sqrtd = NTraits<Real>::sqrt(fmax(B*B - 4*A*C, Real(0)));
         Vec2 t = Vec2(sqrtd - B, -sqrtd - B) / (2*A);
 
         // Two divides + misc: ~30 flops
@@ -295,7 +295,7 @@ static void combineParaboloidsHelper
     // since -x2 is an equally good max curvature direction.
     const Real dotx1x2 = dot(x1,x2);         // 5 flops
     const UnitVec3 x2p = dotx1x2 < 0 ? -x2 : x2;
-    const Real cosw = std::abs(dotx1x2);
+    const Real cosw = fabs(dotx1x2);
     const Real sinw = dot(cross(x1,x2p), z); // signed, 14 flops
 
     // We'll need cos(2w), sin(2w); luckily these are easy to get (5 flops).
@@ -306,7 +306,7 @@ static void combineParaboloidsHelper
     // See KL Johnson 1987 Ch. 4 and Appendix 2, and J-F Antoine, et al. 
     // 2006 pg 661. ~35 flops
     const Real ksum = ksum1 + ksum2;
-    const Real kdiff = std::sqrt(square(kdiff1) + square(kdiff2)
+    const Real kdiff = sqrt(square(kdiff1) + square(kdiff2)
                                  + 2*kdiff1*kdiff2*cos2w);
     k = Vec2(ksum + kdiff, ksum - kdiff)/2; // kmax, kmin (4 flops)  
 }
@@ -328,8 +328,8 @@ static void combineParaboloidsHelper
     // again, noting that beta = theta-alpha, then solving for tan(2 alpha).
     // This is about 130 flops.
     const Real yy = kdiff2*sin2w, xx = kdiff2*cos2w + kdiff1;
-    Real a = std::atan2(yy,xx) / 2; // yy==xx==0 -> a=0
-    Real cosa = std::cos(a), sina = std::sin(a);
+    Real a = atan2(yy,xx) / 2; // yy==xx==0 -> a=0
+    Real cosa = NTraits<Real>::cos(a), sina = NTraits<Real>::sin(a);
 
     // Perform the actual rotations of x1,y1 to get x,y (18 flops)
     const UnitVec3& x1 = R_SP1.x(); // P1 kmax direction
@@ -401,7 +401,7 @@ projectDownhillToNearestPoint(const Vec3& Q) const {
     const Real ftol = SignificantReal;
 
     // Check for immediate return.
-    if (std::abs(calcSurfaceValue(Q)) <= ftol)
+    if (fabs(calcSurfaceValue(Q)) <= ftol)
         return Q;
 
     // construct arbitrary frame at p
@@ -416,8 +416,8 @@ projectDownhillToNearestPoint(const Vec3& Q) const {
     // scale to avoid jumping out of the local minimum.
     const Real kt = calcSurfaceCurvatureInDirection(Q, tP);
     const Real kb = calcSurfaceCurvatureInDirection(Q, bP);
-    const Real maxK = std::max(std::abs(kt),std::abs(kb));
-    const Real scale = std::min(1/maxK, Real(1000)); // keep scale reasonable
+    const Real maxK = fmax(fabs(kt),fabs(kb));
+    const Real scale = fmin(1/maxK, Real(1000)); // keep scale reasonable
     const Real MaxMove = Real(.25); // Limit one move to 25% of smaller radius.
 
     const Real xtol = Real(1e-12);  // TODO: what should these be in single
@@ -434,7 +434,7 @@ projectDownhillToNearestPoint(const Vec3& Q) const {
     f[1] = 0;
     f[2] = 0;
 
-    rmsError = std::sqrt(f.normSqr()/3);
+    rmsError = NTraits<Real>::sqrt(f.normSqr()/3);
     //std::cout << "BEFORE Q=" << Q << ", f=" << f << ", frms=" << rmsError << std::endl;
 
     int cnt = 0;
@@ -474,13 +474,13 @@ projectDownhillToNearestPoint(const Vec3& Q) const {
         J[2] = -(~b) + ~r*Bx;
 
         dx = J.invert()*f;
-        const Real dxrms = std::sqrt(dx.normSqr()/3);
+        const Real dxrms = NTraits<Real>::sqrt(dx.normSqr()/3);
 
         rmsErrorOld = rmsError;
         xold = x;
 
         // Backtracking. Limit the starting step size if dx is too big.
-        lam = std::min(Real(1), MaxMove*(scale/dxrms));
+        lam = fmin(Real(1), MaxMove*(scale/dxrms));
         if (lam < 1) {
             //std::cout << "PROJECT: LIMITED STEP: iter=" << cnt 
             //          << " lam=" << lam << endl;
@@ -497,7 +497,7 @@ projectDownhillToNearestPoint(const Vec3& Q) const {
             f[1] = ~r*t;
             f[2] = ~r*b;
 
-            rmsError = std::sqrt(f.normSqr()/3);
+            rmsError = NTraits<Real>::sqrt(f.normSqr()/3);
             if (rmsError > rmsErrorOld && lam > minlam) {
                 lam = lam / 2;
             } else {
@@ -650,8 +650,9 @@ trackSeparationFromLine(const Vec3& pointOnLine,
     // using the larger curvature in the t or b direction. 
     const Real kt = calcSurfaceCurvatureInDirection(x, tX);
     const Real kb = calcSurfaceCurvatureInDirection(x, bX);
-    const Real maxK = std::max(std::abs(kt),std::abs(kb));
+    const Real maxK = fmax(fabs(kt),fabs(kb));
     const Real scale2 = square(clamp(Real(0.1), 1/maxK, Real(1000))); // keep scale reasonable
+
 
     //cout << "TRACK START: line p0=" << pointOnLine << " d=" << directionOfLine << "\n";
     //cout << "  starting x=" << x << " nX=" << nX << " scale est=" << std::sqrt(scale2) << "\n";
@@ -682,10 +683,10 @@ trackSeparationFromLine(const Vec3& pointOnLine,
 
         // Backtracking. Limit the starting step size if dx is too big.
         // Calculate the square of the step fraction.
-        const Real stepFrac2 = std::min(Real(1), MaxMove2*(scale2/dxrms2));
+        const Real stepFrac2 = fmin(Real(1), MaxMove2*(scale2/dxrms2));
         Real stepFrac = 1;
         if (stepFrac2 < 1) {
-            stepFrac = std::sqrt(stepFrac2); // not done often
+            stepFrac = NTraits<Real>::sqrt(stepFrac2); // not done often
             //cout << "TRACK: LIMITED STEP: iter=" << stepCount 
             //          << " stepFrac=" << stepFrac << endl;
             ++limitedStepCount;
@@ -1027,7 +1028,7 @@ calcSurfaceCurvatureInDirection(const Vec3& point,
     const Vec3     g  = calcSurfaceGradient(point);
     const Mat33 H = calcSurfaceHessian(point);
     const Real  knum = ~direction*H*direction; // numerator
-    if (std::abs(knum) < TinyReal)
+    if (fabs(knum) < TinyReal)
         return 0; // don't want to return 0/0.
         
     const Real k = knum/(~g*nn);
@@ -1085,7 +1086,7 @@ calcSurfacePrincipalCurvatures(const Vec3&  point,
     // If b is zero then the matrix is diagonal and its eigenvalues are
     // 2a and 2c in directions [1,0] (t1) and [0,1] (t2) resp. Must order 
     // correctly so x is kmax direction and y kmin direction.
-    if (std::abs(b) < SignificantReal) {
+    if (fabs(b) < SignificantReal) {
         if (a >= c) {
             curvature = 2*Vec2(a,c);
             R_SP = R_SF; // t1 is vmax, t2 is vmin
@@ -1096,7 +1097,7 @@ calcSurfacePrincipalCurvatures(const Vec3&  point,
         return;
     }
 
-    const Real d = std::sqrt(square(a-c)+4*b*b);    // discriminant    ~25 flops
+    const Real d = NTraits<Real>::sqrt(square(a-c)+4*b*b);    // discriminant    ~25 flops
     curvature = Vec2(a+c + d, a+c - d);             // kmax, kmin        4
     const Vec2 vmax2(a-c + d, 2*b);                 //                   3
     const UnitVec3 vmax(vmax2[0]*t1 + vmax2[1]*t2); //                 ~40
@@ -1229,7 +1230,7 @@ continueGeodesic(const Vec3& xP, const Vec3& xQ, const Geodesic& prevGeod,
     // TODO: if the previous geodesic was very long and came all the way
     // around this will incorrectly switch to a very short geodesic. Does
     // that matter?
-    const Real kdP = std::abs(calcSurfaceCurvatureInDirection(P,PQdir));
+    const Real kdP = fabs(calcSurfaceCurvatureInDirection(P,PQdir));
     if (PQlength*kdP <= StraightLineGeoFrac) {
         cout << "STRAIGHT LINE GEO length=" << PQlength << "\n";
         makeStraightLineGeodesic(P, Q, PQdir, options, geod);
@@ -1252,8 +1253,8 @@ continueGeodesic(const Vec3& xP, const Vec3& xQ, const Geodesic& prevGeod,
     // Find maximum curvature of previous geodesic to use as a length scale.
     // TODO: should store this with the geodesic so we can use any intermediate
     // points also. TODO: use binormal curvature also?
-    const Real maxK = std::max(std::abs(prevGeod.getCurvatureP()),
-                               std::abs(prevGeod.getCurvatureQ()));
+    const Real maxK = fmax(fabs(prevGeod.getCurvatureP()),
+                               fabs(prevGeod.getCurvatureQ()));
 
     // We consider a geodesic straight when the separation of its end points
     // is a small fraction of the radius of curvature because then the chord
@@ -1723,17 +1724,21 @@ shootGeodesicInDirectionUntilLengthReached(const Vec3& xP, const UnitVec3& tP,
 
 
 static Real cleanUpH(Real hEst, Real y0) {
-    volatile Real temp = y0+hEst;
+	#ifndef SimTK_REAL_IS_ADOUBLE
+		volatile Real temp = y0+hEst;
+	#else
+		Real temp = y0 + hEst;
+	#endif
     return temp-y0;
 }
 
 static Real maxabs(Vec2 x) {
-    return std::max(std::abs(x[0]), std::abs(x[1]));
+    return fmax(fabs(x[0]), fabs(x[1]));
 }
 
 static Real maxabsdiff(Vec2 x, Vec2 xold) {
-    return std::max(std::abs(x[0]-xold[0])/std::max(x[0],Real(1)),
-                    std::abs(x[1]-xold[1])/std::max(x[1],Real(1)));
+    return fmax(fabs(x[0]-xold[0])/fmax(x[0],Real(1)),
+                    fabs(x[1]-xold[1])/fmax(x[1],Real(1)));
 }
 
 
@@ -1782,10 +1787,14 @@ void ContactGeometryImpl::calcGeodesic(const Vec3& xP, const Vec3& xQ,
     Fx = calcSplitGeodError(xP, xQ, x[0], x[1]);
     if (vizReporter != NULL) {
         vizReporter->handleEvent(ptOnSurfSys->getDefaultState());
-        sleepInSec(pauseBetweenGeodIterations);
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			sleepInSec(pauseBetweenGeodIterations);
+		#else
+			sleepInSec(pauseBetweenGeodIterations.getValue());
+		#endif
     }
 
-    f = std::sqrt(~Fx*Fx);
+    f = NTraits<Real>::sqrt(~Fx*Fx);
 
     for (int i = 0; i < maxNewtonIterations; ++i) {
         if (maxabs(Fx) < ftol) {
@@ -1807,7 +1816,7 @@ void ContactGeometryImpl::calcGeodesic(const Vec3& xP, const Vec3& xQ,
             x = xold - lam*dx;
 //            splitGeodErr->f(x, Fx);
             Fx = calcSplitGeodError(xP, xQ, x[0], x[1]);
-            f = std::sqrt(~Fx*Fx);
+            f = NTraits<Real>::sqrt(~Fx*Fx);
             if (f > fold && lam > minlam) {
                 lam = lam / 2;
             } else {
@@ -1822,7 +1831,11 @@ void ContactGeometryImpl::calcGeodesic(const Vec3& xP, const Vec3& xQ,
 
         if (vizReporter != NULL) {
             vizReporter->handleEvent(ptOnSurfSys->getDefaultState());
+		#ifndef SimTK_REAL_IS_ADOUBLE
             sleepInSec(pauseBetweenGeodIterations);
+		#else
+			sleepInSec(pauseBetweenGeodIterations.getValue());
+		#endif
         }
 
     }
@@ -1873,7 +1886,11 @@ void ContactGeometryImpl::calcGeodesicUsingOrthogonalMethod
     Fx = calcOrthogonalGeodError(P, Q, x[0], x[1], geod);
     if (vizReporter != NULL) {
         vizReporter->handleEvent(ptOnSurfSys->getDefaultState());
+	#ifndef SimTK_REAL_IS_ADOUBLE
         sleepInSec(pauseBetweenGeodIterations);
+	#else
+		sleepInSec(pauseBetweenGeodIterations.getValue());
+	#endif
     }
 
     //OrthoGeodesicError orthoErr(*this, P, Q);
@@ -1884,7 +1901,7 @@ void ContactGeometryImpl::calcGeodesicUsingOrthogonalMethod
     //     << " iteration\n";
 
     for (int i = 0; i < MaxIterations; ++i) {
-        f = std::sqrt(~Fx*Fx);
+        f = NTraits<Real>::sqrt(~Fx*Fx);
         const Vec3 r_QQhat = geod.getPointQ()-Q;
         dist = r_QQhat.norm();
         //std::cout << "ORTHO x= " << x << " err = " << Fx << " |err|=" << f 
@@ -1972,7 +1989,7 @@ void ContactGeometryImpl::calcGeodesicUsingOrthogonalMethod
         xold = x;
 
         // backtracking. Limit angle changes to around 22 degrees.
-        const Real dtheta = std::abs(dx[0]);
+        const Real dtheta = fabs(dx[0]);
         lam = 1;
         if (dtheta > Pi/8) {
             lam = (Pi/8)/dtheta; 
@@ -1998,7 +2015,7 @@ void ContactGeometryImpl::calcGeodesicUsingOrthogonalMethod
             }
             Fx = calcOrthogonalGeodError(P, Q, xadj[0], xadj[1],geod);
             if (flipped) Fx[1] = -Fx[1];
-            f = std::sqrt(~Fx*Fx);
+            f = NTraits<Real>::sqrt(~Fx*Fx);
             dist = (geod.getPointQ()-Q).norm();
             //cout << "step size=" << lam << " errNorm=" << f << " dist=" << dist << endl;
             if (f > fold && lam > minlam) {
@@ -2016,7 +2033,11 @@ void ContactGeometryImpl::calcGeodesicUsingOrthogonalMethod
 
         if (vizReporter != NULL) {
             vizReporter->handleEvent(ptOnSurfSys->getDefaultState());
+	#ifndef SimTK_REAL_IS_ADOUBLE
             sleepInSec(pauseBetweenGeodIterations);
+	#else
+			sleepInSec(pauseBetweenGeodIterations.getValue());
+	#endif
         }
 
     }
@@ -2186,16 +2207,16 @@ calcSplitGeodErrorJacobian(const Vec3& xP, const Vec3& xQ,
     Geodesic geodQtmp;
 
     if (order == 1) {
-        accFactor = std::sqrt(estimatedGeodesicAccuracy);
+        accFactor = NTraits<Real>::sqrt(estimatedGeodesicAccuracy);
     } else {
-        accFactor = std::pow(estimatedGeodesicAccuracy, OneThird);
+        accFactor = pow(estimatedGeodesicAccuracy, OneThird);
     }
     YMin = Real(0.1);
 
     Vec2 y0(thetaP, thetaQ);
 
     // perturb thetaP
-    hEst = accFactor*std::max(std::abs(thetaP), YMin);
+    hEst = accFactor*fmax(fabs(thetaP), YMin);
     h = cleanUpH(hEst, thetaP);
 
     // positive perturb
@@ -2218,7 +2239,7 @@ calcSplitGeodErrorJacobian(const Vec3& xP, const Vec3& xQ,
     }
 
     // perturb thetaQ
-    hEst = accFactor*std::max(std::abs(thetaQ), YMin);
+    hEst = accFactor*fmax(fabs(thetaQ), YMin);
     h = cleanUpH(hEst, thetaP);
 
     // positive perturb

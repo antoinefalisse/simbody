@@ -26,25 +26,25 @@
 #include <iostream>
 
 #define ASSERT(cond) {SimTK_ASSERT_ALWAYS((cond), "Assertion failed");}
-#define ASSERT_EQUAL(val1, val2) {ASSERT(std::abs((val1)-(val2)) < 1e-10);}
+#define ASSERT_EQUAL(val1, val2) {ASSERT(fabs((val1)-(val2)) < 1e-10);}
 
 using std::cout;
 using std::endl;
 using namespace SimTK;
 using namespace std;
 
-static Real sqrt(int a) {return std::sqrt(Real(a));}
-static Real sin(int a) {return std::sin(Real(a));}
-static Real cos(int a) {return std::cos(Real(a));}
-static Real tan(int a) {return std::tan(Real(a));}
-static Real asin(int a) {return std::asin(Real(a));}
-static Real acos(int a) {return std::acos(Real(a));}
-static Real atan(int a) {return std::atan(Real(a));}
-static Real exp(int a) {return std::exp(Real(a));}
-static Real log(int a) {return std::log(Real(a));}
-static Real cosh(int a) {return std::cosh(Real(a));}
-static Real sinh(int a) {return std::sinh(Real(a));}
-static Real tanh(int a) {return std::tanh(Real(a));}
+static Real sqrt(int a) {return sqrt(Real(a));}
+static Real sin(int a) {return sin(Real(a));}
+static Real cos(int a) {return cos(Real(a));}
+static Real tan(int a) {return tan(Real(a));}
+static Real asin(int a) {return asin(Real(a));}
+static Real acos(int a) {return acos(Real(a));}
+static Real atan(int a) {return atan(Real(a));}
+static Real exp(int a) {return exp(Real(a));}
+static Real log(int a) {return log(Real(a));}
+static Real cosh(int a) {return cosh(Real(a));}
+static Real sinh(int a) {return sinh(Real(a));}
+static Real tanh(int a) {return tanh(Real(a));}
 
 template <class T, int N>
 void testVector(const T& value, const Vec<N>& expected) {

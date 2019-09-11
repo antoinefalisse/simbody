@@ -125,7 +125,7 @@ public:
      * Get the value of the event trigger function for a State.
      */  
     virtual Real getValue(const State&) const = 0;
-    
+
     /**
      * Get an EventTriggerInfo object which can be used to customize when the
      * event occurs.
@@ -157,7 +157,7 @@ public:
      *     The time interval at which events should occur.
      */
     explicit PeriodicEventHandler(Real eventInterval);
-    
+        
     /**
      * Get the time interval at which events occur.
      */   

@@ -88,7 +88,7 @@ void testTriangleMesh() {
     SimTK_TEST_EQ(mesh.getFaceArea(0), 0.5);
     SimTK_TEST_EQ(mesh.getFaceArea(1), 0.5);
     SimTK_TEST_EQ(mesh.getFaceArea(2), 0.5);
-    SimTK_TEST_EQ(mesh.getFaceArea(3), std::sin(Pi/3.0));
+    SimTK_TEST_EQ(mesh.getFaceArea(3), sin(Pi/3.0));
     SimTK_TEST_EQ(mesh.getFaceNormal(0), Vec3(0, 0, -1));
     SimTK_TEST_EQ(mesh.getFaceNormal(1), Vec3(-1, 0, 0));
     SimTK_TEST_EQ(mesh.getFaceNormal(2), Vec3(0, -1, 0));
@@ -271,7 +271,7 @@ void testFindNearestPoint() {
         SimTK_TEST(inside == (~pos*normal < 1/Sqrt3));
         SimTK_TEST_EQ(~nearest*normal, 1/Sqrt3);
         for (int j = 0; j < 3; j++) {
-            SimTK_TEST(pos[j]*nearest[j] >= 0 || std::abs(nearest[j]) < 100*Eps);
+            SimTK_TEST(pos[j]*nearest[j] >= 0 || fabs(nearest[j]) < 100*Eps);
             SimTK_TEST(pos[j]*normal[j] >= 0);
         }
     }

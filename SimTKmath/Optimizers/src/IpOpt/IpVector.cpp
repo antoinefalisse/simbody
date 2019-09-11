@@ -18,7 +18,7 @@
 # endif
 #endif
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   void Vector::Print(SmartPtr<const Journalist> jnlst,
@@ -110,7 +110,7 @@ namespace SimTKIpopt
 
     Number alpha = inv_alpha_bar->Max();
     if (alpha > 0) {
-      alpha = SimTKIpopt::Min(1/alpha, Number(1));
+      alpha = Ipopt::Min(1/alpha, Number(1));
     }
     else {
       alpha = 1;

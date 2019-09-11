@@ -21,6 +21,10 @@
  * limitations under the License.                                             *
  * -------------------------------------------------------------------------- */
 
+#include "SimTKcommon.h"
+
+#ifndef SimTK_REAL_IS_ADOUBLE
+
 #include "IntegratorTestFramework.h"
 #include "simmath/CPodesIntegrator.h"
 
@@ -80,3 +84,9 @@ int main () {
     return 1;
   }
 }
+
+#else
+void main() {
+	std::cout << "CPodes not implemented with adouble" << std::endl;
+}
+#endif

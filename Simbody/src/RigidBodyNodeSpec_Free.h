@@ -77,6 +77,7 @@ RBNodeFree(const MassProperties& mProps_B,
 // This has a default implementation but it rotates first then translates,
 // which works fine for the normal Free joint but produces wrong behavior when
 // the mobilizer is reversed.
+#ifndef SimTK_REAL_IS_ADOUBLE
 void setQToFitTransformImpl(const SBStateDigest& sbs, const Transform& X_FM, 
                             Vector& q) const override 
 {
@@ -92,11 +93,13 @@ void setQToFitRotationImpl(const SBStateDigest& sbs, const Rotation& R_FM,
     else
         this->toQuat(q) = R_FM.convertRotationToQuaternion().asVec4();
 }
+#endif
 
 // The user gives us the translation vector from OF to OM as a vector expressed
 // in F, which is what we use as translational generalized coordinates. Also, 
 // with a free joint we never have to change orientation coordinates in order 
 // to achieve a translation.
+#ifndef SimTK_REAL_IS_ADOUBLE
 void setQToFitTranslationImpl(const SBStateDigest& sbs,
                               const Vec3& p_FM,
                               Vector& q) const override
@@ -106,24 +109,29 @@ void setQToFitTranslationImpl(const SBStateDigest& sbs,
     else
         this->toQVec3(q,4) = p_FM; // skip the 4 quaternions
 }
+#endif
 
 // Our 3 rotational generalized speeds are just the angular velocity vector of 
 // M in F, expressed in F, which is exactly what the user provides here.
+#ifndef SimTK_REAL_IS_ADOUBLE
 void setUToFitAngularVelocityImpl(const SBStateDigest& sbs, 
                                   const Vector& q, const Vec3& w_FM,
                                   Vector& u) const override
 {
     this->toUVec3(u,0) = w_FM; // relative ang. vel. always used as generalized speeds
 }
+#endif
 
 // Our 3 translational generalized speeds are the linear velocity of M's origin 
 // in F, expressed in F, which is just what the user gives us.
+#ifndef SimTK_REAL_IS_ADOUBLE
 void setUToFitLinearVelocityImpl(const SBStateDigest& sbs,
                                  const Vector& q, const Vec3& v_FM,
                                  Vector& u) const override
 {
     this->toUVec3(u,3) = v_FM;
 }
+#endif
 
 // When we're using Euler angles, we're going to want to cache cos and sin for
 // each angle, and also 1/cos of the middle angle will be handy to have around.
@@ -147,11 +155,16 @@ void performQPrecalculations(const SBStateDigest& sbs,
     if (this->getUseEulerAngles(sbs.getModelVars())) {
         assert(q && nq==6 && qCache && nQCache==AnglePoolSize && nQErr==0);
 
-        const Real cy = std::cos(q[1]);
+        //const Real cy = NTraits<Real>::cos(q[1]);
+        //Vec3::updAs(&qCache[AngleCosQ]) =
+        //    Vec3(NTraits<Real>::cos(q[0]), cy, NTraits<Real>::cos(q[2]));
+        //Vec3::updAs(&qCache[AngleSinQ]) =
+        //    Vec3(NTraits<Real>::sin(q[0]), NTraits<Real>::sin(q[1]), NTraits<Real>::sin(q[2]));
+        const Real cy = cos(q[1]);
         Vec3::updAs(&qCache[AngleCosQ]) =
-            Vec3(std::cos(q[0]), cy, std::cos(q[2]));
+            Vec3(cos(q[0]), cy, cos(q[2]));
         Vec3::updAs(&qCache[AngleSinQ]) =
-            Vec3(std::sin(q[0]), std::sin(q[1]), std::sin(q[2]));
+            Vec3(sin(q[0]), sin(q[1]), sin(q[2]));
         qCache[AngleOOCosQy] = 1/cy; // trouble at 90 or 270 degrees
     } else {
         assert(q && nq==7 && qCache && nQCache==QuatPoolSize && 

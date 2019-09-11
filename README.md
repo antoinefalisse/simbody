@@ -1,4 +1,4 @@
-Simbody [![Travis][buildstatus_image_travis]][travisci] [![Appveyor][buildstatus_image_appveyor]][appveyorci] [![Codecov][buildstatus_image_codecov]][codecovci]
+Simbody [![Travis][buildstatus_image_travis]][travisci] [![Appveyor][buildstatus_image_appveyor]][appveyorci]
 =======
 
 Simbody is a high-performance, open-source toolkit for science- and
@@ -85,7 +85,7 @@ You want to...
 --------------
 * **[install Simbody](#installing)**.
 * [use Simbody in your own program][user].
-* [view API documentation](https://simbody.github.io/simbody-latest-doxygen).
+* [view API documentation](https://simtk.org/api_docs/simbody/latest/index.html).
 * [learn the theory behind Simbody](https://github.com/simbody/simbody/raw/master/Simbody/doc/SimbodyTheoryManual.pdf).
 * [extend Simbody](https://github.com/simbody/simbody/raw/master/Simbody/doc/SimbodyAdvancedProgrammingGuide.pdf).
 * [**get support** at the Simbody Forum](https://simtk.org/forums/viewforum.php?f=47).
@@ -100,7 +100,7 @@ Dependencies
 Simbody depends on the following:
 
 * cross-platform building: [CMake](http://www.cmake.org/cmake/resources/software.html) 2.8.10 or later (3.1.3 or later for Visual Studio).
-* compiler: [Visual Studio](http://www.visualstudio.com) 2015 or 2017 (Windows only), [gcc](http://gcc.gnu.org/) 4.9.0 or later (typically on Linux), [Clang](http://clang.llvm.org/) 3.4 or later, or Apple Clang (Xcode) 8 or later.
+* compiler: [Visual Studio](http://www.visualstudio.com) 2015 (Windows only), [gcc](http://gcc.gnu.org/) 4.9.0 or later (typically on Linux), or [Clang](http://clang.llvm.org/) 3.4 or later (typically on Mac, possibly through Xcode)
 * linear algebra: [LAPACK](http://www.netlib.org/lapack/) 3.6.0 or later and [BLAS](http://www.netlib.org/blas/)
 * visualization (optional): [FreeGLUT](http://freeglut.sourceforge.net/), [Xi and Xmu](http://www.x.org/wiki/)
 * API documentation (optional): [Doxygen](http://www.stack.nl/~dimitri/doxygen/) 1.8.6 or later; we recommend at least 1.8.8.
@@ -117,14 +117,13 @@ Using Simbody
 Installing
 ----------
 
-Simbody works on Windows, Mac, and Linux. For each operating system, you can use a package manager or build from source. In this file, we provide instructions for 6 different ways of installing Simbody:
+Simbody works on Windows, Mac, and Linux. For Windows, you must build from source. For Mac and Linux, you can use a package manager or build from source. In this file, we provide instructions for 5 different ways of installing Simbody:
 
 1. [**Windows**](#windows-using-visual-studio): build from source using Microsoft Visual Studio.
 2. [**Linux or Mac (make)**](#linux-or-mac-using-make): build from source using gcc or Clang with make.
 3. [**Mac (Homebrew)**](#mac-and-homebrew): automated build/install with Homebrew.
 4. [**Ubuntu/Debian**](#ubuntu-and-apt-get): install pre-built binaries with apt-get.
 5. [**Windows using MinGW**](#windows-using-mingw): build from source using MinGW.
-6. [**Windows/Mac/Linux**](#windows-mac-and-linux-using-conda): install pre-built binaries with the Conda package manager.
 
 These are not the only ways to install Simbody, however. For example, on a Mac, you could use CMake and Xcode.
 
@@ -144,11 +143,7 @@ Windows using Visual Studio
 
 All needed library dependencies are provided with the Simbody installation on Windows, including linear algebra and visualization dependencies.
 
-1. Download and install [Microsoft Visual Studio](http://www.visualstudio.com), version [2015](https://www.visualstudio.com/vs/older-downloads/) or 2017. The Community edition is free and sufficient. 
-  * 2015: By default, Visual Studio 2015 does not provide C++ support; when installing, be sure to select *Custom*, and check *Programming Languages > Visual C++ > Common Tools for Visual C++ 2015*. If you have already installed Visual Studio without C++ support, simply re-run the installer and select *Modify*.
-  * 2017: In the installer, select the *Desktop development with C++* workload.
-  * Any other C++ code you plan to use with Simbody should be compiled with the
-    same compiler as used for Simbody.
+1. Download and install [Microsoft Visual Studio](http://www.visualstudio.com), version 2015. The Community edition is free and sufficient. By default, Visual Studio 2015 does not provide C++ support; when installing, be sure to select *Custom*, and check *Programming Languages > Visual C++ > Common Tools for Visual C++ 2015*. If you have already installed Visual Studio without C++ support, simply re-run the installer and select *Modify*.
 2. Download and install [CMake](http://www.cmake.org/download), version 3.1.3 or higher.
 3. (optional) If you want to build API documentation, download and install Doxygen, version 1.8.8 or higher.
 
@@ -158,14 +153,14 @@ All needed library dependencies are provided with the Simbody installation on Wi
 * Method 2: Clone the git repository.
     1. Get git. There are many options:
 
-       * [Git for Windows](http://gitforwindows.org/) (most advanced),
-       * [TortoiseGit](https://tortoisegit.org/download/) (intermediate; good for TortoiseSVN users),
-       * [GitHub Desktop](https://desktop.github.com/) (easiest).
+       * [Git for Windows](http://msysgit.github.io/)(most advanced),
+       * [TortoiseGit](https://code.google.com/p/tortoisegit/wiki/Download) (intermediate; good for TortoiseSVN users),
+       * [GitHub for Windows](https://windows.github.com/) (easiest).
 
     2. Clone the github repository into `C:/Simbody-source`. Run the following in a Git Bash / Git Shell, or find a way to run the equivalent commands in a GUI client:
 
             $ git clone https://github.com/simbody/simbody.git C:/Simbody-source
-            $ git checkout Simbody-3.6
+            $ git checkout Simbody-3.5.3
 
     3. In the last line above, we assumed you want to build a released version.
        Feel free to change the version you want to build.
@@ -184,15 +179,14 @@ All needed library dependencies are provided with the Simbody installation on Wi
 2. In the field **Where is the source code**, specify `C:/Simbody-source`.
 3. In the field **Where to build the binaries**, specify something like `C:/Simbody-build`, just not inside your source directory. This is *not* where we will install Simbody; see below.
 4. Click the **Configure** button.
-    1. When prompted to select a *generator*, select one ending with **Win64** to build 64-bit binaries (e.g., **Visual Studio 14 2015 Win64** or **Visual Studio 15 2017 Win64**), or select one *without* **Win64** to build 32-bit binaries (e.g., **Visual Studio 14 2015** or **Visual Studio 15 2017**).
+    1. When prompted to select a *generator*, choose either **Visual Studio 14 2015** (to build 32-bit binaries) or **Visual Studio 14 2015 Win64** (to build 64-bit binaries).
     2. Click **Finish**.
 5. Where do you want to install Simbody on your computer? Set this by changing the `CMAKE_INSTALL_PREFIX` variable. We'll assume you set it to `C:/Simbody`. If you choose a different installation location, make sure to use *yours* where we use `C:/Simbody` below.
 6. Play around with the other build options:
     * `BUILD_EXAMPLES` to see what Simbody can do. On by default.
     * `BUILD_TESTING` to ensure your Simbody works correctly. On by default.
     * `BUILD_VISUALIZER` to be able to watch your system move about! If building remotely, you could turn this off. On by default.
-    * `BUILD_DYNAMIC_LIBRARIES` builds the three libraries as dynamic libraries. On by default. Unless you know what you're doing, leave this one on.
-    * `BUILD_STATIC_LIBRARIES` builds the three libraries as static libraries, whose names will end with `_static`. Off by default. You must activate either `BUILD_DYNAMIC_LIBRARIES`, `BUILD_STATIC_LIBRARIES`, or both.
+    * `BUILD_STATIC_LIBRARIES` builds the three libraries as static libraries, whose names will end with `_static`. Off by default.
     * `BUILD_TESTS_AND_EXAMPLES_STATIC` if static libraries, and tests or examples are being built, creates statically-linked tests/examples. Can take a while to build, and it is unlikely you'll use the statically-linked libraries.
     * `BUILD_TESTS_AND_EXAMPLES_SHARED` if tests or examples are being built, creates dynamically-linked tests/examples. Unless you know what you're doing, leave this one on.
 7. Click the **Configure** button again. Then, click **Generate** to make Visual Studio project files.
@@ -227,7 +221,7 @@ Within your build in Visual Studio (not the installation):
 If you are only building Simbody to use it with OpenSim, you can skip this section.
 
 1. Allow executables to find Simbody libraries (.dll's) by adding the Simbody `bin/` directory to your `PATH` environment variable.
-    1. In the Start menu (Windows 7 or 10) or screen (Windows 8), search `environment`.
+    1. In the Start menu (Windows 7) or screen (Windows 8), search `environment`.
     2. Select **Edit the system environment variables**.
     3. Click **Environment Variables...**.
     4. Under **System variables**, click **Path**, then click **Edit**.
@@ -271,8 +265,6 @@ Before installing Simbody, check your compiler version with commands like that:
 
 In case your compiler is not supported, you can upgrade your compiler.
 
-##### Upgrading GCC to 4.9 on Ubuntu 14.04
-
 Here are some instructions to upgrade GCC on a Ubuntu 14.04 distribution.
 
     $ sudo add-apt-repository ppa:ubuntu-toolchain-r/test
@@ -302,8 +294,8 @@ On Ubuntu, we need to get the dependencies ourselves. Open a terminal and run th
 3. For visualization (optional): `$ sudo apt-get install freeglut3-dev libxi-dev libxmu-dev`.
 4. For API documentation (optional): `$ sudo apt-get install doxygen`.
 
-LAPACK version 3.6.0 and higher may be required for some applications (OpenSim).
-LAPACK can be downloaded from [http://www.netlib.org/lapack/](http://www.netlib.org/lapack/),
+LAPACK version 3.6.0 and higher may be required for some applications (OpenSim). 
+LAPACK can be downloaded from [http://www.netlib.org/lapack/](http://www.netlib.org/lapack/), 
 and compiled using the following method. It is sufficient to set `LD_LIBRARY_PATH` to your LAPACK install prefix
 and build Simbody using the `-DBUILD_USING_OTHER_LAPACK:PATH=/path/to/liblapack.so` option in cmake.
 ```{bash}
@@ -329,7 +321,7 @@ There are two ways to get the source code.
     2. Clone the github repository into `~/simbody-source`.
 
             $ git clone https://github.com/simbody/simbody.git ~/simbody-source
-            $ git checkout Simbody-3.6
+            $ git checkout Simbody-3.5.3
 
     3. In the last line above, we assumed you want to build a released version.
        Feel free to change the version you want to build.
@@ -378,7 +370,6 @@ There are two ways to get the source code.
         * `BUILD_VISUALIZER` to be able to watch your system
           move about! If building on a cluster, you could turn this off. On by
           default.
-        * `BUILD_DYNAMIC_LIBRARIES` builds the three libraries as dynamic libraries. On by default.
         * `BUILD_STATIC_LIBRARIES` builds the three libraries as static libraries, whose names will end with `_static`.
         * `BUILD_TESTS_AND_EXAMPLES_STATIC` if tests or examples are being built, creates statically-linked tests/examples. Can take a while to build, and it is unlikely you'll use the statically-linked libraries.
         * `BUILD_TESTS_AND_EXAMPLES_SHARED` if tests or examples are being built, creates dynamically-linked tests/examples. Unless you know what you're doing, leave this one on.
@@ -490,7 +481,7 @@ If using a Mac and Homebrew, the dependencies are taken care of for you.
 #### Where is Simbody installed?
 
 Simbody is now installed to `/usr/local/Cellar/simbody/<version>/`,
-where `<version>` is either the version number (e.g., `3.6`),
+where `<version>` is either the version number (e.g., `3.5.3`),
 or `HEAD` if you specified `--HEAD` above.
 
 Some directories are symlinked (symbolically linked) to `/usr/local/`, which is where your system typically expects to find executables, shared libraries (.dylib's), headers (.h's), etc. The following directories from the Simbody installation are symlinked:
@@ -563,12 +554,12 @@ Other versions are supported with additional configurations.
 
 The table below lists the various versions of MinGW versions tested:
 
-|   | OS      | Thread | Exception | Comment                                                             | URL                                           |
-| - | ------- | ------ | --------- | ------------------------------------------------------------------- | --------------------------------------------- |
-| 1 | 64 Bits | Posix  | SJLJ      | All features supported, all binary included (Recommended version)   | [MinGW64 GCC 5.2.0][mingw_520_64_posix_sjlj]  |
-| 2 | 64 Bits | Posix  | SEH       | Needs to be linked against user's Blas and Lapack                   | [MinGW64 GCC 5.2.0][mingw_520_64_posix_seh]   |
-| 3 | 32 Bits | Posix  | Dwarf     | No visualization, all binary included                               | [MinGW64 GCC 5.2.0][mingw_520_32_posix_dwarf] |
-| 4 | 32 Bits | Posix  | SJLJ      | No visualization, needs to be linked against user's Blas and Lapack | [MinGW64 GCC 5.2.0][mingw_520_32_posix_sjlj]  |
+   | OS      | Thread | Exception | Comment                                                             | URL                                                                                                                                                                                                                            |
+---|---------|--------|-----------|---------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+ 1 | 64 Bits | Posix  | SJLJ      | All features supported, all binary included  (Recommended version)  | [MinGW64 project GCC 5.2.0](http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/5.2.0/threads-posix/sjlj/x86_64-5.2.0-release-posix-sjlj-rt_v4-rev0.7z/download)    |
+ 2 | 64 Bits | Posix  | SEH       | Needs to be linked against user's Blas and Lapack                   | [MinGW64 project GCC 5.2.0](http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/5.2.0/threads-posix/seh/x86_64-5.2.0-release-posix-seh-rt_v4-rev0.7z/download)      |
+ 3 | 32 Bits | Posix  | Dwarf     | No visualization, all binary included                               | [MinGW64 project GCC 5.2.0](http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/mingw-builds/5.2.0/threads-posix/dwarf/i686-5.2.0-release-posix-dwarf-rt_v4-rev0.7z/download)    |
+ 4 | 32 Bits | Posix  | SJLJ      | No visualization, needs to be linked against user's Blas and Lapack | [MinGW64 project GCC 5.2.0](http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/mingw-builds/5.2.0/threads-posix/sjlj/i686-5.2.0-release-posix-sjlj-rt_v4-rev0.7z/download)      |
 
 We recommend to use the first configuration where all features are supported and
 does not need additional libraries to compile and run.
@@ -683,27 +674,6 @@ then the configuration stops because of this difference.
 If one provides Blas and Lapack libraries with the CMake variable `BUILD_USING_OTHER_LAPACK`,
 compilation with MinGW is always possible.
 
-Windows, Mac, and Linux Using Conda
------------------------------------
-
-[Conda](http://conda.pydata.org) is a cross platform package manager that can
-be used to install Simbody on Windows, Mac, or Linux. To install Simbody using
-Conda you must first install
-[Miniconda](http://conda.pydata.org/miniconda.html) or
-[Anaconda](https://www.continuum.io/downloads). Either of these will provide
-the `conda` command which can be invoked at the command line to install Simbody
-from the [Conda Forge](https://conda-forge.github.io/) channel as follows:
-
-```
-$ conda install -c conda-forge simbody
-```
-
-This command will install Simbody (both the libraries and headers) into
-the Miniconda or Anaconda installation directory as per the standard layout for
-each of the operating systems described above. The Conda Forge Simbody recipe
-can be found in Conda Forge's [feedstock
-repository](https://github.com/conda-forge/simbody-feedstock).
-
 Acknowledgments
 ---------------
 We are grateful for past and continuing support for Simbody's development in Stanford's Bioengineering department through the following grants:
@@ -721,8 +691,6 @@ Prof. Scott Delp is the Principal Investigator on these grants and Simbody is us
 [travisci]: https://travis-ci.org/simbody/simbody
 [buildstatus_image_appveyor]: https://ci.appveyor.com/api/projects/status/2dua0qna2m85fts2/branch/master?svg=true
 [appveyorci]: https://ci.appveyor.com/project/opensim-org/simbody/branch/master
-[buildstatus_image_codecov]: https://codecov.io/gh/simbody/simbody/branch/master/graph/badge.svg
-[codecovci]: https://codecov.io/gh/simbody/simbody
 [user]: https://github.com/simbody/simbody/raw/master/Simbody/doc/SimbodyAndMolmodelUserGuide.pdf
 [rna]: doc/images/simbios_11000_body_RNA.gif
 [simbios]: http://simbios.stanford.edu/
@@ -731,7 +699,3 @@ Prof. Scott Delp is the Principal Investigator on these grants and Simbody is us
 [flores]: http://xray.bmc.uu.se/flores/Home.html
 [buildwin]: https://github.com/simbody/simbody/raw/master/doc/HowToBuildSimbodyFromSource_Windows.pdf
 [buildunix]: https://github.com/simbody/simbody/raw/master/doc/HowToBuildSimbodyFromSource_MacLinux.pdf
-[mingw_520_64_posix_sjlj]: http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/5.2.0/threads-posix/sjlj/x86_64-5.2.0-release-posix-sjlj-rt_v4-rev0.7z/download
-[mingw_520_64_posix_seh]: http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/5.2.0/threads-posix/seh/x86_64-5.2.0-release-posix-seh-rt_v4-rev0.7z/download
-[mingw_520_32_posix_dwarf]: http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/mingw-builds/5.2.0/threads-posix/dwarf/i686-5.2.0-release-posix-dwarf-rt_v4-rev0.7z/download
-[mingw_520_32_posix_sjlj]: http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/mingw-builds/5.2.0/threads-posix/sjlj/i686-5.2.0-release-posix-sjlj-rt_v4-rev0.7z/download

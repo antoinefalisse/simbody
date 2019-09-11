@@ -30,7 +30,9 @@
 using namespace SimTK;
 using namespace std;
 
-const Real TESTTOL = 1e-9;
+//const Real TESTTOL = 1e-9;
+const double TESTTOL = 1e-9;
+
 
 void testSpline() {
     Vector_<Vec3> coeff(5);
@@ -150,13 +152,15 @@ void testRealSpline() {
                               (coeff[i+1]-coeff[i])/(x[i+1]-x[i]), TESTTOL);
         }
     }
-    SimTK_TEST_EQ_TOL(1, spline.getControlPointValues()[1], TESTTOL);
+    SimTK::Real tempone = 1;
+    SimTK_TEST_EQ_TOL(tempone, spline.getControlPointValues()[1], TESTTOL);
 
     // Try using a SplineFitter.
 
     SplineFitter<Real> fitter = SplineFitter<Real>::fitFromGCV(3, x, coeff);
     Spline spline2 = fitter.getSpline();
-    SimTK_TEST_EQ_TOL(3, spline2.getSplineDegree(),TESTTOL);
+    SimTK::Real tempthree = 3;
+    SimTK_TEST_EQ_TOL(tempthree, spline2.getSplineDegree(),TESTTOL);
 }
 
 //MM bits added to test the numerical accuracy of the natural cubic splines.
@@ -181,8 +185,8 @@ void testRealSpline() {
 Vector getCentralDifference(Vector x, Vector y, 
                                    bool extrap_endpoints){
     Vector dy(x.size());
-    double dx1,dx2;
-    double dy1,dy2;
+    SimTK::Real dx1,dx2;
+    SimTK::Real dy1,dy2;
     int size = x.size();
     for(int i=1; i<x.size()-1; i++){
         dx1 = x(i)-x(i-1);
@@ -240,7 +244,7 @@ void printMatrixToFile(Vector col0,Matrix data, string filename){
 * @returns Vector: a 3x1 vector of the value, 
 *                 first derivative and second derivative
 */
-Vector getAnalyticFunction(double x,int fcnType){
+Vector getAnalyticFunction(SimTK::Real x,int fcnType){
     Vector fdF(3);
     fdF = -1;
 
@@ -313,7 +317,7 @@ Vector benchmarkNaturalCubicSpline
     int size = xK.size();
     int sizeD= xD.size();
     int sizeDK = xD.size()/(xK.size()-1);
-    double deltaD = (xK(xK.size()-1)-xK(0))/xD.size();
+    SimTK::Real deltaD = (xK(xK.size()-1)-xK(0))/xD.size();
 
     Matrix ysp_K(size,2),ysp_M(size-1,2),ysp_D(sizeD,4);
     Vector errVec(4);
@@ -331,7 +335,7 @@ Vector benchmarkNaturalCubicSpline
     //1. Evaluate the spline at the knots, the mid points and then a dense sample
     ///////////////////////////////////////////
         Vector tmpV1(1);
-        double xVal=0;
+        SimTK::Real xVal=0;
         for(int i=0;i<size;i++){
             xVal = xK(i);
             tmpV1(0)=xK(i);
@@ -387,7 +391,7 @@ Vector benchmarkNaturalCubicSpline
         //                            interest should equal the point in 
         //                            interest;
 
-            double ykL,ykR,y0L,dydxL,y0R,dydxR = 0;
+            SimTK::Real ykL,ykR,y0L,dydxL,y0R,dydxR = 0;
             for(int i=1; i<size-1; i++){
                 y0L = ysp_D(i*sizeDK-1,1);
                 y0R = ysp_D(i*sizeDK+1,1);
@@ -423,7 +427,7 @@ Vector benchmarkNaturalCubicSpline
         //* d.    The second derivative is zero at the end points
         //////////////////////////////////////
 
-        errVec(3) = abs(ysp_D(0,2)) + abs(ysp_D(sizeD-1,2));
+        errVec(3) = fabs(ysp_D(0,2)) + fabs(ysp_D(sizeD-1,2));
 
         
 
@@ -487,13 +491,13 @@ void testNaturalCubicSpline() {
                                        //interpolation
 
         //Domain vector variables
-        double xmin,xmax,deltaX,deltaD;
+        SimTK::Real xmin,xmax,deltaX,deltaD;
         xmin = Pi/4;            //Value of first knot
         xmax = Pi/2;            //Value of the final knot
 
         deltaX = (xmax-xmin)/(size-1);    
         deltaD = (xmax-xmin)/(sizeD-1);
-        double etime = 0;
+        SimTK::Real etime = 0;
     /////////////////////////////
     //Test Code body
     ////////////////////////////
@@ -522,13 +526,13 @@ void testNaturalCubicSpline() {
     //0. Initialize the input vectors xK, xM and xD
     ///////////////////////////////////////////
         for (int i = 0; i < size; i++) {
-            xK(i) = xmin + ((double)i)*deltaX;
+            xK(i) = xmin + ((SimTK::Real)i)*deltaX;
             if(i<size-1){
-                xM(i) = xmin + deltaX/(double)2 + ((double)i)*deltaX;
+                xM(i) = xmin + deltaX/(SimTK::Real)2 + ((SimTK::Real)i)*deltaX;
             }
         }
         for(int i = 0; i < sizeD; i++)
-            xD(i) = xmin + deltaD*(double)i;
+            xD(i) = xmin + deltaD*(SimTK::Real)i;
 
     ///////////////////////////////////////////        
     //1.    Initialize the analytic function vector data to interpolate
@@ -609,7 +613,7 @@ void testNaturalCubicSpline() {
     //4. Run numerical assertions on each test
     //////////////////////////////////////
 
-        double tol = 0;
+        SimTK::Real tol = 0;
             
         for(int k=0;k<testResults.ncol();k++){
             for(int i=0;i<testResults.nrow();i++){                    
@@ -630,7 +634,11 @@ void testNaturalCubicSpline() {
                         cout << "testNCSpline: Invalid error type selected" << endl;
                 }
                 //cout << "Testing (i,k) " << i << " " << k << " tol " << tol << " \tval " << testResults(i,k) << endl;
+			#ifndef SimTK_REAL_IS_ADOUBLE
                 SimTK_TEST_EQ_TOL(testResults(i,k),0,tol);
+			#else
+				SimTK_TEST_EQ_TOL(testResults(i, k), 0, tol.value());
+			#endif
             }
         }
         // getchar();

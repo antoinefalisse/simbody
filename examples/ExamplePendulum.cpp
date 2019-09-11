@@ -30,6 +30,9 @@
 
 
 #include "Simbody.h"
+#include "SimTKcommon.h"
+#include <adolc.h>
+#include <adolc_sparse.h>
 
 using namespace SimTK;
 using std::cout; using std::endl;

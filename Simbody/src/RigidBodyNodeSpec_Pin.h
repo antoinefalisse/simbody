@@ -60,6 +60,7 @@ RBNodeTorsion(const MassProperties&   mProps_B,
     this->updateSlots(nextUSlot,nextUSqSlot,nextQSlot);
 }
 
+#ifndef SimTK_REAL_IS_ADOUBLE
 void setQToFitRotationImpl(const SBStateDigest& sbs, const Rotation& R_FM, 
                            Vector& q) const {
     // The only rotation our pin joint can handle is about z.
@@ -92,6 +93,7 @@ void setUToFitLinearVelocityImpl
     // is no way to create a linear velocity by rotating. So the only linear 
     // velocity we can represent is 0.
 }
+#endif
 
 enum {PoolSize=2}; // number of Reals
 enum {CosQ=0, SinQ=1};
@@ -106,8 +108,8 @@ void performQPrecalculations(const SBStateDigest& sbs,
                              Real* qErr,    int nQErr) const
 {
     assert(q && nq==1 && qCache && nQCache==PoolSize && nQErr==0);
-    qCache[CosQ] = std::cos(q[0]);
-    qCache[SinQ] = std::sin(q[0]);
+    qCache[CosQ] = cos(q[0]);
+    qCache[SinQ] = sin(q[0]);
 }
 
 // This is nearly free since we already calculated sin/cos.

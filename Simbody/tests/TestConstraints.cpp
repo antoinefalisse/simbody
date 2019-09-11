@@ -33,7 +33,9 @@ const int NUM_BODIES = 10;
 const Real BOND_LENGTH = 0.5;
 
 // Keep constraints satisfied to this tolerance during testing.
-static const Real ConstraintTol = 1e-10;
+//static const Real ConstraintTol = 1e-10;
+static const double ConstraintTol = 1e-10;
+
 
 // Compare two quantities that are expected to agree to constraint tolerance.
 #define CONSTRAINT_TEST(a,b) SimTK_TEST_EQ_TOL(a,b, ConstraintTol)
@@ -98,13 +100,12 @@ void createState(MultibodySystem& system, State& state, const Vector& qOverride=
 }
 
 void testBallConstraint() {
-    
     State state;
     MultibodySystem& system = createSystem();
     SimbodyMatterSubsystem& matter = system.updMatterSubsystem();
     MobilizedBody& first = matter.updMobilizedBody(MobilizedBodyIndex(1));
     MobilizedBody& last = matter.updMobilizedBody(MobilizedBodyIndex(NUM_BODIES));
-    Constraint::Ball constraint(first, last);
+	Constraint::Ball constraint(first, last);
     createState(system, state);
     Vec3 r1 = first.getBodyOriginLocation(state);
     Vec3 r2 = last.getBodyOriginLocation(state);
@@ -112,17 +113,23 @@ void testBallConstraint() {
     Vec3 v1 = first.getBodyOriginVelocity(state);
     Vec3 v2 = last.getBodyOriginVelocity(state);
     Vec3 dv = v1-v2;
+	std::cout << "start first.getBodyOriginAcceleration(state)" << std::endl;
     Vec3 a1 = first.getBodyOriginAcceleration(state);
+	std::cout << "end first.getBodyOriginAcceleration(state)" << std::endl;
     Vec3 a2 = last.getBodyOriginAcceleration(state);
     Vec3 da = a1-a2;
+	std::cout << "dt.norm() " << std::endl;
     CONSTRAINT_TEST(dr.norm(), 0.0);
+	std::cout << "getPositionErrors() " << std::endl;
     CONSTRAINT_TEST(dr, constraint.getPositionErrors(state));
     CONSTRAINT_TEST(dv.norm(), 0.0);
     CONSTRAINT_TEST(dv, constraint.getVelocityErrors(state));
     // Accelerations should be satisfied to machine tolerance times the
     // size of the problem.
     MACHINE_TEST(da.norm(), 0);
+	std::cout << "getAcc Errors" << std::endl;
     MACHINE_TEST(da, constraint.getAccelerationErrors(state));
+	std::cout << "end get Acc errors" << std::endl;
     delete &system;
 }
 
@@ -140,6 +147,8 @@ void testConstantAngleConstraint() {
     Vec3 perpDir = dir1%dir2;
     Vec3 v1 = first.getBodyAngularVelocity(state);
     Vec3 v2 = last.getBodyAngularVelocity(state);
+    std::cout << dot(dir1, dir2) << std::endl;
+    std::cout << cos(1.1) << std::endl;
     CONSTRAINT_TEST(dot(dir1, dir2), cos(1.1));
     CONSTRAINT_TEST(dot(dir1, dir2)-cos(1.1), constraint.getPositionError(state));
     CONSTRAINT_TEST(dot(v1-v2, perpDir), 0.0);
@@ -386,7 +395,9 @@ void testDisablingConstraints() {
     const int numQuaternionsInUse = matter.getNumQuaternionsInUse(state);
 
     // This is slow if we do it at very tight tolerance.
-    const Real LooserConstraintTol = 1e-6;
+    //const Real LooserConstraintTol = 1e-6;
+    const double LooserConstraintTol = 1e-6;
+
 
     RungeKuttaMersonIntegrator integ(system);
     integ.setAccuracy(10*LooserConstraintTol);
@@ -474,23 +485,23 @@ void testConstraintForces() {
                  mobilizerReactions[welded.getMobilizedBodyIndex()]);
 }
 
-// Test methods for multiplication by the various constraint matrices, and
-// for forming the whole matrices. The equations of motion are:
-//      M udot + ~G lambda + f_inertial = f_applied
-//                               G udot = b
-//                                 qdot = N * u
-//           [P]
-// where G = [V], and we are also interested in Pq = P*N^-1 which is the
-//           [A]
-// q-space Jacobian Pq = Dperr/Dq. Routines involving these matrices use the
-// constraint error routines; routines involving their transposes use the
-// constraint force routines -- that is, they use a completely different
-// algorithm so need separate tests.
-//
-// The code for working with G and ~G has flags allowing selection of P,V,A
-// submatrices or combinations; that needs testing too. Extracting the
-// right constraint-specific segments in the holonomic, nonholonomic, and
-// acceleration-only arrays is tricky.
+ //Test methods for multiplication by the various constraint matrices, and
+ //for forming the whole matrices. The equations of motion are:
+ //     M udot + ~G lambda + f_inertial = f_applied
+ //                              G udot = b
+ //                                qdot = N * u
+ //          [P]
+ //where G = [V], and we are also interested in Pq = P*N^-1 which is the
+ //          [A]
+ //q-space Jacobian Pq = Dperr/Dq. Routines involving these matrices use the
+ //constraint error routines; routines involving their transposes use the
+ //constraint force routines -- that is, they use a completely different
+ //algorithm so need separate tests.
+
+ //The code for working with G and ~G has flags allowing selection of P,V,A
+ //submatrices or combinations; that needs testing too. Extracting the
+ //right constraint-specific segments in the holonomic, nonholonomic, and
+ //acceleration-only arrays is tricky.
 void testConstraintMatrices() {
     // Create a chain of bodies 
     State state;
@@ -719,12 +730,15 @@ void testConstraintAccelerationErrors() {
                                                 outputZeros);
         matter.calcConstraintAccelerationErrors(state, Vector(),
                                                 outputEmpty);
-        SimTK_TEST_EQ_TOL(outputZeros, outputEmpty, SignificantReal);
+        //SimTK_TEST_EQ_TOL(outputZeros, outputEmpty, SignificantReal);
+        SimTK_TEST_EQ_TOL(outputZeros, outputEmpty, SignificantReal.value());
+
     }
 }
 
 int main() {
-    SimTK_START_TEST("TestConstraints");
+#ifndef SimTK_REAL_IS_ADOUBLE
+    SimTK_START_TEST("TestConstraints");    
         SimTK_SUBTEST(testBallConstraint);
         SimTK_SUBTEST(testConstantAngleConstraint);
         SimTK_SUBTEST(testConstantOrientationConstraint);
@@ -740,4 +754,7 @@ int main() {
         SimTK_SUBTEST(testConstraintAccelerationErrors);
         SimTK_SUBTEST(testDisablingConstraints);
     SimTK_END_TEST();
+#else
+    std::cout << "This test is not supported with ADOL-C" << std::endl;
+#endif    
 }

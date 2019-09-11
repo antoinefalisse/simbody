@@ -16,7 +16,7 @@
 # include "IpDebug.hpp"
 #endif
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   /** Template class for Smart Pointers.

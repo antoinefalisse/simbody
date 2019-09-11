@@ -141,7 +141,7 @@ public:
      * @param dynamicFriction the coefficient of dynamic friction (ud) for the body
      * @param viscousFriction the coefficient of viscous friction (uv) for the body
      */
-    void setBodyParameters
+	void setBodyParameters
        (ContactSurfaceIndex surfIndex, Real stiffness, Real dissipation, 
         Real staticFriction, Real dynamicFriction, Real viscousFriction);
     /**

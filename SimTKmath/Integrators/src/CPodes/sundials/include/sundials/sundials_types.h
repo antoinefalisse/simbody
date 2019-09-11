@@ -67,11 +67,19 @@ typedef float realtype;
 
 #elif defined(SUNDIALS_DOUBLE_PRECISION)
 
-typedef double realtype;
-# define RCONST(x) x
-# define BIG_REAL DBL_MAX
-# define SMALL_REAL DBL_MIN
-# define UNIT_ROUNDOFF DBL_EPSILON
+#ifndef SimTK_REAL_IS_ADOUBLE
+    typedef double realtype;
+    # define RCONST(x) x
+    # define BIG_REAL DBL_MAX
+    # define SMALL_REAL DBL_MIN
+    # define UNIT_ROUNDOFF DBL_EPSILON
+#else
+    typedef Recorder realtype;
+    # define RCONST(x) x
+    # define BIG_REAL DBL_MAX
+    # define SMALL_REAL DBL_MIN
+    # define UNIT_ROUNDOFF DBL_EPSILON
+#endif
 
 #elif defined(SUNDIALS_EXTENDED_PRECISION)
 

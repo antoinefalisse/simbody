@@ -371,9 +371,9 @@ public:
         // If tRoot is too close to either end point we'll assume bad behavior
         // and guess a value 10% of the interval away from the end.
 
-        const Real BufferZone = std::max(Real(0.1*h), minWindow/2);
-        tRoot = std::max(tRoot, tLow  + BufferZone);
-        tRoot = std::min(tRoot, tHigh - BufferZone);
+        const Real BufferZone = fmax(Real(0.1*h), minWindow/2);
+        tRoot = fmax(tRoot, tLow  + BufferZone);
+        tRoot = fmin(tRoot, tHigh - BufferZone);
 
         return tRoot;
     }
@@ -428,8 +428,8 @@ public:
                 // we'll report that as negative-to-positive.
                 transitionSeen = eventTriggerInfo[e].calcTransitionToReport(transitionSeen);
                 candidates.push_back(e);
-                narrowestWindow = std::max(
-                    std::min(narrowestWindow, 
+                narrowestWindow = fmax(
+                    fmin(narrowestWindow, 
                              accuracyInUse*timeScaleInUse*eventTriggerInfo[e].getRequiredLocalizationTimeWindow()),
                     minWindow);
 
@@ -648,7 +648,7 @@ protected:
         assert(w.size() == nv);
         vScale.resize(nv);
         for (int i=0; i<nv; ++i) {
-            const Real vi = std::abs(v[i]);
+            const Real vi = fabs(v[i]);
             const Real wi = w[i];
             vScale[i] = vi*wi > 1 ? 1/vi : wi;
         }

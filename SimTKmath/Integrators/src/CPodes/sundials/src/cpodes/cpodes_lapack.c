@@ -1493,4 +1493,3 @@ static void cplSCcomputeKD(CPodeMem cp_mem, N_Vector d)
 {
   /* RADU:: implement this ... */
 }
-

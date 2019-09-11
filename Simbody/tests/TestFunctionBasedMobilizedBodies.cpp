@@ -34,13 +34,13 @@ const Real TOL = 1e-6;
 
 template <class T>
 void assertEqual(T val1, T val2, Real tol = TOL) {
-    ASSERT(abs(val1-val2) < tol);
+    ASSERT(NTraits<Real>::abs(val1-val2) < tol);
 }
 
 template <int N>
 void assertEqual(Vec<N> val1, Vec<N> val2, Real tol = TOL) {
     for (int i = 0; i < N; ++i)
-        ASSERT(abs(val1[i]-val2[i]) < tol);
+        ASSERT(NTraits<Real>::abs(val1[i]-val2[i]) < tol);
 }
 
 template<>
@@ -118,7 +118,7 @@ void compareMobilizedBodies(const MobilizedBody& b1, const MobilizedBody& b2, bo
     
     Vector tempq(state.getNQ());
     Vector tempu(state.getNU());
-    /*
+    
     matter.multiplyByN(state, false, state.getU(), tempq);
     for (int i = 0; i < b1.getNumQ(state); ++i)
         assertEqual(b1.getOneFromQPartition(state, i, tempq), b2.getOneFromQPartition(state, i, tempq));
@@ -131,10 +131,11 @@ void compareMobilizedBodies(const MobilizedBody& b1, const MobilizedBody& b2, bo
     matter.multiplyByNInv(state, true, state.getU(), tempq);
     for (int i = 0; i < b1.getNumQ(state); ++i)
         assertEqual(b1.getOneFromQPartition(state, i, tempq), b2.getOneFromQPartition(state, i, tempq));
-    */
+    
     
     // Have them calculate q and u, and see if they agree.
     
+#ifndef SimTK_REAL_IS_ADOUBLE
     if (!eulerAngles) { // The optimizer does not work reliably for Euler angles, since it can hit a singularity
         Transform t = b1.getBodyTransform(state);
         b1.setQFromVector(state, Vector(b1.getNumQ(state), 0.0));
@@ -151,6 +152,7 @@ void compareMobilizedBodies(const MobilizedBody& b1, const MobilizedBody& b2, bo
         b2.setUToFitVelocity(state, v);
         assertEqual(b1.getUAsVector(state), b2.getUAsVector(state), 1e-2);
     }
+#endif
     
     // Simulate the system, and see if the two bodies remain identical.
     b2.setQFromVector(state, b1.getQAsVector(state));
@@ -749,8 +751,11 @@ void testFunctionBasedFree() {
     SpatialVec inputVelocity(Vec3(-0.962157,0.523767,1.94993),
                              Vec3(-1.15752,0.436991,-0.787116));
 
+#ifndef SimTK_REAL_IS_ADOUBLE
+
     b1.setUToFitVelocity(state, inputVelocity);
     fb1.setUToFitVelocity(state, inputVelocity);
+#endif
 
     system.realize(state, Stage::Acceleration);
 
@@ -1043,6 +1048,7 @@ void testMultipleArguments() {
 }
 
 int main() {
+#ifndef SimTK_REAL_IS_ADOUBLE
     try {
         cout << "FunctionBased MobilizedBodies vs. Built-in Types: " << endl;
       
@@ -1093,5 +1099,9 @@ int main() {
         return 1;
     }
     cout << "Done" << endl;
+    
+#else
+    std::cout << "This test is not supported with ADOL-C" << std::endl;
+#endif
     return 0;
 }

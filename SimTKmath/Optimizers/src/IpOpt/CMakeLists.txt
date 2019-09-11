@@ -1,6 +1,8 @@
+if (NOT ${RECORDER_TARGET})
+
 # add in local source and headers here
-file(GLOB src_files  ./*.cpp ./*.c)
-file(GLOB incl_files ./*.hpp ./*.h)
+file(GLOB src_files  *.cpp *.c)
+file(GLOB incl_files *.hpp *.h)
 
 foreach( src ${src_files} )
     list(APPEND SOURCE_GROUPS "Source Files\\IpOpt")
@@ -21,3 +23,5 @@ set(SOURCE_FILES ${SOURCE_FILES} PARENT_SCOPE)
 
 list(APPEND SOURCE_INCLUDE_FILES ${incl_files})
 set(SOURCE_INCLUDE_FILES ${SOURCE_INCLUDE_FILES} PARENT_SCOPE)
+
+endif()

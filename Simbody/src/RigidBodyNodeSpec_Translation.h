@@ -61,6 +61,7 @@ RBNodeTranslate(const MassProperties& mProps_B,
 }
 
     // Implementations of virtual methods.
+#ifndef SimTK_REAL_IS_ADOUBLE
 
 void setQToFitRotationImpl(const SBStateDigest& sbs, const Rotation& R_FM, 
                            Vector& q) const {
@@ -82,6 +83,7 @@ void setUToFitLinearVelocityImpl
     // linear velocity is in a Cartesian joint's sweet spot
     this->toU(u) = v_FM;
 }
+#endif
 
 // A translation joint doesn't need to cache any q calculations.
 int calcQPoolSize(const SBModelVars&) const

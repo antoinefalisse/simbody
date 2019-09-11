@@ -45,7 +45,7 @@ bool testFitting
     Real minError, Real maxError, Real endDistance) 
 {    
     // Find the best fit.
-    
+#ifndef SimTK_REAL_IS_ADOUBLE
     Real reportedError = ObservedPointFitter::findBestFit(mbs, state, bodyIxs, stations, targetLocations, TOL);
     cout << "[min,max]=" << minError << "," << maxError << " actual=" << reportedError << endl;
     bool result = (reportedError <= maxError && reportedError >= minError);
@@ -62,18 +62,26 @@ bool testFitting
         for (int j = 0; j < (int) stations[i].size(); ++j)
             error += (targetLocations[i][j]-matter.getMobilizedBody(id).getBodyTransform(state)*stations[i][j]).normSqr();
     }
-    error = std::sqrt(error/numStations);
+    //error = std::sqrt(error/numStations);
+    error = NTraits<Real>::sqrt(error / numStations);
+
     cout << "calc wrms=" << error << endl;
-    ASSERT(std::abs(1.0-error/reportedError) < 0.0001); // should match to machine precision
-    
+    //ASSERT(std::abs(1.0-error/reportedError) < 0.0001); // should match to machine precision
+    ASSERT(NTraits<Real>::abs(1.0 - error / reportedError) < 0.0001); // should match to machine precision
+
     if (endDistance >= 0) {
         // Verify that the ends are the correct distance apart.
         Real distance = (matter.getMobilizedBody(bodyIxs[0]).getBodyOriginLocation(state)-matter.getMobilizedBody(bodyIxs[bodyIxs.size()-1]).getBodyOriginLocation(state)).norm();
         cout << "required dist=" << endDistance << ", actual=" << distance << endl;
-        ASSERT(std::abs(1.0-endDistance/distance) < TOL);
+        //ASSERT(std::abs(1.0-endDistance/distance) < TOL);
+        ASSERT(NTraits<Real>::abs(1.0 - endDistance / distance) < TOL);
+
     }
 
     return result;
+#else
+    return 0;
+#endif
 }
 
 
@@ -97,7 +105,11 @@ static void testObservedPointFitter(bool useConstraint) {
         for (int i = 0; i < NUM_BODIES; ++i) {
             bool mainChain = random.getValue() < 0.5;
             MobilizedBody* parent = (mainChain ? lastMainChainBody : lastBody);
-            int type = (int) (random.getValue()*4);
+            #ifndef SimTK_REAL_IS_ADOUBLE
+                int type = (int) (random.getValue()*4);
+            #else
+                int type = (int)(random.getValue() * 4).value();
+            #endif
             MobilizedBody* nextBody;
             if (type == 0) {
                 MobilizedBody::Cylinder cylinder(*parent, Transform(Vec3(0, 0, 0)), body, Transform(Vec3(0, BOND_LENGTH, 0)));
@@ -146,7 +158,11 @@ static void testObservedPointFitter(bool useConstraint) {
         for (int i = 0; i < NUM_BODIES; ++i) {
             MobilizedBodyIndex id = bodies[i]->getMobilizedBodyIndex();
             bodyIxs.push_back(id);
-            int numStations = 1 + (int) (random.getValue()*4);
+            #ifndef SimTK_REAL_IS_ADOUBLE
+                int numStations = 1 + (int) (random.getValue()*4);
+            #else
+                int numStations = 1 + (int)(random.getValue() * 4).value();
+            #endif
             for (int j = 0; j < numStations; ++j) {
                 Vec3 pos(2.0*random.getValue()-1.0, 2.0*random.getValue()-1.0, 2.0*random.getValue()-1.0);
                 stations[i].push_back(pos);
@@ -203,8 +219,12 @@ static void testConstrained() {
 }
 
 int main() {
+#ifndef SimTK_REAL_IS_ADOUBLE
     SimTK_START_TEST("TestObservedPointFitter");
         SimTK_SUBTEST(testUnconstrained);
         SimTK_SUBTEST(testConstrained);
     SimTK_END_TEST();
+#else
+    std::cout << "This test is not supported with ADOL-C" << std::endl;
+#endif
 }

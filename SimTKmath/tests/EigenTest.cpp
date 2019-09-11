@@ -122,11 +122,17 @@ using std::printf;
 using std::cout;
 using std::endl;
 
-Real A[16] = {  0.35,  0.45,  -0.14,  -0.17,
-                0.09,  0.07,  -0.54,   0.35,
-               -0.44, -0.33,  -0.03,   0.17,
-                0.25, -0.32,  -0.13,   0.11 };
-
+#ifndef SimTK_REAL_IS_ADOUBLE
+	Real A[16] = {  0.35,  0.45,  -0.14,  -0.17,
+					0.09,  0.07,  -0.54,   0.35,
+				   -0.44, -0.33,  -0.03,   0.17,
+					0.25, -0.32,  -0.13,   0.11 };
+#else
+	double A[16] = { 0.35,  0.45,  -0.14,  -0.17,
+	0.09,  0.07,  -0.54,   0.35,
+	-0.44, -0.33,  -0.03,   0.17,
+	0.25, -0.32,  -0.13,   0.11 };
+#endif
 typedef std::complex<double> cd;
 cd expEigen[4] = { cd(0.79948,   0.0), 
                                       cd(-0.099412,  0.40079), 
@@ -163,8 +169,11 @@ int main () {
     double errnorm;
     try { 
            // Default precision (Real, normally double) test.
-
-        Matrix a(4,4, A);
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			Matrix a(4,4, A);
+		#else
+			Matrix_<double> a(4, 4, A);
+		#endif
         Vector_<std::complex<double> > expectedValues(4);
         for(int i=0;i<4;i++) expectedValues[i] = expEigen[i];
         Matrix_<std::complex<double> > expectedVectors(4,4);
@@ -173,7 +182,7 @@ int main () {
         Vector_<std::complex<double> > expectVec(4);
         Vector_<std::complex<double> > computeVec(4);
         Matrix_<std::complex<double> > vectors; // should get sized automatically to 4x4 by getAllEigenValuesAndVectors()
-
+		
         Eigen  es(a);   // setup the eigen system 
 
         es.getAllEigenValuesAndVectors( values, vectors );  // solve for the eigenvalues and eigenvectors of the system 
@@ -222,10 +231,16 @@ int main () {
             cout << computeVecf << "  errnorm=" << errnorm << endl;
             ASSERT( errnorm < 0.0001 );
         }
-        Real Z[4] = { 0.0,   0.0,
-                      0.0,   0.0  };
-
-        Matrix z(2,2, Z);
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			Real Z[4] = { 0.0,   0.0,
+						  0.0,   0.0  };
+			Matrix z(2, 2, Z);
+		#else	
+			double Z[4] = { 0.0,   0.0,
+				0.0,   0.0 };
+			Matrix_<double> z(2, 2, Z);
+		#endif
+        
         Eigen zeigen(z);
         zeigen.getAllEigenValuesAndVectors( values, vectors); 
         cout << "Matrix of all zeros" << endl << "eigenvalues: " << values << endl;

@@ -23,6 +23,9 @@
 
 #include "SimTKmath.h"
 
+#ifndef SimTK_REAL_IS_ADOUBLE
+
+
 #include <iostream>
 using std::cout;
 using std::endl;
@@ -152,3 +155,9 @@ int main() {
 
 
 }
+
+#else
+void main() {
+std:cout << "Optimizer not supported with adouble" << std::endl;
+}
+#endif

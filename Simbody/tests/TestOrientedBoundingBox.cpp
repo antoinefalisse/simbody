@@ -32,13 +32,13 @@ const Real TOL = 1e-10;
 
 template <class T>
 void assertEqual(T val1, T val2) {
-    ASSERT(abs(val1-val2) < TOL);
+    ASSERT(fabs(val1-val2) < TOL);
 }
 
 template <int N>
 void assertEqual(Vec<N> val1, Vec<N> val2) {
     for (int i = 0; i < N; ++i)
-        ASSERT(abs(val1[i]-val2[i]) < TOL);
+        ASSERT(fabs(val1[i]-val2[i]) < TOL);
 }
 
 void testContainsPoint() {
@@ -74,7 +74,7 @@ void verifyCorners(Vec3 expected[8], Vec3 found[8]) {
     for (int i = 0; i < 8; i++) {
         bool match = false;
         for (int j = 0; j < 8 && !match; j++) {
-            if (abs(expected[i][0]-found[j][0]) < TOL && abs(expected[i][1]-found[j][1]) < TOL && abs(expected[i][2]-found[j][2]) < TOL) {
+            if (fabs(expected[i][0]-found[j][0]) < TOL && fabs(expected[i][1]-found[j][1]) < TOL && fabs(expected[i][2]-found[j][2]) < TOL) {
                 match = true;
                 break;
             }
@@ -194,7 +194,7 @@ void testCreateFromPoints() {
         
         // Create a set of points inside it.
         
-        int numPoints = (int)(50*random.getValue()+1);
+        int numPoints = (int)(50*random.getValue()+1).value();
         Vector_<Vec3> points(numPoints);
         for (int i = 0; i < numPoints; i++)
             points[i] = transform*Vec3(size[0]*random.getValue(), size[1]*random.getValue(), size[2]*random.getValue());
@@ -204,7 +204,6 @@ void testCreateFromPoints() {
         OrientedBoundingBox box(points);
         
         // Verify that it contains all the points.
-        
         for (int i = 0; i < numPoints; i++) {
             ASSERT(box.containsPoint(points[i]));
         }

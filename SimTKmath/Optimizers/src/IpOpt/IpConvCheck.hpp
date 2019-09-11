@@ -11,7 +11,7 @@
 
 #include "IpAlgStrategy.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   /** Base class for checking the algorithm

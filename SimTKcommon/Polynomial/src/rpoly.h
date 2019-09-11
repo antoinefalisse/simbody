@@ -31,29 +31,54 @@
  */
 
 namespace SimTK {
-
-template <class T>
-class RPoly {
-public:
-    int findRoots(T *op, int degree, T *zeror, T *zeroi);
-private:
-    void quad(T a,T b1,T c,T *sr,T *si,
-            T *lr,T *li);
-    void fxshfr(int l2, int *nz);
-    void quadit(T *uu,T *vv,int *nz);
-    void realit(T *sss, int *nz, int *iflag);
-    void calcsc(int *type);
-    void nextk(int *type);
-    void newest(int type,T *uu,T *vv);
-    void quadsd(int n,T *u,T *v,T *p,T *q,
-            T *a,T *b);
-    T *p,*qp,*k,*qk,*svk;
-    T sr,si,u,v,a,b,c,d,a1,a2;
-    T a3,a6,a7,e,f,g,h,szr,szi,lzr,lzi;
-    T eta,are,mre;
-    int n,nn,nmi,zerok;
-};
-
-} // namespace SimTK
-
+#ifndef SimTK_REAL_IS_ADOUBLE
+	template <class T>
+#else 
+	template <class Recorder>
+#endif
+	//template <class T>
+	class RPoly {
+	public:
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			int findRoots(T *op, int degree, T *zeror, T *zeroi);
+		#else	
+			int findRoots(Recorder *op, int degree, Recorder *zeror, Recorder *zeroi);
+		#endif	
+	private:
+#ifndef SimTK_REAL_IS_ADOUBLE
+		void quad(T a, T b1, T c, T *sr, T *si, T *lr, T *li);
+		void fxshfr(int l2, int *nz);
+		void quadit(T *uu, T *vv, int *nz);
+		void realit(T *sss, int *nz, int *iflag);
+		void calcsc(int *type);
+		void nextk(int *type);
+		void newest(int type, T *uu, T *vv);
+		void quadsd(int n, T *u, T *v, T *p, T *q,
+			T *a, T *b);
+		T *p, *qp, *k, *qk, *svk;
+		T sr, si, u, v, a, b, c, d, a1, a2;
+		T a3, a6, a7, e, f, g, h, szr, szi, lzr, lzi;
+		T eta, are, mre;
+#else
+		Recorder *p, *qp, *k, *qk, *svk;
+		Recorder sr, si, u, v, a, b, c, d, a1, a2;
+		Recorder a3, a6, a7, e, f, g, h, szr, szi, lzr, lzi;
+		Recorder eta, are, mre;
+		void quad(Recorder a, Recorder b1, Recorder c, Recorder *sr, Recorder *si, Recorder *lr, Recorder *li);
+		void fxshfr(int l2, int *nz);
+		void quadit(Recorder *uu, Recorder *vv, int *nz);
+		void realit(Recorder *sss, int *nz, int *iflag);
+		void calcsc(int *type);
+		void nextk(int *type);
+		void newest(int type, Recorder *uu, Recorder *vv);
+		void quadsd(int n, Recorder *u, Recorder*v, Recorder *p, Recorder *q,
+			Recorder *a, Recorder *b);
+		//Recorder *p, *qp, *k, *qk, *svk;
+		//Recorder sr, si, u, v, a, b, c, d, a1, a2;
+		//Recorder a3, a6, a7, e, f, g, h, szr, szi, lzr, lzi;
+		//Recorder eta, are, mre;
+#endif
+		int n, nn, nmi, zerok;
+	};
+}
 #endif // SimTK_SimTKCOMMON_RPOLY_H_

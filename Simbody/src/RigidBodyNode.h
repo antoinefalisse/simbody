@@ -393,17 +393,20 @@ virtual void setMobilizerDefaultAccelerationValues
 // for reversed mobilizers, so that the mobilizers themselves do not need to
 // know they have been reversed. The corresponding pure virtuals are protected.
 
-void setQToFitTransform
-   (const SBStateDigest& sbs, const Transform& X_FM, Vector& q) const
-{   setQToFitTransformImpl(sbs, isReversed() ? Transform(~X_FM) : X_FM, q); }
+#ifndef SimTK_REAL_IS_ADOUBLE
+    void setQToFitTransform
+       (const SBStateDigest& sbs, const Transform& X_FM, Vector& q) const
+    {   setQToFitTransformImpl(sbs, isReversed() ? Transform(~X_FM) : X_FM, q); }
 
-void setQToFitRotation
-   (const SBStateDigest& sbs, const Rotation& R_FM, Vector& q) const
-{   setQToFitRotationImpl(sbs, isReversed() ? Rotation(~R_FM) : R_FM, q); }
+    void setQToFitRotation
+       (const SBStateDigest& sbs, const Rotation& R_FM, Vector& q) const
+    {   setQToFitRotationImpl(sbs, isReversed() ? Rotation(~R_FM) : R_FM, q); }
+#endif
 
 // Reversing a translation requires that we obtain the current orientation,
 // which we'll do assuming there is something meaningful in the rotational
 // part of the q's.
+#ifndef SimTK_REAL_IS_ADOUBLE
 void setQToFitTranslation
    (const SBStateDigest& sbs, const Vec3& p_FM, Vector& q) const
 {   
@@ -440,7 +443,7 @@ void setUToFitLinearVelocity
     const SpatialVec V_FM( Vec3(0), v_FM );
     setUToFitLinearVelocityImpl(sbs, q, reverseSpatialVelocity(~X_MF,V_FM)[1], u);
 }
-
+#endif
 
     // VIRTUAL METHODS FOR SINGLE-NODE OPERATOR CONTRIBUTIONS //
 
@@ -1023,6 +1026,7 @@ RigidBodyNode(const MassProperties& mProps_B,
 // *defined*, not as it is after reversal (hence F0 instead of F and
 // M0 instead of M). The q's and u's have identical meanings for both
 // forward and reverse mobilizers.
+#ifndef SimTK_REAL_IS_ADOUBLE
 virtual void setQToFitTransformImpl
    (const SBStateDigest&, const Transform& X_F0M0, Vector& q) const = 0;
 virtual void setQToFitRotationImpl
@@ -1036,6 +1040,7 @@ virtual void setUToFitAngularVelocityImpl
    (const SBStateDigest&, const Vector& q, const Vec3& w_F0M0, Vector& u)       const = 0;
 virtual void setUToFitLinearVelocityImpl
    (const SBStateDigest&, const Vector& q, const Vec3& v_F0M0, Vector& u) const = 0;
+#endif
 
 typedef Array_<RigidBodyNode*> RigidBodyNodeList;
 

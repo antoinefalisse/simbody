@@ -256,4 +256,3 @@ void bandAddI(realtype **a, int n, int smu)
   for(j=0; j < n; j++)
     a[j][smu] += ONE;
 }
-

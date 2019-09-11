@@ -16,7 +16,7 @@
 #include "IpStdCInterface.h"
 #include "IpSmartPtr.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
   /** Declare excpetion that is thrown when invalid NLP data
    *  is provided */

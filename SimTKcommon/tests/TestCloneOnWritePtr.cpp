@@ -411,10 +411,10 @@ void testResetOnCopy() {
     ResetOnCopy<int> rint(3);
     SimTK_TEST(rint == 3);
 
-    ResetOnCopy<const double*> dstar;
+    ResetOnCopy<const SimTK::Real*> dstar;
     SimTK_TEST(dstar == nullptr);
 
-    ResetOnCopy<double> rdub;
+    ResetOnCopy<SimTK::Real> rdub;
     SimTK_TEST(rdub == 0.);
 
     // C++ library move assignment methods like those for std::string and 
@@ -459,26 +459,26 @@ void testResetOnCopy() {
     bigM = bigM;
     SimTK_TEST(bigM.nrow()==0 && bigM.ncol()==0);
 
-    ResetOnCopy<unique_ptr<double>> updub;
+    ResetOnCopy<unique_ptr<SimTK::Real>> updub;
     SimTK_TEST(updub.get() == nullptr);
 
-    updub.reset(new double(1.25));
+    updub.reset(new SimTK::Real(1.25));
     SimTK_TEST(updub && *updub == 1.25);
 
     // This is a move assignment since the RHS is a temporary rvalue. Copy
     // assignment wouldn't compile;
-    double* dp = new double(3.125); 
-    updub = unique_ptr<double>(dp); // should transfer the heap object
+    SimTK::Real* dp = new SimTK::Real(3.125); 
+    updub = unique_ptr<SimTK::Real>(dp); // should transfer the heap object
     SimTK_TEST(updub.get()==dp && *updub == 3.125);
 
     // This is copy construction so should default initialize and leave source
     // untouched.
-    ResetOnCopy<unique_ptr<double>> updub2(updub);
+    ResetOnCopy<unique_ptr<SimTK::Real>> updub2(updub);
     SimTK_TEST(!updub2 && updub.get()==dp && *updub == 3.125);
 
     // Move construction should move the heap object and leave the source
     // empty.
-    ResetOnCopy<unique_ptr<double>> updub3(std::move(updub));
+    ResetOnCopy<unique_ptr<SimTK::Real>> updub3(std::move(updub));
     SimTK_TEST(updub3.get()==dp && *updub3 == 3.125);
     SimTK_TEST(!updub);
 
@@ -499,7 +499,7 @@ void testResetOnCopy() {
 
     ResetOnCopy<int> arr[3];
     SimTK_TEST(arr[0]==0 && arr[1]==0 && arr[2]==0);
-    ResetOnCopy<double> arr2[3] {9.25,8,7};
+    ResetOnCopy<SimTK::Real> arr2[3] {9.25,8,7};
     SimTK_TEST(arr2[0]==9.25 && arr2[1]==8 && arr2[2]==7);
 }
 
@@ -584,12 +584,12 @@ void testReinitOnCopy() {
     ReinitOnCopy<Color> myColor2(myColor); // copy construction; reinit
     SimTK_TEST(myColor2 == Blue);
 
-    ReinitOnCopy<double> d{123.};
+    ReinitOnCopy<SimTK::Real> d{123.};
     SimTK_TEST(d == 123.);
     d = 3.125;
     SimTK_TEST(d == 3.125);
 
-    ReinitOnCopy<double> dd(d); // copy construction; reinit
+    ReinitOnCopy<SimTK::Real> dd(d); // copy construction; reinit
     SimTK_TEST(dd == 123.);
 
     // Test with a matrix.

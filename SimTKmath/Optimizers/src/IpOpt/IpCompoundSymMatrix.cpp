@@ -29,7 +29,7 @@
 
 
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   CompoundSymMatrix::CompoundSymMatrix(const CompoundSymMatrixSpace* owner_space)

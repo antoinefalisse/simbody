@@ -96,7 +96,7 @@ findNearestPoint(const Vec3& Q, bool& inside, UnitVec3& normal) const {
     Vec3 Qproj = Q - Zdir*(~Q*Zdir);
     Real normQproj = Qproj.norm();
 
-    if (std::abs(normQproj) < SimTK::Eps) {
+    if (fabs(normQproj) < SimTK::Eps) {
         // Q is along z-axis, therefore there is a locus of closest points,
         // we arbitrarily choose the one in the x-z plane
         P = Vec3(torusRadius,0,0);
@@ -144,10 +144,10 @@ void ContactGeometry::Torus::Impl::createPolygonalMesh(PolygonalMesh& mesh) cons
     // add vertices 
     for (int i = 0; i < numSlices; ++i) {
       Real u = Real((i*2*SimTK_PI)/numSlices);
-      UnitVec3 e1(std::sin(u), std::cos(u), 0); // torus circle aligned with z-axis (z-axis through hole)
+      UnitVec3 e1(NTraits<Real>::sin(u), NTraits<Real>::cos(u), 0); // torus circle aligned with z-axis (z-axis through hole)
       for (int j = 0; j < numSides; ++j) {
         Real v = Real((j*2*SimTK_PI)/numSides);
-        Vec3 vtx = (torusRadius + tubeRadius*std::cos(v))*e1 + tubeRadius*std::sin(v)*Vec3(0,0,1); // use ZAXIS? 
+        Vec3 vtx = (torusRadius + tubeRadius*NTraits<Real>::cos(v))*e1 + tubeRadius*NTraits<Real>::sin(v)*Vec3(0,0,1); // use ZAXIS? 
         mesh.addVertex(vtx);  
       }
     }
@@ -183,7 +183,7 @@ calcSupportPoint(const UnitVec3& direction) const {
 
 Real TorusImplicitFunction::
 calcValue(const Vector& x) const {
-    return 1-(square(ownerp->getTorusRadius()-std::sqrt(x[0]*x[0]+x[1]*x[1]))+x[2]*x[2])/
+    return 1-(square(ownerp->getTorusRadius()- NTraits<Real>::sqrt(x[0]*x[0]+x[1]*x[1]))+x[2]*x[2])/
             square(ownerp->getTubeRadius());
 }
 
@@ -192,7 +192,7 @@ calcDerivative(const Array_<int>& derivComponents, const Vector& x) const {
     // first derivatives
     if (derivComponents.size() == 1) {
         if (derivComponents[0]<2) {
-            Real sqrt_xy = std::sqrt(x[0]*x[0] + x[1]*x[1]);
+            Real sqrt_xy = NTraits<Real>::sqrt(x[0]*x[0] + x[1]*x[1]);
             return 2*x[derivComponents[0]]*(ownerp->getTorusRadius() - sqrt_xy)/
                     (square(ownerp->getTubeRadius())*sqrt_xy);
         }
@@ -206,7 +206,7 @@ calcDerivative(const Array_<int>& derivComponents, const Vector& x) const {
             if (derivComponents[1] < 2) {
                 Real tubeRadiusSq = square(ownerp->getTubeRadius());
                 Real xy = x[0]*x[0] + x[1]*x[1];
-                Real sqrt_xy = std::sqrt(xy);
+                Real sqrt_xy = NTraits<Real>::sqrt(xy);
                 Real den = tubeRadiusSq*xy*sqrt_xy;
                 if (derivComponents[0]==derivComponents[1]) { // fxx or fyy
                     int idx = derivComponents[1]==0; // if 0 then idx=1, if 1 then idx=0

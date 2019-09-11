@@ -130,6 +130,7 @@ void setQToFitRotationImpl(const SBStateDigest& sbs, const Rotation& R_FM,
     this->toQ(q)[1] = signZe * (angles[1] - ze0);
 }
 
+#ifndef SimTK_REAL_IS_ADOUBLE
 void setQToFitTranslationImpl(const SBStateDigest& sbs, const Vec3& p_FM, 
                               Vector& q) const {
     // We're not going to attempt any rotations to fit the translation. We'll 
@@ -139,6 +140,7 @@ void setQToFitTranslationImpl(const SBStateDigest& sbs, const Vec3& p_FM,
     // note: rows of R_FM are columns of R_MF.
     this->toQ(q)[2] = signT * dot(p_FM, R_FM[axisT]); 
 }
+#endif
 
 // We can only express angular velocity that can be produced with our 
 // generalized speeds which are Fz(=Mz) and My rotation rates. So we'll take 
@@ -190,8 +192,10 @@ void performQPrecalculations(const SBStateDigest& sbs,
                              Real* qErr,    int nQErr) const
 {
     assert(q && nq==3 && qCache && nQCache==PoolSize && nQErr==0);
-    Vec2::updAs(&qCache[CosQ]) = Vec2(std::cos(q[0]),std::cos(q[1]));
-    Vec2::updAs(&qCache[SinQ]) = Vec2(std::sin(q[0]),std::sin(q[1]));
+    //Vec2::updAs(&qCache[CosQ]) = Vec2(NTraits<Real>::cos(q[0]), NTraits<Real>::cos(q[1]));
+    //Vec2::updAs(&qCache[SinQ]) = Vec2(NTraits<Real>::sin(q[0]), NTraits<Real>::sin(q[1]));
+    Vec2::updAs(&qCache[CosQ]) = Vec2(cos(q[0]), cos(q[1]));
+    Vec2::updAs(&qCache[SinQ]) = Vec2(sin(q[0]), sin(q[1]));
 }
 
 // TODO: should be using sin/cos cache but isn't.

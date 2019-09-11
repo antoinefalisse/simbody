@@ -71,7 +71,7 @@ bool ContactGeometry::HalfSpace::Impl::intersectsRay
    (const Vec3& origin, const UnitVec3& direction, 
     Real& distance, UnitVec3& normal) const 
 {
-    if (std::abs(direction[0]) < SignificantReal)
+    if (fabs(direction[0]) < SignificantReal)
         return false; // ray is parallel to halfspace surface
 
     const Real t = origin[0]/direction[0];

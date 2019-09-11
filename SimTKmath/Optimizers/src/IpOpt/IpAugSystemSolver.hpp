@@ -13,7 +13,7 @@
 #include "IpSymLinearSolver.hpp"
 #include "IpAlgStrategy.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   /** Base class for Solver for the augmented system.  This is the

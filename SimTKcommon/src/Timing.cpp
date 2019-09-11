@@ -32,6 +32,8 @@
 #include "SimTKcommon/internal/common.h"
 #include "SimTKcommon/internal/Timing.h"
 
+#include "pthread.h" // included in SimTK_SDK/include
+
 #include <string>
 #include <cstring>
 #include <cctype>

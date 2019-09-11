@@ -55,6 +55,7 @@ private:
             cmaes_t& evo, double*const* pop, double* funvals,
             ParallelExecutor* executor);
 
+#ifndef SimTK_REAL_IS_ADOUBLE
     class Task : public SimTK::ParallelExecutor::Task {
     public:
         Task(CMAESOptimizer& rep, int n, double*const* pop, double* funvals)
@@ -67,6 +68,7 @@ private:
         double*const* pop;
         double* funvals;
     };
+#endif
 
 };
 

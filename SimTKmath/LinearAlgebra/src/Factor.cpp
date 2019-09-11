@@ -324,7 +324,9 @@ template SimTK_SIMMATH_EXPORT FactorLU::FactorLU( const Matrix_<negator< std::co
 template SimTK_SIMMATH_EXPORT FactorLU::FactorLU( const Matrix_<negator< std::complex<double> > >& m );
 template SimTK_SIMMATH_EXPORT FactorLU::FactorLU( const Matrix_<negator< conjugate<float> > >& m );
 template SimTK_SIMMATH_EXPORT FactorLU::FactorLU( const Matrix_<negator< conjugate<double> > >& m );
-
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template SimTK_SIMMATH_EXPORT FactorLU::FactorLU(const Matrix_<Recorder>& m);
+#endif
 template SimTK_SIMMATH_EXPORT void FactorLU::factor( const Matrix_<double>& m );
 template SimTK_SIMMATH_EXPORT void FactorLU::factor( const Matrix_<float>& m );
 template SimTK_SIMMATH_EXPORT void FactorLU::factor( const Matrix_<std::complex<float> >& m );
@@ -337,6 +339,9 @@ template SimTK_SIMMATH_EXPORT void FactorLU::factor( const Matrix_<negator< std:
 template SimTK_SIMMATH_EXPORT void FactorLU::factor( const Matrix_<negator< std::complex<double> > >& m );
 template SimTK_SIMMATH_EXPORT void FactorLU::factor( const Matrix_<negator< conjugate<float> > >& m );
 template SimTK_SIMMATH_EXPORT void FactorLU::factor( const Matrix_<negator< conjugate<double> > >& m );
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template SimTK_SIMMATH_EXPORT void FactorLU::factor(const Matrix_<Recorder>& m);
+#endif
 
 template class FactorLURep<double>;
 template FactorLURep<double>::FactorLURep( const Matrix_<double>& m);
@@ -370,6 +375,14 @@ template void FactorLURep<std::complex<float> >::factor( const Matrix_<negator<s
 template void FactorLURep<std::complex<float> >::factor( const Matrix_<conjugate<float> >& m);
 template void FactorLURep<std::complex<float> >::factor( const Matrix_<negator<conjugate<float> > >& m);
 
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template class FactorLURep<Recorder>;
+    template FactorLURep<Recorder>::FactorLURep(const Matrix_<Recorder>& m);
+    template FactorLURep<Recorder>::FactorLURep(const Matrix_<negator<double> >& m);
+    template void FactorLURep<Recorder>::factor(const Matrix_<Recorder>& m);
+    template void FactorLURep<Recorder>::factor(const Matrix_<negator<Recorder> >& m);
+#endif
+
 template SimTK_SIMMATH_EXPORT void FactorLU::getL<float>(Matrix_<float>&) const;
 template SimTK_SIMMATH_EXPORT void FactorLU::getL<double>(Matrix_<double>&) const;
 template SimTK_SIMMATH_EXPORT void FactorLU::getL<std::complex<float> >(Matrix_<std::complex<float> >&) const;
@@ -394,6 +407,12 @@ template SimTK_SIMMATH_EXPORT void FactorLU::inverse<float>(Matrix_<float>&) con
 template SimTK_SIMMATH_EXPORT void FactorLU::inverse<double>(Matrix_<double>&) const;
 template SimTK_SIMMATH_EXPORT void FactorLU::inverse<std::complex<float> >(Matrix_<std::complex<float> >&) const;
 template SimTK_SIMMATH_EXPORT void FactorLU::inverse<std::complex<double> >(Matrix_<std::complex<double> >&) const;
-
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template SimTK_SIMMATH_EXPORT void FactorLU::getL<Recorder>(Matrix_<Recorder>&) const;
+    template SimTK_SIMMATH_EXPORT void FactorLU::getU<Recorder>(Matrix_<Recorder>&) const;
+    template SimTK_SIMMATH_EXPORT void FactorLU::solve<Recorder>(const Vector_<Recorder>&, Vector_<Recorder>&) const;
+    template SimTK_SIMMATH_EXPORT void FactorLU::solve<Recorder>(const Matrix_<Recorder>&, Matrix_<Recorder>&) const;
+    template SimTK_SIMMATH_EXPORT void FactorLU::inverse<Recorder>(Matrix_<Recorder>&) const;
+#endif
 
 } // namespace SimTK

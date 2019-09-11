@@ -9,7 +9,7 @@
 #include "IpExpansionMatrix.hpp"
 #include "IpDenseVector.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
 #ifdef IP_DEBUG

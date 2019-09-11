@@ -141,7 +141,7 @@ projectIfNeeded(Real consTol, Real t, Vec<N>& y) const {
     int piters=0; 
     while (true) {
         perr = geom.calcSurfaceValue(p);
-        ptolAchieved = std::abs(perr); 
+        ptolAchieved = fabs(perr); 
         if (ptolAchieved <= tryTol || piters==MaxIter)
             break;
 
@@ -327,7 +327,7 @@ static Real wrms(const Vector& y, const Vector& w) {
     Real sumsq = 0;
     for (int i=0; i<y.size(); ++i)
         sumsq += square(y[i]*w[i]);
-    return std::sqrt(sumsq/y.size());
+    return sqrt(sumsq/y.size());
 }
 
 /*
@@ -367,7 +367,7 @@ void ParticleConSurfaceSystemGuts::projectQImpl(State& s, Vector& qerrest,
         dp = ~P/(P*~P)*ep;
 //        dp = (g/(~g*g))*ep;
 
-        qchg = std::sqrt(dp.normSqr()/3); // rms norm
+        qchg = NTraits<Real>::sqrt(dp.normSqr()/3); // rms norm
 
         p -= dp; // updates the state
 
@@ -383,7 +383,7 @@ void ParticleConSurfaceSystemGuts::projectQImpl(State& s, Vector& qerrest,
             return;
         }
 
-    } while (std::abs(ep) > consAccuracy && qchg >= 0.01*consAccuracy);
+    } while (fabs(ep) > consAccuracy && qchg >= 0.01*consAccuracy);
 
 /*
     // Now do error estimates.

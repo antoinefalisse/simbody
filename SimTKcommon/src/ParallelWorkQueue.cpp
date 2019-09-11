@@ -6,9 +6,9 @@
  * Biological Structures at Stanford, funded under the NIH Roadmap for        *
  * Medical Research, grant U54 GM072970. See https://simtk.org/home/simbody.  *
  *                                                                            *
- * Portions copyright (c) 2010-17 Stanford University and the Authors.        *
+ * Portions copyright (c) 2010-12 Stanford University and the Authors.        *
  * Authors: Peter Eastman                                                     *
- * Contributors: Christopher Dembia                                           *
+ * Contributors:                                                              *
  *                                                                            *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may    *
  * not use this file except in compliance with the License. You may obtain a  *
@@ -23,35 +23,35 @@
 
 #include "ParallelWorkQueueImpl.h"
 #include "SimTKcommon/internal/ParallelExecutor.h"
+#include <pthread.h>
 #include <utility>
-#include <mutex>
-#include <condition_variable>
 
 using std::queue;
 
 namespace SimTK {
 
-static void threadBody(ParallelWorkQueueImpl& owner) {
+static void* threadBody(void* args) {
+    ParallelWorkQueueImpl& owner = *reinterpret_cast<ParallelWorkQueueImpl*>(args);
     queue<ParallelWorkQueue::Task*>& taskQueue = owner.updTaskQueue();
-    std::mutex& queueMutex = owner.getQueueMutex();
-    std::condition_variable& waitForTaskCondition = owner.getWaitCondition();
-    std::condition_variable& queueFullCondition = owner.getQueueFullCondition();
+    pthread_mutex_t& queueLock = owner.getQueueLock();
+    pthread_cond_t& waitForTaskCondition = owner.getWaitCondition();
+    pthread_cond_t& queueFullCondition = owner.getQueueFullCondition();
     bool decrementTaskCount = false;
     while (!owner.isFinished() || !taskQueue.empty()) {
-        std::unique_lock<std::mutex> lock(queueMutex);
+        pthread_mutex_lock(&queueLock);
         if (decrementTaskCount) {
             owner.markTaskCompleted();
             decrementTaskCount = false;
         }
-        waitForTaskCondition.wait(lock,
-                [&] { return !taskQueue.empty() || owner.isFinished(); });
+        while (taskQueue.empty() && !owner.isFinished())
+            pthread_cond_wait(&waitForTaskCondition, &queueLock);
         ParallelWorkQueue::Task* task = NULL;
         if (!taskQueue.empty()) {
             task = taskQueue.front();
             taskQueue.pop();
         }
-        queueFullCondition.notify_one();
-        lock.unlock();
+        pthread_cond_signal(&queueFullCondition);
+        pthread_mutex_unlock(&queueLock);
         if (task != NULL) {
             task->execute();
             delete task;
@@ -59,26 +59,37 @@ static void threadBody(ParallelWorkQueueImpl& owner) {
         }
     }
     if (decrementTaskCount) {
-        std::lock_guard<std::mutex> lock(queueMutex);
+        pthread_mutex_lock(&queueLock);
         owner.markTaskCompleted();
+        pthread_mutex_unlock(&queueLock);
     }
+    return 0;
 }
 
 ParallelWorkQueueImpl::ParallelWorkQueueImpl(int queueSize, int numThreads) : queueSize(queueSize), pendingTasks(0), finished(false) {
+    pthread_mutex_init(&queueLock, NULL);
+    pthread_cond_init(&waitForTaskCondition, NULL);
+    pthread_cond_init(&queueFullCondition, NULL);
     threads.resize(numThreads);
     for (int i = 0; i < numThreads; ++i)
-        threads[i] = std::thread(threadBody, std::ref(*this));
+        pthread_create(&threads[i], NULL, threadBody, this);
 }
 
 ParallelWorkQueueImpl::~ParallelWorkQueueImpl() {
     // Wait for the theads to finish.
 
-    std::unique_lock<std::mutex> lock(queueMutex);
+    pthread_mutex_lock(&queueLock);
     finished = true;
-    waitForTaskCondition.notify_all();
-    lock.unlock();
+    pthread_cond_broadcast(&waitForTaskCondition);
+    pthread_mutex_unlock(&queueLock);
     for (int i = 0; i < (int) threads.size(); ++i)
-        threads[i].join();
+        pthread_join(threads[i], NULL);
+
+    // Clean up memory.
+    
+    pthread_mutex_destroy(&queueLock);
+    pthread_cond_destroy(&waitForTaskCondition);
+    pthread_cond_destroy(&queueFullCondition);
 }
 
 ParallelWorkQueueImpl* ParallelWorkQueueImpl::clone() const {
@@ -86,19 +97,20 @@ ParallelWorkQueueImpl* ParallelWorkQueueImpl::clone() const {
 }
 
 void ParallelWorkQueueImpl::addTask(ParallelWorkQueue::Task* task) {
-    std::unique_lock<std::mutex> lock(queueMutex);
-    queueFullCondition.wait(lock,
-            [this] { return (int)taskQueue.size() < queueSize; });
+    pthread_mutex_lock(&queueLock);
+    while ((int)taskQueue.size() >= queueSize)
+        pthread_cond_wait(&queueFullCondition, &queueLock);
     taskQueue.push(task);
     ++pendingTasks;
-    waitForTaskCondition.notify_one();
-    lock.unlock();
+    pthread_cond_signal(&waitForTaskCondition);
+    pthread_mutex_unlock(&queueLock);
 }
 
 void ParallelWorkQueueImpl::flush() {
-    std::unique_lock<std::mutex> lock(queueMutex);
-    queueFullCondition.wait(lock, [this] { return pendingTasks == 0; });
-    lock.unlock();
+    pthread_mutex_lock(&queueLock);
+    while (pendingTasks > 0)
+       pthread_cond_wait(&queueFullCondition, &queueLock);
+    pthread_mutex_unlock(&queueLock);
 }
 
 queue<ParallelWorkQueue::Task*>& ParallelWorkQueueImpl::updTaskQueue() {
@@ -109,21 +121,21 @@ bool ParallelWorkQueueImpl::isFinished() const {
     return finished;
 }
 
-std::mutex& ParallelWorkQueueImpl::getQueueMutex() {
-    return queueMutex;
+pthread_mutex_t& ParallelWorkQueueImpl::getQueueLock() {
+    return queueLock;
 }
 
-std::condition_variable& ParallelWorkQueueImpl::getWaitCondition() {
+pthread_cond_t& ParallelWorkQueueImpl::getWaitCondition() {
     return waitForTaskCondition;
 }
 
-std::condition_variable& ParallelWorkQueueImpl::getQueueFullCondition() {
+pthread_cond_t& ParallelWorkQueueImpl::getQueueFullCondition() {
     return queueFullCondition;
 }
 
 void ParallelWorkQueueImpl::markTaskCompleted() {
     --pendingTasks;
-    queueFullCondition.notify_one();
+    pthread_cond_signal(&queueFullCondition);
 }
 
 ParallelWorkQueue::ParallelWorkQueue(int queueSize, int numThreads) : HandleBase(new ParallelWorkQueueImpl(queueSize, numThreads)) {

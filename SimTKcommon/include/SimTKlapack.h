@@ -122,8 +122,10 @@
 
    /* This is C++, just use the built-in complex types. */
    #include <complex>
+   
    #define SimTK_C_               std::complex<float>
    #define SimTK_Z_               std::complex<double>
+	
    #define SimTK_S_INPUT_(s)      const float& s
    #define SimTK_D_INPUT_(d)      const double& d
    #define SimTK_I_INPUT_(i)      const int& i
@@ -148,6 +150,7 @@
    #define SimTK_CHAR_OUTPUT_(c)  char& c             /* returns a single char */
    #define SimTK_FLEN_(c)         int c##_len=1       /* dummy length parameter added by Fortran */
    #define SimTK_INFO_            int& info           /* returns error code */
+   
 #else
 
   /*

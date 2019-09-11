@@ -8,7 +8,7 @@
 
 #include "IpObserver.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 #ifdef IP_DEBUG_OBSERVER
   const Index Observer::dbg_verbosity = 0;

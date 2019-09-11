@@ -190,6 +190,7 @@ public:
         }
     };
 
+    #ifndef SimTK_REAL_IS_ADOUBLE
     void setQToFitTransformImpl(const SBStateDigest& sbs, const Transform& X_FM, Vector& q) const {
         impl.setQToFitTransform(sbs.getState(), X_FM, this->getNQInUse(sbs.getModelVars()), &q[this->getQIndex()]);
     }
@@ -209,6 +210,7 @@ public:
     void setUToFitLinearVelocityImpl(const SBStateDigest& sbs, const Vector& q, const Vec3& v_FM, Vector& u) const {
         setUToFitVelocityImpl(sbs, q, SpatialVec(Vec3(0), v_FM), u);
     }
+    #endif
 
         // VIRTUAL METHODS FOR SINGLE-NODE OPERATOR CONTRIBUTIONS //
 

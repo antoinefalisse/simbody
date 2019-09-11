@@ -44,27 +44,28 @@ CollisionDetectionAlgorithm::AlgorithmMap::~AlgorithmMap() {
 CollisionDetectionAlgorithm::AlgorithmMap 
     CollisionDetectionAlgorithm::algorithmMap;
 
-static int registerStandardAlgorithms() {
-    CollisionDetectionAlgorithm::registerAlgorithm
-       (ContactGeometry::HalfSpace::classTypeId(), 
-        ContactGeometry::Sphere::classTypeId(), 
-        new CollisionDetectionAlgorithm::HalfSpaceSphere());
-    CollisionDetectionAlgorithm::registerAlgorithm
-       (ContactGeometry::Sphere::classTypeId(), 
-        ContactGeometry::Sphere::classTypeId(), 
-        new CollisionDetectionAlgorithm::SphereSphere());
-    CollisionDetectionAlgorithm::registerAlgorithm
-       (ContactGeometry::HalfSpace::classTypeId(), 
-        ContactGeometry::Ellipsoid::classTypeId(), 
-        new CollisionDetectionAlgorithm::HalfSpaceEllipsoid());
-    CollisionDetectionAlgorithm::registerAlgorithm
-       (ContactGeometry::Ellipsoid::classTypeId(), 
-        ContactGeometry::Sphere::classTypeId(), 
-        new CollisionDetectionAlgorithm::ConvexConvex());
-    CollisionDetectionAlgorithm::registerAlgorithm
-       (ContactGeometry::Ellipsoid::classTypeId(), 
-        ContactGeometry::Ellipsoid::classTypeId(), 
-        new CollisionDetectionAlgorithm::ConvexConvex());
+	static int registerStandardAlgorithms() {
+	CollisionDetectionAlgorithm::registerAlgorithm
+	(ContactGeometry::HalfSpace::classTypeId(),
+		ContactGeometry::Sphere::classTypeId(),
+		new CollisionDetectionAlgorithm::HalfSpaceSphere());
+	CollisionDetectionAlgorithm::registerAlgorithm
+	(ContactGeometry::Sphere::classTypeId(),
+	ContactGeometry::Sphere::classTypeId(),
+	new CollisionDetectionAlgorithm::SphereSphere());
+	CollisionDetectionAlgorithm::registerAlgorithm
+	(ContactGeometry::HalfSpace::classTypeId(),
+		ContactGeometry::Ellipsoid::classTypeId(),
+		new CollisionDetectionAlgorithm::HalfSpaceEllipsoid());
+	CollisionDetectionAlgorithm::registerAlgorithm
+	(ContactGeometry::Ellipsoid::classTypeId(),
+		ContactGeometry::Sphere::classTypeId(),
+		new CollisionDetectionAlgorithm::ConvexConvex());
+	CollisionDetectionAlgorithm::registerAlgorithm
+	(ContactGeometry::Ellipsoid::classTypeId(),
+		ContactGeometry::Ellipsoid::classTypeId(),
+	new CollisionDetectionAlgorithm::ConvexConvex());
+
     CollisionDetectionAlgorithm::registerAlgorithm
        (ContactGeometry::HalfSpace::classTypeId(), 
         ContactGeometry::TriangleMesh::classTypeId(), 
@@ -95,10 +96,7 @@ getAlgorithm(ContactGeometryTypeId type1, ContactGeometryTypeId type2) {
     if (iter == algorithmMap.end())
         return NULL;
     return iter->second;
-
 }
-
-
 
 //==============================================================================
 //                             HALF SPACE - SPHERE
@@ -160,8 +158,6 @@ void CollisionDetectionAlgorithm::SphereSphere::processObjects
     }
 }
 
-
-
 //==============================================================================
 //                            HALF SPACE - ELLIPSOID
 //==============================================================================
@@ -182,7 +178,7 @@ void CollisionDetectionAlgorithm::HalfSpaceEllipsoid::processObjects
     const Transform trans = (~transform1)*transform2;
     Vec3 normal = ~trans.R()*Vec3(-1, 0, 0);
     Vec3 location(normal[0]*r2[0], normal[1]*r2[1], normal[2]*r2[2]);
-    location /= -std::sqrt(  normal[0]*location[0]
+    location /= -NTraits<Real>::sqrt(  normal[0]*location[0]
                            + normal[1]*location[1]
                            + normal[2]*location[2]);
     Real depth = (trans*location)[0];
@@ -195,20 +191,34 @@ void CollisionDetectionAlgorithm::HalfSpaceEllipsoid::processObjects
         Real dxx = v1[0]*v1[0]*ri2[0] + v1[1]*v1[1]*ri2[1] + v1[2]*v1[2]*ri2[2];
         Real dyy = v2[0]*v2[0]*ri2[0] + v2[1]*v2[1]*ri2[1] + v2[2]*v2[2]*ri2[2];
         Real dxy = v1[0]*v2[0]*ri2[0] + v1[1]*v2[1]*ri2[1] + v1[2]*v2[2]*ri2[2];
-        Vec<2, complex<Real> > eigenvalues;
-        PolynomialRootFinder::findRoots(Vec3(1, -dxx-dyy, dxx*dyy-dxy*dxy), 
-                                        eigenvalues);
+
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			Vec<2, complex<Real> > eigenvalues;
+			PolynomialRootFinder::findRoots(Vec3(1, -dxx-dyy, dxx*dyy-dxy*dxy), 
+											eigenvalues);
+		#else
+			Vec<2, Real> eigenvalues;
+			PolynomialRootFinder::findRoots(Vec3(1, -dxx - dyy, dxx*dyy - dxy*dxy),
+				eigenvalues);
+		#endif	
+
         Vec3 contactNormal = transform2.R()*normal;
         Vec3 contactPoint = transform2*(location+(depth/2)*normal);
-        contacts.push_back(PointContact(index1, index2, contactPoint, 
-                                        contactNormal, 
-                                        1/std::sqrt(eigenvalues[0].real()), 
-                                        1/std::sqrt(eigenvalues[1].real()), 
-                                        depth));
+		#ifndef SimTK_REAL_IS_ADOUBLE
+			contacts.push_back(PointContact(index1, index2, contactPoint, 
+											contactNormal, 
+											1/ NTraits<Real>::sqrt(eigenvalues[0].real()),
+											1/ NTraits<Real>::sqrt(eigenvalues[1].real()),
+											depth));
+		#else
+			contacts.push_back(PointContact(index1, index2, contactPoint,
+				contactNormal,
+				1 / sqrt(eigenvalues[0]),
+				1 / sqrt(eigenvalues[1]),
+				depth));
+		#endif
     }
 }
-
-
 
 //==============================================================================
 //                          HALF SPACE - TRIANGLE MESH
@@ -350,7 +360,6 @@ void CollisionDetectionAlgorithm::SphereTriangleMesh::processBox
 }
 
 
-
 //==============================================================================
 //                        TRIANGLE MESH - TRIANGLE MESH
 //==============================================================================
@@ -483,11 +492,13 @@ findInsideTriangles(const ContactGeometry::TriangleMesh&    mesh,       // M
     }
 }
 
+
 //TODO: the following method uses depth-first recursion to iterate through
 //unmarked faces. For a large mesh this was observed to produce a stack
 //overflow in OpenSim. Here we limit the recursion depth; after we get that
 //deep we'll pop back out and do another expensive intersectsRay() test in
 //the method above.
+
 static const int MaxRecursionDepth = 500;
 
 void CollisionDetectionAlgorithm::TriangleMeshTriangleMesh::
@@ -673,13 +684,14 @@ void CollisionDetectionAlgorithm::ConvexConvex::addContact
     // refine them.
 
     Vec6 err = computeErrorVector(object1, object2, point1, point2, transform12);
-    while (err.norm() > Real(1e-12)) {
-        Mat66 J = computeJacobian(object1, object2, point1, point2, transform12);
-        FactorQTZ qtz;
-        qtz.factor(Matrix(J), Real(1e-6));
-        Vector deltaVec(6);
-        qtz.solve(Vector(err), deltaVec);
-        Vec6 delta(&deltaVec[0]);
+	while (err.norm() > Real(1e-12)) {
+		Mat66 J = computeJacobian(object1, object2, point1, point2, transform12);
+		
+		FactorQTZ qtz;
+		qtz.factor(Matrix(J), double(1e-6));
+		Vector deltaVec(6);
+		qtz.solve(Vector(err), deltaVec);
+		Vec6 delta(&deltaVec[0]);
 
         // Line search for safety in case starting guess bad.
         

@@ -11,7 +11,7 @@
 
 #include "IpAlgStrategy.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   /** Abstract Base Class for classes that are able to compute a

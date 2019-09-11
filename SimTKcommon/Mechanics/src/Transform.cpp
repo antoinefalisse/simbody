@@ -39,7 +39,6 @@ template class Transform_<double>;
 template class InverseTransform_<float>;
 template class InverseTransform_<double>;
 
-
 // Define the stream output operators and instantiate them for float and
 // double Transforms.
 template <class P> std::ostream& 
@@ -58,6 +57,16 @@ template SimTK_SimTKCOMMON_EXPORT std::ostream&
 operator<<(std::ostream& o, const InverseTransform_<float>& x );
 template SimTK_SimTKCOMMON_EXPORT std::ostream& 
 operator<<(std::ostream& o, const InverseTransform_<double>& x );
+
+
+#ifdef SimTK_REAL_IS_ADOUBLE
+    template class Transform_<Recorder>;
+    template class InverseTransform_<Recorder>;
+    template SimTK_SimTKCOMMON_EXPORT std::ostream&
+    operator<<(std::ostream& o, const Transform_<Recorder>& x);
+    template SimTK_SimTKCOMMON_EXPORT std::ostream&
+    operator<<(std::ostream& o, const InverseTransform_<Recorder>& x);
+#endif
 
 //------------------------------------------------------------------------------
 }  // End of namespace SimTK

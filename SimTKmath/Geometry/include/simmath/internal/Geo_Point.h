@@ -85,7 +85,7 @@ copying for large point sets. **/
 /** Calculate the distance between two points (expensive). Cost is about 
 30 flops. **/
 static RealP calcDistance(const Vec3P& p1, const Vec3P& p2)
-{   return std::sqrt(findDistanceSqr(p1,p2)); }
+{   return NTraits<RealP>::sqrt(findDistanceSqr(p1,p2)); }
 
 /** Find the square of the distance between two points (cheap). Cost is 
 8 flops. **/
@@ -111,8 +111,8 @@ static bool pointsAreNumericallyCoincident(const Vec3P& p1, const Vec3P& p2)
 static bool pointsAreNumericallyCoincident
    (const Vec3P& p1, const Vec3P& p2, RealP tol)
 {
-    const RealP maxcoord = std::max(max(p1.abs()),max(p2.abs())); // ~7 flops
-    const RealP scale = std::max(tol, maxcoord*tol); // 2 flops
+    const RealP maxcoord = fmax(max(p1.abs()),max(p2.abs())); // ~7 flops
+    const RealP scale = fmax(tol, maxcoord*tol); // 2 flops
     return findDistanceSqr(p1,p2) < square(scale); // 10 flops
 }
 

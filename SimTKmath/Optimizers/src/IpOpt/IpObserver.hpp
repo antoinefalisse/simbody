@@ -14,7 +14,7 @@
 #include <vector>
 #include <algorithm>
 
-namespace SimTKIpopt
+namespace Ipopt
 {
   /** Forward declarations */
   class Subject;

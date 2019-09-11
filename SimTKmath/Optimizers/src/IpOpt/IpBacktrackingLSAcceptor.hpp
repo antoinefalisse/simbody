@@ -13,7 +13,7 @@
 
 #include "IpAlgStrategy.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   /** Base class for backtracking line search acceptors.

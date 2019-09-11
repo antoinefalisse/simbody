@@ -26,7 +26,7 @@
 
 #include "IpBlas.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   Index TripletHelper::GetNumberEntries(const Matrix& matrix)

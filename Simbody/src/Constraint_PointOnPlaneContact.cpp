@@ -26,6 +26,9 @@ Constraint::PointOnPlaneContact, and its implementation class
 Constraint::PointOnPlaneContactImpl. */
 
 #include "SimTKcommon.h"
+
+#ifndef SimTK_REAL_IS_ADOUBLE
+
 #include "simbody/internal/common.h"
 #include "simbody/internal/Constraint.h"
 #include "simbody/internal/Constraint_PointOnPlaneContact.h"
@@ -196,4 +199,6 @@ calcDecorativeGeometryAndAppendVirtual
 
 
 } // namespace SimTK
+
+#endif
 

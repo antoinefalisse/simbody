@@ -17,7 +17,7 @@
 #include "IpDiagMatrix.hpp"
 #include "IpIdentityMatrix.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   DECLARE_STD_EXCEPTION(FATAL_ERROR_IN_LINEAR_SOLVER);

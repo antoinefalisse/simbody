@@ -21,6 +21,8 @@
  * limitations under the License.                                             *
  * -------------------------------------------------------------------------- */
 
+#ifndef SimTK_REAL_IS_ADOUBLE
+
 #include "simmath/CPodesIntegrator.h"
 
 #include "IntegratorRep.h"
@@ -643,4 +645,5 @@ void CPodesIntegratorRep::setOrderLimit(int order) {
     cpodes->setMaxOrd(order);
 }
 
-
+#else
+#endif

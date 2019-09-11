@@ -12,7 +12,7 @@
 #include "IpTypes.hpp"
 #include "IpException.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   /** forward declarations */

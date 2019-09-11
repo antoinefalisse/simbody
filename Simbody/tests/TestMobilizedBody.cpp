@@ -239,13 +239,13 @@ void testBushing() {
 
     State state = system.realizeTopology();
     p1.setQ(state, Vec6(.1,.2,.3,1,2,3));
-    dummy0.setTranslation(state, Vec3(1,2,3));
+    dummy0.setMobilizerTranslation(state, Vec3(1,2,3));
     dummy1.setAngle(state, .1);
     dummy2.setAngle(state, .2);
     p2.setAngle(state, .3);
 
     p1.setU(state, Vec6(1, 2, 3, -.1, -.2, -.3));
-    dummy0.setVelocity(state, Vec3(-.1, -.2, -.3));
+    dummy0.setMobilizerVelocity(state, Vec3(-.1, -.2, -.3));
     dummy1.setRate(state, 1);
     dummy2.setRate(state, 2);
     p2.setRate(state, 3);
@@ -271,10 +271,14 @@ void testBushing() {
 
 int main() {
     SimTK_START_TEST("TestMobilizedBody");
-        SimTK_SUBTEST(testCalculationMethods);
         SimTK_SUBTEST(testWeld);
         SimTK_SUBTEST(testGimbal);
         SimTK_SUBTEST(testBushing);
+        #ifndef SimTK_REAL_IS_ADOUBLE
+            SimTK_SUBTEST(testCalculationMethods);
+        #else
+            std::cout << "testCalculationMethods is not supported with ADOL-C" << std::endl;
+        #endif
     SimTK_END_TEST();
 }
 

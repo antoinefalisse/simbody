@@ -11,7 +11,7 @@
 #include "IpDebug.hpp"
 #include "IpJournalist.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 #ifdef IP_DEBUG
   Index DebugJournalistWrapper::indentation_level_ = 0;

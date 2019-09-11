@@ -119,7 +119,7 @@ bool RungeKutta3IntegratorRep::attemptODEStep
 
     const Vector& y1 = getAdvancedState().getY();
     for (int i=0; i<y1.size(); ++i)
-        y1err[i] = std::abs(y1[i]-(y0[i] + h*f1[i]));
+        y1err[i] = fabs(y1[i]-(y0[i] + h*f1[i]));
 
     return true;
 }

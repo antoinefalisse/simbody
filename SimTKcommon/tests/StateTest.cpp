@@ -334,8 +334,14 @@ void testCacheValidity() {
     SimTK_TEST_MUST_THROW(s.getCacheEntry(Sub0, cx0TopoModel));
 
     // "calculate" the cache entry and mark it valid.
-    Value<int>::updDowncast(s.updCacheEntry(Sub0,cx0TopoModel)) = 
-        (int)(2*Value<Real>::downcast(s.getDiscreteVariable(Sub1,dvx1TopoModel)));
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        Value<int>::updDowncast(s.updCacheEntry(Sub0, cx0TopoModel)) =
+            (int)(2 * Value<Real>::downcast(s.getDiscreteVariable(Sub1, dvx1TopoModel)));
+    #else
+        Value<int>::updDowncast(s.updCacheEntry(Sub0, cx0TopoModel)) =
+            (int)(2 * Value<Real>::downcast(s.getDiscreteVariable(Sub1, dvx1TopoModel))).getValue();
+    #endif
+    
     s.markCacheValueRealized(Sub0, cx0TopoModel);
 
     SimTK_TEST(Value<int>::downcast(s.getCacheEntry(Sub0, cx0TopoModel)) == 18);

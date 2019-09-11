@@ -106,13 +106,15 @@ const Real MaxStepSize    = Real(1/1000.); // 1 ms (1000 Hz)
 const int  DrawEveryN     = 33;            // 33 ms frame update (30.3 Hz)
 const Real SimTime        = 2;
 const int  NSteps         = // make this a whole number of viz frames
-    DrawEveryN*(int(SimTime/MaxStepSize/DrawEveryN+0.5));
+    DrawEveryN*(int(SimTime.value() /MaxStepSize.value() /DrawEveryN+0.5));
 
 const Real TotalImpulse   = 1; // Applied only on the first step
 const Real StepForce      = TotalImpulse/MaxStepSize;
 
 const Real IntegAccuracy = 1e-3;
-const Real CheckAccuracy = 1e-3;
+//const Real CheckAccuracy = 1e-3;
+const double CheckAccuracy = 1e-3;
+
 
 struct MyMultibodySystem {
     MyMultibodySystem()
@@ -259,6 +261,10 @@ void runOnce(const MyMultibodySystem& mbs, Integrator& integ, int nsteps)
 }
 
 int main() {
+
+#ifndef SimTK_REAL_IS_ADOUBLE
+
+
     SimTK_START_TEST("GazeboInelasticCollision");
         // Create the system.   
         MyMultibodySystem mbs;
@@ -296,6 +302,12 @@ int main() {
 
 
     SimTK_END_TEST();
+
+#else
+
+    std::cout << "GazeboInelasticCollision is not supported with ADOL-C" << std::endl;
+
+#endif
 }
 
 

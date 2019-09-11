@@ -28,6 +28,8 @@
 
 #include "SimTKmath.h"
 
+#ifndef SimTK_REAL_IS_ADOUBLE
+
 // Just so we can get the version number:
 #include "SimTKlapack.h"
 
@@ -91,7 +93,7 @@ public:
     CFunc cp;
 };
 
-#define PREC double
+#define PREC SimTK::Real
 class SinOmegaX : public Differentiator::ScalarFunction {
 public:
     SinOmegaX(Real omega, Real acc) 
@@ -100,13 +102,13 @@ public:
     }
 
     Real calc(Real x) const {
-        return std::sin(w*x);
+        return sin(w*x);
     }
     Real calcD1(Real x) const {
-        return w*std::cos(w*x);
+        return w*cos(w*x);
     }
     Real calcD2(Real x) const {
-        return -w*w*std::sin(w*x);
+        return -w*w*sin(w*x);
     }
     // Must provide this virtual function.
     int f(Real x, Real& fx) const override {
@@ -127,15 +129,15 @@ public:
     }
 
     Real calc(Real x) const {
-        return (a*x*x*x + b*x*x + c*x + d)*std::exp(a*x);
+        return (a*x*x*x + b*x*x + c*x + d)*exp(a*x);
     }
 
     Real calcD1(Real x) const {
-        return (3*a*x*x+2*b*x+c)*std::exp(a*x) + a*calc(x);
+        return (3*a*x*x+2*b*x+c)*exp(a*x) + a*calc(x);
     }
 
     Real calcD2(Real x) const {
-        return (6*a*x+2*b)*std::exp(a*x) + (3*a*x*x+2*b*x+c)*a*std::exp(a*x)
+        return (6*a*x+2*b)*exp(a*x) + (3*a*x*x+2*b*x+c)*a*exp(a*x)
                 + a*calcD1(x);
     }
 
@@ -154,7 +156,7 @@ private:
 static void doSinOmegaExample() {
   for (int digits=0; digits<=41; ++digits) {
     Real acc;
-    if (digits < 40) acc = std::pow(10., -(digits/(1.5*sizeof(double)/sizeof(PREC))));
+    if (digits < 40) acc = std::pow(10., -(digits/(1.5*sizeof(SimTK::Real)/sizeof(PREC))));
     else if (digits==40) acc=SimTK::NTraits<PREC>::getSignificant();
     else if (digits==41) acc=SimTK::NTraits<PREC>::getEps();
 
@@ -176,8 +178,8 @@ static void doSinOmegaExample() {
         const Real analytic = func.calcD1(x);
         const Real approx1st = dsin3x.calcDerivative(x);
         const Real approx2nd = dsin3x.calcDerivative(x, Differentiator::CentralDifference);
-        const Real err1 = std::abs((approx1st-analytic)/analytic);
-        const Real err2 = std::abs((approx2nd-analytic)/analytic);
+        const Real err1 = fabs((approx1st-analytic)/analytic);
+        const Real err2 = fabs((approx2nd-analytic)/analytic);
         err1rms += err1*err1; err2rms += err2*err2;
         if (err1 > err1max) err1max=err1;
         if (err2 > err2max) err2max=err2;
@@ -185,17 +187,17 @@ static void doSinOmegaExample() {
           //  x, analytic, err1, err2);
     }
     printf("%.3e: err1: max=%.3e, rms=%.3e  err2: max=%.3e, rms=%.3e\n",
-        acc, err1max, std::sqrt(err1rms/NEntries), err2max, std::sqrt(err2rms/NEntries));
+        acc, err1max, sqrt(err1rms/NEntries), err2max, sqrt(err2rms/NEntries));
   }
 
 };
 
 
 static Real mysin(Real x) {
-    return std::sin(x);
+    return sin(x);
 }
 static Real mycos(Real x) {
-    return std::cos(x);
+    return cos(x);
 }
 
 int main() {
@@ -264,8 +266,8 @@ int main() {
     sf.f(y0+delta_y, sfyd);
     cout << "sf(y0+dy)=" << sfyd << endl;
     cout << "sf(y0)+~grad1*dy=" << sfy0 + ~grad1*delta_y << endl;
-    cout << "err @order1=" << std::abs(sfyd-(sfy0 + ~grad1*delta_y)) << endl;
-    cout << "err @order2=" << std::abs(sfyd-(sfy0 + ~grad2*delta_y)) << endl;
+    cout << "err @order1=" << fabs(sfyd-(sfy0 + ~grad1*delta_y)) << endl;
+    cout << "err @order2=" << fabs(sfyd-(sfy0 + ~grad2*delta_y)) << endl;
 
     vf.f(y0, yp);
     Matrix dfdy;
@@ -352,3 +354,9 @@ int MyObjectiveFunc::f(const Vector& yy, Real& fy) const
     fy = tmp.norm();
     return res;
 }
+
+#else
+void main() {
+	std::cout << "Lapack not supported with adouble" << std::endl;
+}
+#endif

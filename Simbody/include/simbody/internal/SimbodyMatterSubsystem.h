@@ -40,7 +40,9 @@ class MobilizedBody;
 class MultibodySystem;
 class Constraint;
 
-class UnilateralContact;
+#ifndef SimTK_REAL_IS_ADOUBLE
+    class UnilateralContact;
+#endif
 class StateLimitedFriction;
 
 /** This subsystem contains the bodies ("matter") in the multibody system,
@@ -265,10 +267,12 @@ normally need to be called by end users. **/
 ConstraintIndex adoptConstraint(Constraint&);
 
 /** (Experimental) **/
+#ifndef SimTK_REAL_IS_ADOUBLE
 UnilateralContactIndex adoptUnilateralContact(UnilateralContact*);
 int getNumUnilateralContacts() const;
 const UnilateralContact& getUnilateralContact(UnilateralContactIndex) const;
 UnilateralContact& updUnilateralContact(UnilateralContactIndex);
+#endif
 /** (Experimental) **/
 StateLimitedFrictionIndex adoptStateLimitedFriction(StateLimitedFriction*);
 int getNumStateLimitedFrictions() const;

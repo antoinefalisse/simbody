@@ -87,17 +87,21 @@ endif(NEED_QUOTES)
 
 set(SHARED_TARGET ${SimTKCOMMON_LIBRARY_NAME})
 set(STATIC_TARGET ${SimTKCOMMON_LIBRARY_NAME}_static)
+set(RECORDER_TARGET ${SimTKCOMMON_LIBRARY_NAME}_recorder)
 set(SHARED_TARGET_VN ${SimTKCOMMON_LIBRARY_NAME}${VN})
 set(STATIC_TARGET_VN ${SimTKCOMMON_LIBRARY_NAME}${VN}_static)
+set(RECORDER_TARGET_VN ${SimTKCOMMON_LIBRARY_NAME}${VN}_recorder)
 
 ## Test against the unversioned libraries if they are being build;
 ## otherwise against the versioned libraries.
 if(BUILD_UNVERSIONED_LIBRARIES)
     set(TEST_SHARED_TARGET ${SHARED_TARGET})
     set(TEST_STATIC_TARGET ${STATIC_TARGET})
+    set(TEST_RECORDER_TARGET ${RECORDER_TARGET})
 else(BUILD_UNVERSIONED_LIBRARIES)
     set(TEST_SHARED_TARGET ${SHARED_TARGET_VN})
     set(TEST_STATIC_TARGET ${STATIC_TARGET_VN})
+    set(TEST_RECORDER_TARGET ${RECORDER_TARGET_VN})
 endif(BUILD_UNVERSIONED_LIBRARIES)
 
 
@@ -176,6 +180,9 @@ if(BUILD_STATIC_LIBRARIES)
 endif()
 if(BUILD_DYNAMIC_LIBRARIES)
     add_subdirectory( sharedTarget )
+endif()
+if(BUILD_RECORDER_LIBRARIES)
+    add_subdirectory( recorderTarget )
 endif()
 
 if( BUILD_TESTING )

@@ -12,7 +12,7 @@
 #include "IpIterateInitializer.hpp"
 #include "IpEqMultCalculator.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   /** Class implementing the default initialization procedure (based

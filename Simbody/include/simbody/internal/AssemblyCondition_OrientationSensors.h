@@ -465,7 +465,7 @@ Real findCurrentOSensorError(OSensorIx mx) const {
     const Rotation R_GS = findCurrentOSensorOrientation(mx);
     const Rotation R_SO = ~R_GS*R_GO; // orientation error, in S
     const Vec4 aa_SO = R_SO.convertRotationToAngleAxis();
-    return std::abs(aa_SO[0]);
+    return NTraits<Real>::abs(aa_SO[0]);
 }
 /*@}*/
 

@@ -26,7 +26,9 @@
 #include "SimTKcommon.h"
 #include "SimTKmath.h"
 #include "simbody/internal/common.h"
+#ifndef SimTK_REAL_IS_ADOUBLE
 #include "simbody/internal/ConditionalConstraint.h"
+#endif
 
 #include "SimbodyMatterSubsystemRep.h"
 #include "SimbodyTreeState.h"
@@ -51,13 +53,15 @@ void SimbodyMatterSubsystemRep::clearTopologyState() {
     // Unilateral constraints reference Constraints but not vice versa,
     // so delete the conditional constraints first.
 
-    for (UnilateralContactIndex ucx(0); ucx < uniContacts.size(); ++ucx)
-        delete uniContacts[ucx];
-    uniContacts.clear();
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        for (UnilateralContactIndex ucx(0); ucx < uniContacts.size(); ++ucx)
+            delete uniContacts[ucx];
+        uniContacts.clear();
 
-    for (StateLimitedFrictionIndex fx(0); fx < stateLtdFriction.size(); ++fx)
-        delete stateLtdFriction[fx];
-    stateLtdFriction.clear();
+        for (StateLimitedFrictionIndex fx(0); fx < stateLtdFriction.size(); ++fx)
+            delete stateLtdFriction[fx];
+        stateLtdFriction.clear();
+    #endif
     //TODO: more conditional constraints to come.
 
     // Constraints are independent from one another, so any deletion order
@@ -141,32 +145,33 @@ ConstraintIndex SimbodyMatterSubsystemRep::adoptConstraint(Constraint& child) {
     return ix;
 }
 
+#ifndef SimTK_REAL_IS_ADOUBLE
+    UnilateralContactIndex SimbodyMatterSubsystemRep::
+    adoptUnilateralContact(UnilateralContact* child) {
+        assert(child);
+        invalidateSubsystemTopologyCache();
 
-UnilateralContactIndex SimbodyMatterSubsystemRep::
-adoptUnilateralContact(UnilateralContact* child) {
-    assert(child);
-    invalidateSubsystemTopologyCache();
+        const UnilateralContactIndex ucx(uniContacts.size());
+        uniContacts.push_back(child); // grow
 
-    const UnilateralContactIndex ucx(uniContacts.size());
-    uniContacts.push_back(child); // grow
+        // Tell the contact object its index within the matter subsystem.
+        child->setMyIndex(ucx);
+        return ucx;
+    }
 
-    // Tell the contact object its index within the matter subsystem.
-    child->setMyIndex(ucx);
-    return ucx;
-}
+    StateLimitedFrictionIndex SimbodyMatterSubsystemRep::
+    adoptStateLimitedFriction(StateLimitedFriction* child) {
+        assert(child);
+        invalidateSubsystemTopologyCache();
 
-StateLimitedFrictionIndex SimbodyMatterSubsystemRep::
-adoptStateLimitedFriction(StateLimitedFriction* child) {
-    assert(child);
-    invalidateSubsystemTopologyCache();
+        const StateLimitedFrictionIndex fx(stateLtdFriction.size());
+        stateLtdFriction.push_back(child); // grow
 
-    const StateLimitedFrictionIndex fx(stateLtdFriction.size());
-    stateLtdFriction.push_back(child); // grow
-
-    // Tell the friction object its index within the matter subsystem.
-    child->setMyIndex(fx);
-    return fx;
-}
+        // Tell the friction object its index within the matter subsystem.
+        child->setMyIndex(fx);
+        return fx;
+    }
+#endif
 
 
 void SimbodyMatterSubsystemRep::createGroundBody() {
@@ -340,6 +345,7 @@ int SimbodyMatterSubsystemRep::realizeSubsystemTopologyImpl(State& s) const {
         const_cast<SimbodyMatterSubsystemRep*>(this);
 
     if (!subsystemTopologyHasBeenRealized()) 
+
         mThis->endConstruction(s); // no more bodies after this!
 
     // Fill in the local copy of the topologyCache from the information
@@ -362,6 +368,7 @@ int SimbodyMatterSubsystemRep::realizeSubsystemTopologyImpl(State& s) const {
     setDefaultModelValues(topologyCache, mvars);
     tc.modelingVarsIndex  = 
         allocateDiscreteVariable(s,Stage::Model, new Value<SBModelVars>(mvars));
+
 
     tc.modelingCacheIndex = 
         allocateCacheEntry(s,Stage::Model, new Value<SBModelCache>());
@@ -1536,10 +1543,12 @@ int SimbodyMatterSubsystemRep::realizeSubsystemAccelerationImpl(const State& s) 
     // forces accumulated from all the force subsystems. We use these to 
     // compute accelerations, with all results going into the AccelerationCache.
     const MultibodySystem& mbs = getMultibodySystem(); // owner of this subsystem
-    realizeLoopForwardDynamics(s,
-        mbs.getMobilityForces(s, Stage::Dynamics),
-        mbs.getParticleForces(s, Stage::Dynamics),
-        mbs.getRigidBodyForces(s, Stage::Dynamics));
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        realizeLoopForwardDynamics(s,
+            mbs.getMobilityForces(s, Stage::Dynamics),
+            mbs.getParticleForces(s, Stage::Dynamics),
+            mbs.getRigidBodyForces(s, Stage::Dynamics));
+    #endif
 
     SBStateDigest stateDigest(s, *this, Stage::Acceleration);
 
@@ -3565,19 +3574,21 @@ calcGMInvGt(const State&   s,
 // Current implementation computes G*M^-1*~G, factors it, and does a single
 // solve all at great expense.
 // TODO: should realize factored matrix if needed and reuse if possible.
-void SimbodyMatterSubsystemRep::
-solveForConstraintImpulses(const State&     state,
-                           const Vector&    deltaV,
-                           Vector&          impulse) const
-{
-    Matrix GMInvGt;
-    calcGMInvGt(state, GMInvGt);
-    // MUST DUPLICATE SIMBODY'S METHOD HERE:
-    const Real conditioningTol = GMInvGt.nrow() 
-                                    * SqrtEps*std::sqrt(SqrtEps); // Eps^(3/4)
-    FactorQTZ qtz(GMInvGt, conditioningTol); 
-    qtz.solve(deltaV, impulse);
-}
+#ifndef SimTK_REAL_IS_ADOUBLE
+    void SimbodyMatterSubsystemRep::
+    solveForConstraintImpulses(const State&     state,
+                               const Vector&    deltaV,
+                               Vector&          impulse) const
+    {
+        Matrix GMInvGt;
+        calcGMInvGt(state, GMInvGt);
+        // MUST DUPLICATE SIMBODY'S METHOD HERE:
+        const Real conditioningTol = GMInvGt.nrow() 
+                                        * SqrtEps*sqrt(SqrtEps); // Eps^(3/4)
+        FactorQTZ qtz(GMInvGt, conditioningTol); 
+        qtz.solve(deltaV, impulse);
+    }
+#endif
 
 
 
@@ -3850,6 +3861,7 @@ static Real calcQErrestWeightedNormQ(const SimbodyMatterSubsystemRep& matter,
     return Wq_qErrest.normRMS();
 }
 
+#ifndef SimTK_REAL_IS_ADOUBLE
 void SimbodyMatterSubsystemRep::enforcePositionConstraints
    (State& s, Real consAccuracy, const Vector& yWeights,
     const Vector& ooTols, Vector& yErrest, ProjectOptions opts) const
@@ -3921,7 +3933,7 @@ void SimbodyMatterSubsystemRep::enforcePositionConstraints
     // We only fail if we can't achieve consAccuracy, but while we're
     // solving we'll see if we can get consAccuracyToTryFor.
     const Real consAccuracyToTryFor = 
-        std::max(Real(0.1)*consAccuracy, SignificantReal);
+        fmax(Real(0.1)*consAccuracy, SignificantReal);
 
     // Conditioning tolerance. This determines when we'll drop a 
     // constraint. 
@@ -4193,7 +4205,7 @@ int SimbodyMatterSubsystemRep::projectQ
     // we manage to reach consAccuracy.
     const Real overshootFactor = opts.getOvershootFactor();
     const Real consAccuracyToTryFor = 
-        std::max(overshootFactor*consAccuracy, SignificantReal);
+        fmax(overshootFactor*consAccuracy, SignificantReal);
 
     // Check whether we should stop if we see the solution diverging
     // which should not happen when we're in the neighborhood of a solution
@@ -4440,6 +4452,7 @@ int SimbodyMatterSubsystemRep::projectQ
     results.setExitStatus(ProjectResults::Succeeded);
     return 0;
 }
+#endif
 //................................. PROJECT Q ..................................
 
 // Project quaternions onto their constraint manifold by normalizing
@@ -4479,6 +4492,7 @@ bool SimbodyMatterSubsystemRep::normalizeQuaternions
 //==============================================================================
 //                         ENFORCE VELOCITY CONSTRAINTS
 //==============================================================================
+#ifndef SimTK_REAL_IS_ADOUBLE
 void SimbodyMatterSubsystemRep::enforceVelocityConstraints
    (State& s, Real consAccuracy, const Vector& yWeights,
     const Vector& ooTols, Vector& yErrest, ProjectOptions opts) const
@@ -4547,7 +4561,7 @@ void SimbodyMatterSubsystemRep::enforceVelocityConstraints
     // We only fail if we can't achieve consAccuracy, but while we're
     // solving we'll see if we can get consAccuracyToTryFor.
     const Real consAccuracyToTryFor = 
-        std::max(Real(0.1)*consAccuracy, SignificantReal);
+        fmax(Real(0.1)*consAccuracy, SignificantReal);
 
     // Conditioning tolerance. This determines when we'll drop a 
     // constraint. 
@@ -4657,12 +4671,14 @@ void SimbodyMatterSubsystemRep::enforceVelocityConstraints
     //if (uErrest.size())
     //    cout << " uErrest WRMS=" << uErrest.rowScale(uWeights).normRMS() << endl;
 }
+#endif
 //........................ ENFORCE VELOCITY CONSTRAINTS ........................
 
 
 //==============================================================================
 //                                 PROJECT U
 //==============================================================================
+#ifndef SimTK_REAL_IS_ADOUBLE
 int SimbodyMatterSubsystemRep::projectU
    (State&                  s, 
     Vector&                 uErrest,        // u error estimate or empty 
@@ -4736,7 +4752,7 @@ int SimbodyMatterSubsystemRep::projectU
     // we manage to reach consAccuracy.
     const Real overshootFactor = opts.getOvershootFactor();
     const Real consAccuracyToTryFor = 
-        std::max(overshootFactor*consAccuracy, SignificantReal);
+       fmax(overshootFactor*consAccuracy, SignificantReal);
 
     // Check whether we should stop if we see the solution diverging
     // which should not happen when we're in the neighborhood of a solution
@@ -4778,7 +4794,7 @@ int SimbodyMatterSubsystemRep::projectU
     const Vector& uWeights = getUWeights(s); // 1/unit change (Wu)
     Vector uRelScale(nu);
     for (int i=0; i<nu; ++i) {
-        const Real ui = std::abs(u[i]);
+        const Real ui = fabs(u[i]);
         const Real wi = uWeights[i];
         uRelScale[i] = ui*wi > 1 ? ui : 1/wi; // max(unit error, u) (1/Eu)
     }
@@ -4941,6 +4957,7 @@ int SimbodyMatterSubsystemRep::projectU
     results.setExitStatus(ProjectResults::Succeeded);
     return 0;
 }
+#endif
 //................................ PROJECT U ...................................
 
 
@@ -5073,6 +5090,7 @@ void SimbodyMatterSubsystemRep::realizeTreeForwardDynamics(
 // operator. In typical usage, the output arguments actually will be part of 
 // the state cache to effect a response, but this method can also be used to 
 // effect an operator.
+#ifndef SimTK_REAL_IS_ADOUBLE
 void SimbodyMatterSubsystemRep::calcLoopForwardDynamicsOperator
    (const State& s, 
     const Vector&                   mobilityForces,
@@ -5115,7 +5133,7 @@ void SimbodyMatterSubsystemRep::calcLoopForwardDynamicsOperator
     // constraints.
     const Real conditioningTol = m 
         //* SignificantReal;
-        * SqrtEps*std::sqrt(SqrtEps); // Eps^(3/4)
+        * SqrtEps*sqrt(SqrtEps); // Eps^(3/4)
 
     // Calculate multipliers lambda as
     //     (G M^-1 ~G) lambda = aerr
@@ -5150,6 +5168,7 @@ void SimbodyMatterSubsystemRep::calcLoopForwardDynamicsOperator
        (s, mobilityForces, particleForces, bodyForces,
         &mobilityF, &bodyForcesInG, tac, udot, qdotdot, udotErr);
 }
+#endif
 //................... CALC LOOP FORWARD DYNAMICS OPERATOR ......................
 
 
@@ -5159,6 +5178,7 @@ void SimbodyMatterSubsystemRep::calcLoopForwardDynamicsOperator
 //==============================================================================
 // Given the set of forces in the state, calculate accelerations resulting from
 // those forces and enforcement of acceleration constraints.
+#ifndef SimTK_REAL_IS_ADOUBLE
 void SimbodyMatterSubsystemRep::realizeLoopForwardDynamics(const State& s, 
     const Vector&               mobilityForces,
     const Vector_<Vec3>&        particleForces,
@@ -5181,6 +5201,7 @@ void SimbodyMatterSubsystemRep::realizeLoopForwardDynamics(const State& s,
     markCacheValueRealized(s, topologyCache.treeAccelerationCacheIndex);
     markCacheValueRealized(s, topologyCache.constrainedAccelerationCacheIndex);
 }
+#endif
 //....................... REALIZE LOOP FORWARD DYNAMICS ........................
 
 

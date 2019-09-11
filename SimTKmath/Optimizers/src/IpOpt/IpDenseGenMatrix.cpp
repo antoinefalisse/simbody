@@ -10,7 +10,7 @@
 #include "IpBlas.hpp"
 #include "IpLapack.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
 #ifdef IP_DEBUG

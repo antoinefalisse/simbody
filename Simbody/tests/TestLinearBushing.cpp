@@ -238,6 +238,7 @@ void testKinematicsAndEnergyConservation() {
     mq  = Vec6(ang[0],ang[1],ang[2],xyz[0],xyz[1],xyz[2]);
     mqd = Vec6(angd[0],angd[1],angd[2],xyzd[0],xyzd[1],xyzd[2]);
 
+
     SimTK_TEST_EQ(bushing.getQ(istate), mq);
     SimTK_TEST_EQ(bushing.getQDot(istate), mqd);
     
@@ -245,7 +246,7 @@ void testKinematicsAndEnergyConservation() {
     const Real finalEnergy = system.calcEnergy(istate)
                                 + bushing.getDissipatedEnergy(istate);
 
-    SimTK_TEST_EQ_TOL(initialEnergy, finalEnergy, 10*Accuracy);
+    SimTK_TEST_EQ_TOL(initialEnergy, finalEnergy, 10*Accuracy.value());
 
     // Let's find everything and see if the bushing agrees.
     const Transform& X_GB1 = body1.getBodyTransform(istate);
@@ -410,7 +411,7 @@ void testKinematicsAndEnergyConservationUsingBushingMobilizer() {
     const Real finalEnergy = system.calcEnergy(istate)
                                 + bushing.getDissipatedEnergy(istate);
 
-    SimTK_TEST_EQ_TOL(initialEnergy, finalEnergy, 10*Accuracy);
+    SimTK_TEST_EQ_TOL(initialEnergy, finalEnergy, 10*Accuracy.value());
 
     // Let's find everything and see if the bushing agrees.
     const Transform& X_GB1 = body1.getBodyTransform(istate);
@@ -583,6 +584,7 @@ void testForces() {
 
     REPORT(state);
 
+#ifndef SimTK_REAL_IS_ADOUBLE
     Rotation RR = Test::randRotation();
     brick1.setQToFitTransform(state, RR); 
 
@@ -593,6 +595,7 @@ void testForces() {
     dummy3.setOneQ(state, 0, qRRinv[0]);
     dummy2.setOneQ(state, 0, qRRinv[1]);
     dummy1.setOneQ(state, 0, qRRinv[2]);
+#endif
 
 
     REPORT(state);
@@ -712,6 +715,7 @@ void testForcesUsingReverseBushingMobilizer() {
 
     REPORT(state);
 
+#ifndef SimTK_REAL_IS_ADOUBLE
     Rotation RR = Test::randRotation();
     brick1.setQToFitTransform(state, RR); 
     system.realize(state, Stage::Position);
@@ -720,6 +724,7 @@ void testForcesUsingReverseBushingMobilizer() {
     cout <<   "bushing.q=" << bushing.getQ(state) << endl;
 
     brick2.setQToFitTransform(state, Transform(RR, -Vec3(1,1,1)));
+#endif
 
     cout << "brick2 .q=" << brick2.getQ(state) << endl;
 
@@ -744,11 +749,15 @@ void testForcesUsingReverseBushingMobilizer() {
 
 int main() {
     SimTK_START_TEST("TestLinearBushing");
-        SimTK_SUBTEST(testParameterSetting);
-        SimTK_SUBTEST(testKinematicsAndEnergyConservation);
-        SimTK_SUBTEST(testKinematicsAndEnergyConservationUsingBushingMobilizer);
-        SimTK_SUBTEST(testForces);
-        SimTK_SUBTEST(testForcesUsingReverseBushingMobilizer);
+        SimTK_SUBTEST(testParameterSetting);        
+        #ifndef SimTK_REAL_IS_ADOUBLE
+            SimTK_SUBTEST(testKinematicsAndEnergyConservation);
+            SimTK_SUBTEST(testKinematicsAndEnergyConservationUsingBushingMobilizer);
+            SimTK_SUBTEST(testForces);
+            SimTK_SUBTEST(testForcesUsingReverseBushingMobilizer);
+        #else   
+            std::cout << "This test is not supported with ADOL-C" << std::endl;
+        #endif
     SimTK_END_TEST();
 }
 

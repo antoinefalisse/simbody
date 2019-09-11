@@ -50,8 +50,8 @@ public:
         
         Real q = state.getQ(pendulum.getGuts().getSubsysIndex())[0];
         Real u = state.getU(pendulum.getGuts().getSubsysIndex())[0];
-        ASSERT(std::abs(q+1.0) < 0.05);
-        ASSERT(std::abs(u) < 0.01);
+        ASSERT(fabs(q+1.0) < 0.05);
+        ASSERT(fabs(u) < 0.01);
         ASSERT(state.getTime() > lastEventTime);
         eventCount++;
         lastEventTime = state.getTime();
@@ -91,7 +91,7 @@ public:
         // This should be triggered when the pendulum crosses q == 0.
         
         Real q = state.getQ(pendulum.getGuts().getSubsysIndex())[0];
-        ASSERT(std::abs(q) < 0.01);
+        ASSERT(fabs(q) < 0.01);
         ASSERT(state.getTime() > lastEventTime);
         eventCount++;
         lastEventTime = state.getTime();
@@ -164,9 +164,9 @@ int main () {
     ASSERT(ts.getTime() == tFinal);
     ASSERT(integ.getTerminationReason() == Integrator::ReachedFinalTime);
     ASSERT(ZeroVelocityHandler::eventCount >= 10);
-    ASSERT(PeriodicHandler::eventCount == (int) (ts.getTime()/1.5));
+    ASSERT(PeriodicHandler::eventCount == (int) (ts.getTime()/1.5).value());
     ASSERT(ZeroPositionReporter::eventCount > 10);
-    ASSERT(PeriodicReporter::eventCount == (int) (std::log(ts.getTime())/std::log(2.0))+1);
+    ASSERT(PeriodicReporter::eventCount == (int) (log(ts.getTime()).value()/log(2.0))+1);
     cout << "Done" << endl;
     return 0;
   }

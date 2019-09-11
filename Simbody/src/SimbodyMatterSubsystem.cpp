@@ -115,6 +115,7 @@ getConstraint(ConstraintIndex id) const {return getRep().getConstraint(id);}
 Constraint& SimbodyMatterSubsystem::
 updConstraint(ConstraintIndex id) {return updRep().updConstraint(id);}
 
+#ifndef SimTK_REAL_IS_ADOUBLE
 
 UnilateralContactIndex SimbodyMatterSubsystem::
 adoptUnilateralContact(UnilateralContact* child)
@@ -142,6 +143,8 @@ getStateLimitedFriction(StateLimitedFrictionIndex ix) const
 StateLimitedFriction& SimbodyMatterSubsystem::
 updStateLimitedFriction(StateLimitedFrictionIndex ix)
 {   return updRep().updStateLimitedFriction(ix); }
+
+#endif
 
 
 //==============================================================================
@@ -180,9 +183,11 @@ void SimbodyMatterSubsystem::calcAcceleration
     Vector multipliers(getNMultipliers(state)); // unwanted return value
     Vector udotErr(getNUDotErr(state)); // unwanted return value
 
-    getRep().calcLoopForwardDynamicsOperator(state, 
-        appliedMobilityForces, appliedParticleForces, appliedBodyForces,
-        tac, cac, udot, qdotdot, multipliers, udotErr);
+    #ifndef SimTK_REAL_IS_ADOUBLE
+        getRep().calcLoopForwardDynamicsOperator(state, 
+            appliedMobilityForces, appliedParticleForces, appliedBodyForces,
+            tac, cac, udot, qdotdot, multipliers, udotErr);
+    #endif
 
     A_GB = tac.bodyAccelerationInGround;
 }
@@ -485,11 +490,11 @@ void SimbodyMatterSubsystem::calcProjectedMInv(const State&   s,
                                                Matrix&        GMInvGt) const
 {   getRep().calcGMInvGt(s, GMInvGt); }
 
-void SimbodyMatterSubsystem::
-solveForConstraintImpulses(const State&     state,
-                           const Vector&    deltaV,
-                           Vector&          impulse) const
-{   getRep().solveForConstraintImpulses(state,deltaV,impulse); }
+//void SimbodyMatterSubsystem::
+//solveForConstraintImpulses(const State&     state,
+//                           const Vector&    deltaV,
+//                           Vector&          impulse) const
+//{   getRep().solveForConstraintImpulses(state,deltaV,impulse); }
 
 
 void SimbodyMatterSubsystem::calcG(const State& s, Matrix& G) const 
@@ -1197,8 +1202,14 @@ void SimbodyMatterSubsystem::calcSystemJacobian
         VectorView col = J_G(j); // 6*nb long; maybe not contiguous!
         int nxt = 0; // index into col
         for (MobilizedBodyIndex mbx(0); mbx < nb; ++mbx) {
-            const SpatialVec& V = Ju[mbx];
-            for (int k=0; k<3; ++k) col[nxt++] = V[0][k]; // w
+            const SpatialVec& V = Ju[mbx];			
+			//for (int k = 0; k < 3; ++k) {
+			//	col[nxt++] = V[0][k];
+			//		int ind = nxt++;
+			//		Real r=V[0][k];
+			//		col[ind] = r;
+			//}; // w
+            for (int k = 0; k<3; ++k) col[nxt++] = V[0][k]; // w
             for (int k=0; k<3; ++k) col[nxt++] = V[1][k]; // v
         }
     }

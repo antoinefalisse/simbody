@@ -467,7 +467,7 @@ getH_FMCol(const SBTreePositionCache& pc, int j) const override {
 // these two routines. *Each* mobilizer must implement 
 // setQToFit{Rotation,Translation} and 
 // setUToFit{AngularVelocity,LinearVelocity}; there are no defaults.
-
+#ifndef SimTK_REAL_IS_ADOUBLE
 void setQToFitTransformImpl(const SBStateDigest& sbs, const Transform& X_FM, 
                             Vector& q) const override {
     setQToFitRotationImpl   (sbs,X_FM.R(),q);
@@ -479,6 +479,7 @@ void setUToFitVelocityImpl(const SBStateDigest& sbs, const Vector& q,
     setUToFitAngularVelocityImpl(sbs,q,V_FM[0],u);
     setUToFitLinearVelocityImpl (sbs,q,V_FM[1],u);
 }
+#endif
 
 // End of RigidBodyNode overrides.
 //------------------------------------------------------------------------------

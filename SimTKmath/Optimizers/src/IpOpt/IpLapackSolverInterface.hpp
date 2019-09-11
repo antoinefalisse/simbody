@@ -4,7 +4,7 @@
 
 #include "IpSparseSymLinearSolverInterface.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   /** Interface to the linear solver Lapack, derived from
@@ -120,8 +120,7 @@ namespace SimTKIpopt
     //@{
     /** Number of negative eigenvalues */
     Index negevals_;
-    /** Array for storing the pivot order after factorization. */
-    int *ipiv_;
+
     bool isFactored;
 
     //@}

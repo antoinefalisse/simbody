@@ -26,6 +26,7 @@
 #include "cpoly.h"
 
 namespace SimTK {
+#ifndef SimTK_REAL_IS_ADOUBLE
 
 template <class T>
 void PolynomialRootFinder::findRoots(const Vec<3,T>& coefficients, Vec<2,complex<T> >& roots) {
@@ -65,6 +66,7 @@ void PolynomialRootFinder::findRoots(const Vec<3,T>& coefficients, Vec<2,complex
     roots[1] = c/q;
 }
 
+
 template <class T>
 void PolynomialRootFinder::findRoots(const Vec<3,complex<T> >& coefficients, Vec<2,complex<T> >& roots) {
     complex<T> a = coefficients[0], b = coefficients[1], c = coefficients[2];
@@ -96,7 +98,7 @@ void PolynomialRootFinder::findRoots(const Vec<4,T>& coefficients, Vec<3,complex
     T rooti[3];
     for (int i = 0; i < 3; ++i) // in case these don't get filled in
         rootr[i] = rooti[i] = NTraits<T>::getNaN(); 
-    const int nrootsFound = RPoly<T>().findRoots(coeff, 3, rootr, rooti);
+	const int nrootsFound = RPoly<T>().findRoots(coeff, 3, rootr, rooti);
     roots[0] = complex<T>(rootr[0], rooti[0]);
     roots[1] = complex<T>(rootr[1], rooti[1]);
     roots[2] = complex<T>(rootr[2], rooti[2]);
@@ -146,7 +148,11 @@ void PolynomialRootFinder::findRoots(const Vector_<T>& coefficients, Vector_<com
             coeff[i] = coefficients[i];
         for (int i = 0; i < n; ++i) // in case these don't get filled in
             rootr[i] = rooti[i] = NTraits<T>::getNaN(); 
-        const int nrootsFound = RPoly<T>().findRoots(coeff, n, rootr, rooti);
+	#ifndef SimTK_REAL_IS_ADOUBLE
+		const int nrootsFound = RPoly<T>().findRoots(coeff, n, rootr, rooti);
+	#else
+		const int nrootsFound = RPoly<Recorder>().findRoots(coeff, n, rootr, rooti);
+	#endif
         for (int i = 0; i < n; ++i)
             roots[i] = complex<T>(rootr[i], rooti[i]);
 
@@ -207,7 +213,6 @@ void PolynomialRootFinder::findRoots(const Vector_<complex<T> >& coefficients, V
     delete[] rootr;
     delete[] rooti;
 }
-
 template SimTK_SimTKCOMMON_EXPORT void PolynomialRootFinder::findRoots<float>(const Vec<3,float>& coefficients, Vec<2,complex<float> >& roots);
 template SimTK_SimTKCOMMON_EXPORT void PolynomialRootFinder::findRoots<float>(const Vec<3,complex<float> >& coefficients, Vec<2,complex<float> >& roots);
 template SimTK_SimTKCOMMON_EXPORT void PolynomialRootFinder::findRoots<float>(const Vec<4,float>& coefficients, Vec<3,complex<float> >& roots);
@@ -222,4 +227,87 @@ template SimTK_SimTKCOMMON_EXPORT void PolynomialRootFinder::findRoots<double>(c
 template SimTK_SimTKCOMMON_EXPORT void PolynomialRootFinder::findRoots<double>(const Vector_<double>& coefficients, Vector_<complex<double> >& roots);
 template SimTK_SimTKCOMMON_EXPORT void PolynomialRootFinder::findRoots<double>(const Vector_<complex<double> >& coefficients, Vector_<complex<double> >& roots);
 
+#else
+
+template <class Recorder>
+void PolynomialRootFinder::findRoots(const Vec<3, Recorder>& coefficients, Vec<2, Recorder>& roots) {
+	Recorder a = coefficients[0], b = coefficients[1], c = coefficients[2];
+	if (a == 0.0)
+		SimTK_THROW(ZeroLeadingCoefficient);
+	Recorder b2 = b*b;
+	Recorder discriminant = b2 - 4.0*a*c;
+	if (discriminant < 0.0)
+		throw std::runtime_error("Complex numbers not supported with adoubles");
+
+	Recorder tol = 2.0*NTraits<Recorder>::getEps()*b2;
+	if (discriminant < tol && discriminant > -tol) {
+
+		// b^2 == 4ac to within machine precision, so make the roots identical.
+
+		Recorder root = -b / (2.0*a);
+		roots[0] = root;
+		roots[1] = root;
+		return;
+	}
+	if (b == 0.0) {
+
+		// The coefficient of the linear term is zero, which makes the formula simpler.
+
+		if (discriminant >= 0.0) {
+			Recorder root = sqrt(discriminant) / (2.0*a);
+			roots[0] = root;
+			roots[1] = -root;
+		}
+		else {
+			throw std::runtime_error("Complex numbers not supported with adoubles");
+		}
+		return;
+	}
+	roots[0] = (-b + sqrt(discriminant)) / (2.0*a);
+	roots[1] = (-b - sqrt(discriminant)) / (2.0*a);
+}
+
+template <class Recorder>
+void PolynomialRootFinder::findRoots(const Vector_<Recorder>& coefficients, Vector_<Recorder>& roots) {
+	if (coefficients[0] == 0.0)
+		SimTK_THROW(ZeroLeadingCoefficient);
+	int n = roots.size();
+	assert(coefficients.size() == n + 1);
+	static Recorder *coeff = new Recorder[n + 1];
+	Recorder *rootr = new Recorder[n];
+	 Recorder *rooti = new Recorder[n];
+
+	try {
+		for (int i = 0; i < n + 1; ++i)
+			coeff[i] = coefficients.get(i);
+		for (int i = 0; i < n; ++i) // in case these don't get filled in
+			rootr[i] = rooti[i] = NTraits<Recorder>::getNaN();
+		const int nrootsFound = RPoly<Recorder>().findRoots(coeff, n, rootr, rooti);
+		for (int i = 0; i < n; ++i)	{
+			roots[i] = rootr[i];
+			if (rooti[i].value() != 0.0)
+				throw std::runtime_error("Complex numbers not supported in Recorder");				
+		}
+		SimTK_ERRCHK_ALWAYS(nrootsFound != -1,
+			"PolynomialRootFinder::findRoots()",
+			"Leading coefficient is zero; can't solve.");
+		SimTK_ERRCHK1_ALWAYS(nrootsFound > 0,
+			"PolynomialRootFinder::findRoots()",
+			"Failure to find any roots for polynomial of order %d.", n);
+	}
+	catch (...) {
+		delete[] coeff;
+		delete[] rootr;
+		delete[] rooti;
+		throw;
+	}
+	delete[] coeff;
+	delete[] rootr;
+	delete[] rooti;
+}
+
+
+template SimTK_SimTKCOMMON_EXPORT void PolynomialRootFinder::findRoots<Recorder>(const Vec<3, Recorder>& coefficients, Vec<2, Recorder>& roots);
+template SimTK_SimTKCOMMON_EXPORT void PolynomialRootFinder::findRoots<Recorder>(const Vector_<Recorder>& coefficients, Vector_<Recorder> & roots);
+#endif
 } // namespace SimTK

@@ -21,11 +21,6 @@
  * limitations under the License.                                             *
  * -------------------------------------------------------------------------- */
 
-// Avoid annoying deprecated warnings regarding std::copy during instantiations.
-#ifdef _MSC_VER
-#pragma warning(disable:4996)
-#endif
-
 #include "SimTKcommon/Scalar.h"
 #include "SimTKcommon/SmallMatrix.h"
 #include "SimTKcommon/TemplatizedLapack.h"
@@ -964,6 +959,15 @@ TriInFullHelper<S>::createDiagonalView_() {
 // everything supplied at least compiles. Otherwise you won't find errors
 // until all the code is actually used.
 
+#ifdef SimTK_REAL_IS_ADOUBLE
+    #define INSTANTIATE_ADOLC(Helper)   \
+    template class Helper< Recorder >;   \
+    template class Helper< negator< Recorder >>
+
+#else
+    #define INSTANTIATE_ADOLC(Helper)
+#endif
+
 #define INSTANTIATE(Helper)         \
 template class Helper< float >;     \
 template class Helper< double >;    \
@@ -976,7 +980,9 @@ template class Helper< negator< double > >;     \
 template class Helper< negator< std::complex<float> > >;    \
 template class Helper< negator< std::complex<double> > >;   \
 template class Helper< negator< conjugate<float> > >;       \
-template class Helper< negator< conjugate<double> > >
+template class Helper< negator< conjugate<double> > >; \
+INSTANTIATE_ADOLC(Helper);
+
 
 INSTANTIATE(MatrixHelper);
 INSTANTIATE(MatrixHelperRep);

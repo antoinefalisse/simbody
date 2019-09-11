@@ -13,7 +13,7 @@
 
 /* include from a common include file */
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 #include "IpReturnCodes_inc.h"
 }

@@ -80,10 +80,10 @@ public:
 
             Real velocity = oscillator.getVelocity(state);
             sumVelocity += velocity;
-            sumAbsVelocity += std::abs(velocity);
+            sumAbsVelocity += fabs(velocity);
             sumVelocitySquared += velocity*velocity;
 
-            sumRMSVelPos += std::sqrt(position*position * velocity*velocity);
+            sumRMSVelPos += sqrt(position*position * velocity*velocity);
 
             // oscillator.savedPositions.push_back(oscillator.getPosition(state));
             // oscillator.savedVelocities.push_back(oscillator.getVelocity(state));
@@ -152,17 +152,17 @@ public:
         // Mean position should be zero
         Real expectedMeanPosition = 0.0;
         Real measuredMeanPosition = reporter->sumPosition / reporter->eventCount;
-        ASSERT(std::abs(expectedMeanPosition - measuredMeanPosition) < 0.2);
+        ASSERT(fabs(expectedMeanPosition - measuredMeanPosition) < 0.2);
 
         // Mean velocity should be zero
         Real expectedMeanVelocity = 0.0;
         Real measuredMeanVelocity = reporter->sumVelocity / reporter->eventCount;
-        ASSERT(std::abs(expectedMeanVelocity - measuredMeanVelocity) < 0.2);
+        ASSERT(fabs(expectedMeanVelocity - measuredMeanVelocity) < 0.2);
 
         // Check temperature
         Real measuredMeanEnergy = reporter->sumEnergy/reporter->eventCount;
         Real expectedMeanEnergy = degreesOfFreedom * 0.5 * SimTK_BOLTZMANN_CONSTANT_MD * temperature; // kT/2 per degree of freedom
-        ASSERT(std::abs(1.0 - measuredMeanEnergy/expectedMeanEnergy) < 0.2);
+        ASSERT(fabs(1.0 - measuredMeanEnergy/expectedMeanEnergy) < 0.2);
 
         // Boltzmann distribution stuff
 
@@ -172,11 +172,11 @@ public:
             degreesOfFreedom * SimTK_BOLTZMANN_CONSTANT_MD * temperature / mass;
         Real measuredMeanVelocitySquared =
             reporter->sumVelocitySquared / reporter->eventCount;
-        ASSERT(std::abs(1.0 - measuredMeanVelocitySquared/expectedMeanVelocitySquared) < 0.2);
+        ASSERT(fabs(1.0 - measuredMeanVelocitySquared/expectedMeanVelocitySquared) < 0.2);
 
         // TODO: check this formula
         // Mean absolute velocity should be (8*v2bar/3PI)^1/2
-        Real expectedMeanAbsVelocity = std::sqrt(
+        Real expectedMeanAbsVelocity = sqrt(
             8.0 * expectedMeanVelocitySquared / (degreesOfFreedom * SimTK_PI) );
         Real measuredMeanAbsVelocity = 
             reporter->sumAbsVelocity / reporter->eventCount;
@@ -265,9 +265,12 @@ int main()
 
     //cout << "testNoseHooverConstructorSmoke" << endl;
     //testNoseHooverConstructorSmoke();
-
+#ifndef SimTK_REAL_IS_ADOUBLE
     cout << "oscillator 100K" << endl;
     testOscillatorTemperature(100); // use default #chains
+#else
+    std::cout << "This test is not supported with ADOL-C" << std::endl;
+#endif
 
     //cout << "oscillator 300K" << endl;
     //testOscillatorTemperature(300.0);

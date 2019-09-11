@@ -11,7 +11,7 @@
 
 #include "IpHessianUpdater.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   /** Implementation of the HessianUpdater for the use of exact second

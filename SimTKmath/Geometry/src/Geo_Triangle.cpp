@@ -56,6 +56,7 @@ overlapsTriangle(const Triangle_<P>& other) const {
         &other.v[0][0], &other.v[1][0], &other.v[2][0]);
 }
 
+#ifndef SimTK_REAL_IS_ADOUBLE
 template <class P> 
 bool Geo::Triangle_<P>::
 intersectsTriangle(const Triangle_<P>& other, LineSeg_<P>& seg,
@@ -65,7 +66,7 @@ intersectsTriangle(const Triangle_<P>& other, LineSeg_<P>& seg,
         &other.v[0][0], &other.v[1][0], &other.v[2][0],
         isCoplanar, &seg[0][0], &seg[1][0]);
 }
-
+#endif
 
 //==============================================================================
 //                  Triangle-triangle overlap routines
@@ -527,8 +528,6 @@ tri_tri_intersection_test_3d(const RealP p1[3], const RealP q1[3], const RealP r
 };
 
 
-
-
 //==============================================================================
 //                   2D Triangle-Triangle Overlap Test 
 //==============================================================================
@@ -626,7 +625,8 @@ tri_tri_overlap_test_2d(const RealP p1[2], const RealP q1[2], const RealP r1[2],
 
 // Explicit instantiations for float and double.
 template class Geo::Triangle_<float>;
-template class Geo::Triangle_<double>;
+//template class Geo::Triangle_<double>;
+template class Geo::Triangle_<Real>;
 
 
 }  // End of namespace SimTK

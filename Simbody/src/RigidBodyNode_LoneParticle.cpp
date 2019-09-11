@@ -423,6 +423,9 @@ const SpatialVec& getH_FMCol(const SBTreePositionCache& pc,
     return col;
 }
 
+#ifndef SimTK_REAL_IS_ADOUBLE
+
+
 void setQToFitTransformImpl(const SBStateDigest&, const Transform& X_F0M0, 
                             Vector& q) const override {
     Vec3::updAs(&q[qIndex]) = X_F0M0.p();
@@ -447,12 +450,15 @@ void setUToFitLinearVelocityImpl(const SBStateDigest&, const Vector& q,
     Vec3::updAs(&u[uIndex]) = v_F0M0;
 }
 
+#endif
+
 };
 
 RigidBodyNode* MobilizedBody::TranslationImpl::createRigidBodyNode(
         UIndex&        nextUSlot,
         USquaredIndex& nextUSqSlot,
         QIndex&        nextQSlot) const {
+
     if (!hasChildren && getMyParentMobilizedBodyIndex() == 0 && !isReversed() &&
             getDefaultInboardFrame().p() == 0 && getDefaultInboardFrame().R() == Mat33(1) &&
             getDefaultOutboardFrame().p() == 0 && getDefaultOutboardFrame().R() == Mat33(1)) {

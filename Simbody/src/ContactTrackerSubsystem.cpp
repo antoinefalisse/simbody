@@ -216,7 +216,7 @@ ContactSnapshot& updNextPredictedContacts(const State& state) const {
 int realizeSubsystemTopologyImpl(State& state) const override {
     // Briefly allow writing into the Topology cache; after this the
     // Topology cache is const.
-    ContactTrackerSubsystemImpl* wThis = 
+	ContactTrackerSubsystemImpl* wThis = 
         const_cast<ContactTrackerSubsystemImpl*>(this);
     wThis->m_activeContactsIx = allocateAutoUpdateDiscreteVariable
         (state, Stage::Dynamics, new Value<ContactSnapshot>(), 
@@ -225,7 +225,7 @@ int realizeSubsystemTopologyImpl(State& state) const override {
         (state, Stage::Dynamics, new Value<ContactSnapshot>(), 
          Stage::Acceleration);  // update depends on accelerations
 
-    const SimbodyMatterSubsystem& matter = getMatterSubsystem();
+	const SimbodyMatterSubsystem& matter = getMatterSubsystem();
 
     const int numBodies = matter.getNumBodies();
     wThis->m_mobodContactSurfaceIndex.resize(numBodies);
@@ -244,14 +244,14 @@ int realizeSubsystemTopologyImpl(State& state) const override {
             nSurfs ? ContactSurfaceIndex(m_surfaces.size())
                    : InvalidContactSurfaceIndex;
         wThis->m_mobodContactSurfaceIndex[mbx] = make_pair(firstIx,nSurfs);
-        for (int i=0; i < nSurfs; ++i) {
+		for (int i=0; i < nSurfs; ++i) {
             const ContactSurfaceIndex surfx(firstIx + i);
             wThis->m_surfaces.push_back(); // default construct
             Surface& surf = wThis->m_surfaces.back();
             surf.mobod   = &mobod; 
             surf.surface = &body.getContactSurface(i);
             assert(surf.surface->getIndexOnBody() == i);
-            surf.X_BS    =  body.getContactSurfaceTransform(i);
+			surf.X_BS    =  body.getContactSurfaceTransform(i);
             const ContactGeometry& geo  = surf.surface->getShape();
             // for each bubble:
             wThis->m_bubbles.push_back(); // default construct
@@ -282,11 +282,11 @@ void addInBroadPhasePairs(const State& state, PairMap& pairs) const {
     // contacts. First, find which axis has the most variation in body 
     // locations. That is the axis we will use.
     // TODO: this one-axis method is not good enough in general
-    
     Vector_<Vec3> centers(numBubbles);
     for (BubbleIndex bbx(0); bbx < numBubbles; ++bbx) {
+		
         const Bubble&  bubb = m_bubbles[bbx];
-        const Surface& surf = m_surfaces[bubb.surface];
+        const Surface& surf = m_surfaces[bubb.surface];		
         centers[bbx] = surf.mobod->getBodyTransform(state) 
                         * bubb.getCenter();
     }
@@ -403,18 +403,19 @@ void ensureActiveContactsUpdated(const State& state) const {
         assert(others.find(high)==others.end());
         others[high] = &contact;
     }
-    // This will ignore pairs that we already inserted above; new ones
+	
+	// This will ignore pairs that we already inserted above; new ones
     // will be inserted with null Contact object pointers.
     addInBroadPhasePairs(state, interesting);
-    //cout << "Interesting pairs:\n" << interesting << "\n";
-
     PairMap::const_iterator p = interesting.begin();
     for (; p != interesting.end(); ++p) {
-        const ContactSurfaceIndex index1 = p->first;
-        const Transform transform1 = 
+        
+		const ContactSurfaceIndex index1 = p->first;
+		const Transform transform1 = 
             m_surfaces[index1].mobod->getBodyTransform(state)
                 * m_surfaces[index1].X_BS;
-        const ContactGeometry& geom1 = m_surfaces[index1].surface->getShape();
+		
+		const ContactGeometry& geom1 = m_surfaces[index1].surface->getShape();
         const ContactGeometryTypeId typeId1 = geom1.getTypeId();
 
         const ContactSurfaceSet& others = p->second;

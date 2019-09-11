@@ -55,21 +55,46 @@ dumpUniContacts(const String& msg,
     printf("Unilateral contact runtimes (n=%d):\n", (int)uniContacts.size());
     for (unsigned i=0; i < uniContacts.size(); ++i) {
         const UniContactRT& rt = uniContacts[i];
-        printf("%d: UnilateralContactIndex %d, normal MultiplierIndex %d, "
-               "sign=%g, hasFriction: %d\n", i, (int)rt.m_ucx, (int)rt.m_Nk,
-               rt.m_sign, rt.hasFriction());
+        #ifndef SimTK_REAL_IS_ADOUBLE
+            printf("%d: UnilateralContactIndex %d, normal MultiplierIndex %d, "
+                "sign=%g, hasFriction: %d\n", i, (int)rt.m_ucx, (int)rt.m_Nk,
+                rt.m_sign, rt.hasFriction());
+        #else
+            printf("%d: UnilateralContactIndex %d, normal MultiplierIndex %d, "
+                   "sign=%g, hasFriction: %d\n", i, (int)rt.m_ucx, (int)rt.m_Nk,
+                   rt.m_sign.value(), rt.hasFriction());
+        #endif
+
+        
         if (rt.hasFriction()) {
             std::cout << "  friction MultIndices: " << rt.m_Fk   
                       << " effMu=" << rt.m_effMu << std::endl;
         }
-        printf("  inputs: ContactType=%s, effCOR=%g\n",
-               getContactTypeName(rt.m_type), rt.m_effCOR);
+        #ifndef SimTK_REAL_IS_ADOUBLE
+            printf("  inputs: ContactType=%s, effCOR=%g\n",
+                getContactTypeName(rt.m_type), rt.m_effCOR);
+        #else
+            printf("  inputs: ContactType=%s, effCOR=%g\n",
+                getContactTypeName(rt.m_type), rt.m_effCOR.value());
+        #endif
         printf("  outputs: normal cond=%s", 
                getUniCondName(rt.m_contactCond));
         if (rt.hasFriction()) {
+        #ifndef SimTK_REAL_IS_ADOUBLE
             printf(" friction cond=%s slipV=%g %g, |slipV|=%g",
-                   getFricCondName(rt.m_frictionCond),
-                   rt.m_slipVel[0], rt.m_slipVel[1], rt.m_slipMag);
+                getFricCondName(rt.m_frictionCond),
+                #ifndef SimTK_REAL_IS_ADOUBLE
+                    rt.m_slipVel[0], rt.m_slipVel[1],
+                #else
+                    rt.m_slipVel[0].getValue(), rt.m_slipVel[1].getValue(),
+                #endif
+                rt.m_slipMag);
+        #else
+            printf(" friction cond=%s slipV=%g %g, |slipV|=%g",
+                getFricCondName(rt.m_frictionCond),
+                rt.m_slipVel[0].getValue(), rt.m_slipVel[1].getValue(),
+                rt.m_slipMag.value());
+        #endif
         }
         printf("\n");
     }

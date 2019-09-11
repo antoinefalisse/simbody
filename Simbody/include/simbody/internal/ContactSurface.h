@@ -31,7 +31,6 @@ Declares ContactMaterial and ContactSurface classes. **/
 #include "simbody/internal/common.h"
 
 #include <algorithm>
-#include <atomic>
 
 namespace SimTK {
 
@@ -183,7 +182,9 @@ ContactMaterial& setStiffness(Real stiffness) {
     SimTK_ERRCHK1_ALWAYS(stiffness >= 0, "ContactMaterial::setStiffness()",
         "Stiffness %g is illegal; must be >= 0.", stiffness);
     m_stiffness = stiffness;
-    m_stiffness23 = std::pow(m_stiffness, Real(2./3.));
+    //m_stiffness23 = NTraits<Real>::pow(m_stiffness, Real(2./3.));
+    m_stiffness23 = pow(m_stiffness, Real(2. / 3.));
+
     return *this;
 }
 
@@ -454,7 +455,7 @@ static bool cliquesIntersect(const Array_<ContactCliqueId,short>& a,
 safe). Every contact surface is automatically a member of a clique containing 
 all the surfaces that reside on the same body. **/
 static ContactCliqueId createNewContactClique()
-{   static std::atomic<int> nextAvailableContactClique(1);
+{   static AtomicInteger nextAvailableContactClique = 1;
     return ContactCliqueId(nextAvailableContactClique++); }
 
 /** For selection or other purposes, you may want to use this method to store

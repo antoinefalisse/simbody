@@ -1151,5 +1151,3 @@ static void cpdSCcomputeKD(CPodeMem cp_mem, N_Vector d)
 {
   /* RADU:: implement this ... */
 }
-
-

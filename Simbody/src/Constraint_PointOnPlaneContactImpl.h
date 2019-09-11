@@ -162,7 +162,8 @@ void calcPositionDotDotErrorsVirtual
 
     const Vec3& w_AS = V_AS[0];
     const Vec3 v_CF_A = v_AF-v_AC;          // 3 flops
-    const Vec3 wXv2 = (2.*w_AS) % v_CF_A;   // 12 flops
+    const Vec3 wXv2 = 2.*w_AS % v_CF_A;   // 12 flops
+    //const Vec3 wXv2 = (Real(2.0)*w_AS) % v_CF_A;   // 12 flops
     const Vec3 a_CF_A = a_AF-a_AC;          // 3 flops
     const Vec3 aRel_A = a_CF_A - wXv2; // relative accel of F and C  (3 flops)
 
@@ -271,6 +272,7 @@ void calcVelocityDotErrorsVirtual
     const Vec3& w_AS = V_AS[0];
     const Vec3 v_CF_A = v_AF-v_AC;          // 3 flops
     const Vec3 wXv2 = (2.*w_AS) % v_CF_A;   // 12 flops
+    //const Vec3 wXv2 = (Real(2.0)*w_AS) % v_CF_A;   // 12 flops
 
     const Vec3 a_CF_A = a_AF-a_AC; // 3 flops
     const Vec3 aRel_A = a_CF_A - wXv2; // relative accel of F and C (3 flops)

@@ -148,7 +148,7 @@ public:
     /**
      * Create a new random number generator that produces values according to a Gaussian distribution with the specified mean and standard deviation.
      */
-    Gaussian(Real mean, Real stddev);
+    Gaussian(Real mean,Real stddev);
     /**
      * Get the mean of the Gaussian distribution.
      */

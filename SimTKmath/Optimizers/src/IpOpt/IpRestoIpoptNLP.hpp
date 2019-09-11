@@ -20,7 +20,7 @@
 #include "IpZeroMatrix.hpp"
 #include "IpOrigIpoptNLP.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   /** This class maps the traditional NLP into

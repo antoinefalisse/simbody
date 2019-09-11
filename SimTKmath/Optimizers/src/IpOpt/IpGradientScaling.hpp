@@ -12,7 +12,7 @@
 #include "IpNLPScaling.hpp"
 #include "IpNLP.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
   /** This class does problem scaling by setting the
    *  scaling parameters based on the maximum of the

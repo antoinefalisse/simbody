@@ -35,7 +35,7 @@
 # endif
 #endif
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   bool IsFiniteNumber(Number val)

@@ -123,7 +123,7 @@ void testCrossProduct() {
 }
 
 void testInertia() {
-    const Real mass = std::abs(Test::randReal());
+    const Real mass = fabs(Test::randReal());
     const UnitInertia_<Real> G( Vec3(1,2,2.5),       // moments
                                 Vec3(0.1,0.2,0.3) ); // products
     const Real Gtrace = 1+2+2.5;
@@ -145,7 +145,7 @@ void testInertia() {
     SimTK_TEST_EQ( I.trace(), mass*Gtrace );
 
     // Test Inertia*scalar
-    const Real s = std::abs(Test::randReal()) + 1;
+    const Real s = fabs(Test::randReal()) + 1;
     SimTK_TEST_EQ( (I*s).toMat33(), I.toMat33()*s );
     SimTK_TEST_EQ( (s*I).toMat33(), I.toMat33()*s );
     SimTK_TEST_EQ( (G*s).toMat33(), G.toMat33()*s );
@@ -167,12 +167,12 @@ void testInertia() {
     const Rotation R = Test::randRotation();
     Inertia_<Real> mIR = Inertia_<Real>(~R*I.toMat33()*R);
 
-    SimTK_TEST_EQ(mIR.asSymMat33(), I.reexpress(R).asSymMat33());
-    SimTK_TEST_EQ(I.asSymMat33(),   mIR.reexpress(~R).asSymMat33());
+    SimTK_TEST_EQ_TOL(mIR.asSymMat33(), I.reexpress(R).asSymMat33(),1e-5);
+    SimTK_TEST_EQ_TOL(I.asSymMat33(),   mIR.reexpress(~R).asSymMat33(),1e-5);
 
     Inertia_<Real> J=I;
     J.reexpressInPlace(R);
-    SimTK_TEST_EQ(J.asSymMat33(), mIR.asSymMat33());
+    SimTK_TEST_EQ_TOL(J.asSymMat33(), mIR.asSymMat33(), 1e-5);
 
     // Test inertia shifting
 
@@ -187,21 +187,22 @@ void testInertia() {
     // Assuming I and G are central, shifting them to pLoc should be
     // the same as adding the point inertias above.
     SimTK_TEST_EQ( G.shiftFromCentroid(pLoc), G + pG );
-    SimTK_TEST_EQ( I.shiftFromMassCenter(pLoc, mass), I + pI );
+    SimTK_TEST_EQ_TOL( I.shiftFromMassCenter(pLoc, mass), I + pI, 1e-5);
 
     // Now try in place shifts and shifting back.
     UnitInertia_<Real> Gshft(G); Gshft.shiftFromCentroidInPlace(pLoc);
     Inertia_<Real>     Ishft(I); Ishft.shiftFromMassCenterInPlace(pLoc, mass);
     SimTK_TEST_EQ(Gshft, G+pG);
-    SimTK_TEST_EQ(Ishft, I+pI);
+    SimTK_TEST_EQ_TOL(Ishft, I+pI, 1e-5);
 
-    SimTK_TEST_EQ(Gshft.shiftToCentroid(pLoc), G);
-    SimTK_TEST_EQ(Ishft.shiftToMassCenter(pLoc, mass), I);
+    SimTK_TEST_EQ_TOL(Gshft.shiftToCentroid(pLoc), G, 1e-5);
+    SimTK_TEST_EQ_TOL(Ishft.shiftToMassCenter(pLoc, mass), I, 1e-5);
 
     Gshft.shiftToCentroidInPlace(pLoc);
     Ishft.shiftToMassCenterInPlace(pLoc, mass);
-    SimTK_TEST_EQ(Gshft, G);
-    SimTK_TEST_EQ(Ishft, I);
+
+    SimTK_TEST_EQ_TOL(Gshft, G, 1e-5);
+    SimTK_TEST_EQ_TOL(Ishft, I, 1e-5);
 
     // Check that we catch bad inertias in debug mode
 #ifndef NDEBUG
@@ -286,7 +287,7 @@ void testHalfCross() {
     SimTK_TEST_EQ(halfCross(G, v), hGxv);
 
     const SymMat33 hdiff = hvxF-hGxv;
-    SimTK_TEST_EQ(halfCrossDiff(v, F, G), hdiff);
+    SimTK_TEST_EQ_TOL(halfCrossDiff(v, F, G), hdiff, 1e-5);
 
 }
 
@@ -317,16 +318,14 @@ void testSpatialInertia() {
     // The SpatialInertia shift() method behaves correctly; the Articulated
     // one currently has the reverse sense, see below.
     const SpatialInertia shiftSi = si.shift(shiftVec);
-
-    SimTK_TEST_EQ(shiftSi.toSpatialMat(), msiShiftedManually);
-
-    SimTK_TEST_EQ(shiftSi.shift(-shiftVec).toSpatialMat(),
-                  si.toSpatialMat());
+    SimTK_TEST_EQ_TOL(shiftSi.toSpatialMat(), msiShiftedManually, 1e-5);
+    SimTK_TEST_EQ_TOL(shiftSi.shift(-shiftVec).toSpatialMat(),
+                  si.toSpatialMat(), 1e-5);
 
     si.shiftInPlace(shiftVec);
-    SimTK_TEST_EQ(si.toSpatialMat(), msiShiftedManually);
+    SimTK_TEST_EQ_TOL(si.toSpatialMat(), msiShiftedManually, 1e-5);
 
-    SimTK_TEST_EQ(si.shiftInPlace(-shiftVec).toSpatialMat(), msi);
+    SimTK_TEST_EQ_TOL(si.shiftInPlace(-shiftVec).toSpatialMat(), msi, 1e-5);
 }
 
 void testArticulatedInertia() {
@@ -358,15 +357,15 @@ void testArticulatedInertia() {
     const Vec3 negShiftVec(-shiftVec);
     const ArticulatedInertia shiftAbi = abi.shift(negShiftVec);
 
-    SimTK_TEST_EQ(shiftAbi.toSpatialMat(), mabiShiftedManually);
+    SimTK_TEST_EQ_TOL(shiftAbi.toSpatialMat(), mabiShiftedManually, 1e-5);
 
-    SimTK_TEST_EQ(shiftAbi.shift(-negShiftVec).toSpatialMat(),
-                  abi.toSpatialMat());
+    SimTK_TEST_EQ_TOL(shiftAbi.shift(-negShiftVec).toSpatialMat(),
+                  abi.toSpatialMat(), 1e-5);
 
     abi.shiftInPlace(negShiftVec);
-    SimTK_TEST_EQ(abi.toSpatialMat(), mabiShiftedManually);
+    SimTK_TEST_EQ_TOL(abi.toSpatialMat(), mabiShiftedManually, 1e-5);
 
-    SimTK_TEST_EQ(abi.shiftInPlace(-negShiftVec).toSpatialMat(), mabi);
+    SimTK_TEST_EQ_TOL(abi.shiftInPlace(-negShiftVec).toSpatialMat(), mabi, 1e-5);
 }
 
 void testManualABIShift(const ArticulatedInertia& abi, const Array_<Vec3>& shifts, Real& out) {

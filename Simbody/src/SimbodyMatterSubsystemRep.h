@@ -264,7 +264,8 @@ public:
         return *constraints[ix];
     }
 
-    UnilateralContactIndex adoptUnilateralContact(UnilateralContact*);
+   #ifndef SimTK_REAL_IS_ADOUBLE
+   UnilateralContactIndex adoptUnilateralContact(UnilateralContact*);
     int getNumUnilateralContacts() const 
     {   return (int)uniContacts.size(); }
     const UnilateralContact& 
@@ -281,6 +282,7 @@ public:
         assert(uniContacts[ix]);
         return *uniContacts[ix];
     }
+    #endif
 
     StateLimitedFrictionIndex adoptStateLimitedFriction(StateLimitedFriction*);
     int getNumStateLimitedFrictions() const 
@@ -483,12 +485,14 @@ public:
     // This is used by projectQ().
     bool normalizeQuaternions(State& s, Vector& qErrest) const;
 
+    #ifndef SimTK_REAL_IS_ADOUBLE
     int projectQ(State& s, Vector& qErrest, 
                  const ProjectOptions& opts,
                  ProjectResults& results) const;
     int projectU(State& s, Vector& uErrest, 
                  const ProjectOptions& opts,
                  ProjectResults& results) const;
+    #endif
 
         // REALIZATIONS //
 
@@ -1249,10 +1253,12 @@ public:
     // Given a set of forces, calculate acclerations resulting from
     // those forces and enforcement of acceleration constraints, and update 
     // the state cache with the results.
+    #ifndef SimTK_REAL_IS_ADOUBLE
     void realizeLoopForwardDynamics(const State&,
         const Vector&              mobilityForces,
         const Vector_<Vec3>&       particleForces,
         const Vector_<SpatialVec>& bodyForces) const;
+    #endif
 
     // calc ~(Tp Pq Wq^-1)_r (nfq X mp)
     void calcWeightedPqrTranspose(   
@@ -1334,8 +1340,10 @@ private:
     // Constraints are treated similarly.
     Array_<Constraint*,ConstraintIndex>                     constraints;
 
-    Array_<UnilateralContact*,UnilateralContactIndex>       uniContacts;
-    Array_<StateLimitedFriction*,StateLimitedFrictionIndex> stateLtdFriction;
+    #ifndef SimTK_REAL_IS_ADOUBLE
+     Array_<UnilateralContact*,UnilateralContactIndex>       uniContacts;
+    #endif
+     Array_<StateLimitedFriction*,StateLimitedFrictionIndex> stateLtdFriction;
 
     // Our realizeTopology method calls this after all bodies & constraints have been added,
     // to construct part of the topology cache below.

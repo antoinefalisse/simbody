@@ -1,7 +1,7 @@
 
 # add in all sundials source and headers here
-file(GLOB src_files  ./src/*/*.c)
-file(GLOB incl_files ./include/*/*.h)
+file(GLOB src_files  src/*/*.c)
+file(GLOB incl_files include/*/*.h)
 
 foreach( src ${src_files} )
     list(APPEND SOURCE_GROUPS "Source Files\\CPodes")

@@ -17,7 +17,7 @@
 #include "IpTripletToDenseConverter.hpp"
 #include <vector>
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   /** General driver for linear solvers for sparse indefinite

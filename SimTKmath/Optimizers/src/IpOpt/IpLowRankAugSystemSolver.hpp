@@ -14,7 +14,7 @@
 #include "IpMultiVectorMatrix.hpp"
 #include "IpDiagMatrix.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   /** Solver for the augmented system with LowRankUpdateSymMatrix

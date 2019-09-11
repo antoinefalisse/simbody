@@ -645,14 +645,14 @@ void testJacobianBiasTerms() {
     JDotu    = (J2u-J1u)/Delta/2;
 
     // Calculate errors in JDot*u:
-    SimTK_TEST_EQ_TOL((JSDot_P*u-sbias).norm(), 0, SqrtEps);
-    SimTK_TEST_EQ_TOL((JFDot_P*u-fbias).norm(), 0, SqrtEps);
-    SimTK_TEST_EQ_TOL((JDot*u-sysbias).norm(), 0, SqrtEps);
+    SimTK_TEST_EQ_TOL((JSDot_P*u-sbias).norm(), 0, SqrtEps.value());
+    SimTK_TEST_EQ_TOL((JFDot_P*u-fbias).norm(), 0, SqrtEps.value());
+    SimTK_TEST_EQ_TOL((JDot*u-sysbias).norm(), 0, SqrtEps.value());
 
     // Calculate errors in JDotu:
-    SimTK_TEST_EQ_TOL((JSDot_Pu-sbias).norm(), 0, SqrtEps);
-    SimTK_TEST_EQ_TOL((JFDot_Pu-fbias).norm(), 0, SqrtEps);
-    SimTK_TEST_EQ_TOL((JDotu-sysbias).norm(), 0, SqrtEps);
+    SimTK_TEST_EQ_TOL((JSDot_Pu-sbias).norm(), 0, SqrtEps.value());
+    SimTK_TEST_EQ_TOL((JFDot_Pu-fbias).norm(), 0, SqrtEps.value());
+    SimTK_TEST_EQ_TOL((JDotu-sysbias).norm(), 0, SqrtEps.value());
 }
 
 void testUnconstrainedSystem() {
@@ -687,7 +687,7 @@ void testUnconstrainedSystem() {
     matter.multiplyByMInv(state, result1, result2);
     SimTK_TEST_EQ(result2.size(), nu);
 
-    SimTK_TEST_EQ_TOL(result2, randVec, Slop);
+    SimTK_TEST_EQ_TOL(result2, randVec, Slop.value());
 
     Matrix M(nu,nu), MInv(nu,nu);
 
@@ -784,13 +784,13 @@ void testUnconstrainedSystem() {
     matter.calcAccelerationIgnoringConstraints(state, 
         mobilityForces+residualForces, bodyForces, udots, bodyAccels);
 
-    SimTK_TEST_EQ_TOL(udots, knownUdots, Slop);
+    SimTK_TEST_EQ_TOL(udots, knownUdots, Slop.value());
 
     // See if we get back the same body accelerations by feeding in 
     // these udots.
     Vector_<SpatialVec> A_GB, AC_GB;
     matter.calcBodyAccelerationFromUDot(state, udots, A_GB);
-    SimTK_TEST_EQ_TOL(A_GB, bodyAccels, Slop);
+    SimTK_TEST_EQ_TOL(A_GB, bodyAccels, Slop.value());
 
     // Collect coriolis accelerations.
     AC_GB.resize(matter.getNumBodies());
@@ -800,11 +800,11 @@ void testUnconstrainedSystem() {
     // Verify that either a zero-length or all-zero udot gives just
     // coriolis accelerations.
     matter.calcBodyAccelerationFromUDot(state, Vector(), A_GB);
-    SimTK_TEST_EQ_TOL(A_GB, AC_GB, Slop);
+    SimTK_TEST_EQ_TOL(A_GB, AC_GB, Slop.value());
 
     Vector allZeroUdot(matter.getNumMobilities(), Real(0));
     matter.calcBodyAccelerationFromUDot(state, allZeroUdot, A_GB);
-    SimTK_TEST_EQ_TOL(A_GB, AC_GB, Slop);
+    SimTK_TEST_EQ_TOL(A_GB, AC_GB, Slop.value());
 
     // Now let's test noncontiguous input and output vectors.
     Matrix MatUdot(3, nu); // use middle row
@@ -813,7 +813,7 @@ void testUnconstrainedSystem() {
     Matrix_<SpatialRow> MatA_GB(3, nb); // use middle row
     MatA_GB.setToNaN();
     matter.calcBodyAccelerationFromUDot(state, ~MatUdot[1], ~MatA_GB[1]);
-    SimTK_TEST_EQ_TOL(MatA_GB[1], ~bodyAccels, Slop);
+    SimTK_TEST_EQ_TOL(MatA_GB[1], ~bodyAccels, Slop.value());
 
     // Verify that leaving out arguments makes them act like zeroes.
     Vector residualForces1, residualForces2;
@@ -823,7 +823,7 @@ void testUnconstrainedSystem() {
     matter.calcResidualForceIgnoringConstraints(state,
         Vector(), Vector_<SpatialVec>(), Vector(), residualForces2);
 
-    SimTK_TEST_EQ_TOL(residualForces2, residualForces1, Slop);
+    SimTK_TEST_EQ_TOL(residualForces2, residualForces1, Slop.value());
 
     // We just calculated f_residual = M udot + f_inertial - f_applied, with
     // both udot and f_applied zero, i.e. f_residual=f_inertial. That should
@@ -833,7 +833,7 @@ void testUnconstrainedSystem() {
     for (MobodIndex i(0); i<nb; ++i)
         F_inertial[i] = matter.getTotalCentrifugalForces(state, i);
     matter.multiplyBySystemJacobianTranspose(state, F_inertial, f_inertial);
-    SimTK_TEST_EQ_TOL(f_inertial, residualForces1, Slop);
+    SimTK_TEST_EQ_TOL(f_inertial, residualForces1, Slop.value());
 
     // This should also match total Mass*Coriolis acceleration + gyro force.
     Vector_<SpatialVec> F_coriolis(nb), F_gyro(nb), F_total(nb);
@@ -847,34 +847,34 @@ void testUnconstrainedSystem() {
     }
 
     F_total = F_coriolis + F_gyro;
-    SimTK_TEST_EQ_TOL(F_inertial, F_total, Slop);
+    SimTK_TEST_EQ_TOL(F_inertial, F_total, Slop.value());
 
     // Same, but leave out combinations of arguments.
     matter.calcResidualForceIgnoringConstraints(state,
         0*mobilityForces, bodyForces, knownUdots, residualForces1);
     matter.calcResidualForceIgnoringConstraints(state,
         Vector(), bodyForces, knownUdots, residualForces2);
-    SimTK_TEST_EQ_TOL(residualForces2, residualForces1, Slop);
+    SimTK_TEST_EQ_TOL(residualForces2, residualForces1, Slop.value());
     matter.calcResidualForceIgnoringConstraints(state,
         mobilityForces, 0*bodyForces, knownUdots, residualForces1);
     matter.calcResidualForceIgnoringConstraints(state,
         mobilityForces, Vector_<SpatialVec>(), knownUdots, residualForces2);
-    SimTK_TEST_EQ_TOL(residualForces2, residualForces1, Slop);
+    SimTK_TEST_EQ_TOL(residualForces2, residualForces1, Slop.value());
     matter.calcResidualForceIgnoringConstraints(state,
         mobilityForces, bodyForces, 0*knownUdots, residualForces1);
     matter.calcResidualForceIgnoringConstraints(state,
         mobilityForces, bodyForces, Vector(), residualForces2);
-    SimTK_TEST_EQ_TOL(residualForces2, residualForces1, Slop);
+    SimTK_TEST_EQ_TOL(residualForces2, residualForces1, Slop.value());
     matter.calcResidualForceIgnoringConstraints(state,
         0*mobilityForces, bodyForces, 0*knownUdots, residualForces1);
     matter.calcResidualForceIgnoringConstraints(state,
         Vector(), bodyForces, Vector(), residualForces2);
-    SimTK_TEST_EQ_TOL(residualForces2, residualForces1, Slop);
+    SimTK_TEST_EQ_TOL(residualForces2, residualForces1, Slop.value());
     matter.calcResidualForceIgnoringConstraints(state,
         mobilityForces, 0*bodyForces, 0*knownUdots, residualForces1);
     matter.calcResidualForceIgnoringConstraints(state,
         mobilityForces, Vector_<SpatialVec>(), Vector(), residualForces2);
-    SimTK_TEST_EQ_TOL(residualForces2, residualForces1, Slop);
+    SimTK_TEST_EQ_TOL(residualForces2, residualForces1, Slop.value());
 
     // Check that we object to wrong-length arguments.
     SimTK_TEST_MUST_THROW(matter.calcResidualForceIgnoringConstraints(state,
@@ -926,7 +926,7 @@ void testConstrainedSystem() {
                              udot, lambda, residual);
 
     // Residual should be zero since we accounted for everything.
-    SimTK_TEST_EQ_TOL(residual, 0*randMobFrc, Slop);
+    SimTK_TEST_EQ_TOL(residual, 0*randMobFrc, Slop.value());
 
     Vector abias, mgbias;
     // These are the acceleration error bias terms.
@@ -937,10 +937,10 @@ void testConstrainedSystem() {
     Vector mgGudot; matter.multiplyByG(state, udot, mgbias, mgGudot);
     Matrix G; matter.calcG(state, G);
     Vector Gudot = G*udot;
-    SimTK_TEST_EQ_TOL(mgGudot, Gudot, Slop);
+    SimTK_TEST_EQ_TOL(mgGudot, Gudot, Slop.value());
     Vector aerr = state.getUDotErr(); // won't be zero because bad constraints
     Vector GudotPlusBias = Gudot + abias;
-    SimTK_TEST_EQ_TOL(GudotPlusBias, aerr, Slop);
+    SimTK_TEST_EQ_TOL(GudotPlusBias, aerr, Slop.value());
 
     // Add in some body forces
     state.invalidateAllCacheAtOrAbove(Stage::Dynamics);
@@ -950,7 +950,7 @@ void testConstrainedSystem() {
     lambda = state.getMultipliers();
     matter.calcResidualForce(state,randMobFrc,randBodyFrc,
                              udot, lambda, residual);
-    SimTK_TEST_EQ_TOL(residual, 0*randMobFrc, Slop);
+    SimTK_TEST_EQ_TOL(residual, 0*randMobFrc, Slop.value());
 
     // Try body forces only.
     state.invalidateAllCacheAtOrAbove(Stage::Dynamics);
@@ -960,7 +960,7 @@ void testConstrainedSystem() {
     lambda = state.getMultipliers();
     matter.calcResidualForce(state,Vector(),randBodyFrc,
                              udot, lambda, residual);
-    SimTK_TEST_EQ_TOL(residual, 0*randMobFrc, Slop);
+    SimTK_TEST_EQ_TOL(residual, 0*randMobFrc, Slop.value());
 
     // Put vectors in noncontiguous storage.
     Matrix udotmat(3,nu); // rows are noncontig
@@ -977,7 +977,7 @@ void testConstrainedSystem() {
     // will throw some in and then make sure the residual tries to cancel them.
     matter.calcResidualForce(state,~mobFrcMat[8],~bodyFrcMat[2],
         ~udotmat[2],~lambdamat[3],~residmat[2]);
-    SimTK_TEST_EQ_TOL(residmat[2], -1*mobFrcMat[8], Slop);
+    SimTK_TEST_EQ_TOL(residmat[2], -1*mobFrcMat[8], Slop.value());
 }
 
 
@@ -1186,7 +1186,7 @@ void testTaskJacobians() {
         }
     }
     // These should be exactly the same.
-    SimTK_TEST_EQ_TOL(Jmat2, Jmat, SignificantReal);
+    SimTK_TEST_EQ_TOL(Jmat2, Jmat, SignificantReal.value());
 
     Vector randU = 100.*Test::randVector(nu), resultU1, resultU2;
     Vector_<SpatialVec> randF(nb), resultF1, resultF2;
@@ -1194,11 +1194,11 @@ void testTaskJacobians() {
 
     matter.multiplyBySystemJacobian(state, randU, resultF1);
     resultF2 = J*randU;
-    SimTK_TEST_EQ_TOL(resultF1, resultF2, Slop);
+    SimTK_TEST_EQ_TOL(resultF1, resultF2, Slop.value());
 
     matter.multiplyBySystemJacobianTranspose(state, randF, resultU1);
     resultU2 = ~J*randF;
-    SimTK_TEST_EQ_TOL(resultU1, resultU2, Slop);
+    SimTK_TEST_EQ_TOL(resultU1, resultU2, Slop.value());
 
     // See if Station Jacobian can be used to duplicate the translation
     // rows of the System Jacobian, and if Frame Jacobian can be used to
@@ -1245,8 +1245,8 @@ void testTaskJacobians() {
         matter.multiplyByFrameJacobian(state, allBodies, randS, zeroU, JF2(i));
         zeroU[i] = 0;
     }
-    SimTK_TEST_EQ_TOL(JS2, JS, Slop);
-    SimTK_TEST_EQ_TOL(JF2, JF, Slop);
+    SimTK_TEST_EQ_TOL(JS2, JS, Slop.value());
+    SimTK_TEST_EQ_TOL(JF2, JF, Slop.value());
 
     // Calculate JS2t=~JS using multiplication by force-space unit vectors.
     Matrix_<Row3> JS2t(nu,nb);
@@ -1265,7 +1265,7 @@ void testTaskJacobians() {
                 JS2t(u,b)[k] = JS3matr[u];
         }
     }
-    SimTK_TEST_EQ_TOL(JS2, ~JS2t, Slop); // we'll check JS3mat below
+    SimTK_TEST_EQ_TOL(JS2, ~JS2t, Slop.value()); // we'll check JS3mat below
 
     // Calculate JF2t=~JF using multiplication by force-space unit vectors.
     Matrix_<SpatialRow> JF2t(nu,nb);
@@ -1284,7 +1284,7 @@ void testTaskJacobians() {
                 JF2t(u,b)[k/3][k%3] = JF3matr[u];
         }
     }
-    SimTK_TEST_EQ_TOL(JF2, ~JF2t, Slop); // we'll check JS3mat below
+    SimTK_TEST_EQ_TOL(JF2, ~JF2t, Slop.value()); // we'll check JS3mat below
 
 
     // All three methods match. Now let's see if they are right by shifting
@@ -1314,8 +1314,8 @@ void testTaskJacobians() {
     SimTK_TEST_EQ(JSmat.nrow(), 3*nb); SimTK_TEST_EQ(JSmat.ncol(), nu);
     SimTK_TEST_EQ(JFmat.nrow(), 6*nb); SimTK_TEST_EQ(JFmat.ncol(), nu);
 
-    SimTK_TEST_EQ_TOL(JSmat, JS3mat, Slop); // same as above?
-    SimTK_TEST_EQ_TOL(JFmat, JF3mat, Slop); // same as above?
+    SimTK_TEST_EQ_TOL(JSmat, JS3mat, Slop.value()); // same as above?
+    SimTK_TEST_EQ_TOL(JFmat, JF3mat, Slop.value()); // same as above?
 
     // Unpack JS into JSmat2 and compare with JSmat.
     JSmat2.resize(3*nb, nu);
@@ -1328,7 +1328,7 @@ void testTaskJacobians() {
         }
     }
     // These should be exactly the same.
-    SimTK_TEST_EQ_TOL(JSmat2, JSmat, SignificantReal);
+    SimTK_TEST_EQ_TOL(JSmat2, JSmat, SignificantReal.value());
 
     // Unpack JF into JFmat2 and compare with JFmat.
     JFmat2.resize(6*nb, nu);
@@ -1341,7 +1341,7 @@ void testTaskJacobians() {
         }
     }
     // These should be exactly the same.
-    SimTK_TEST_EQ_TOL(JFmat2, JFmat, SignificantReal);
+    SimTK_TEST_EQ_TOL(JFmat2, JFmat, SignificantReal.value());
 }
 
 // Position kinematics should be valid if:
@@ -1487,15 +1487,25 @@ void testVelocityKinematics() {
 int main() {
     SimTK_START_TEST("TestMassMatrix");
         SimTK_SUBTEST(testPositionKinematics);
-        SimTK_SUBTEST(testVelocityKinematics);
-        SimTK_SUBTEST(testRel2Cart);
+        SimTK_SUBTEST(testVelocityKinematics);        
         SimTK_SUBTEST(testJacobianBiasTerms);
         SimTK_SUBTEST(testCompositeBodyInertia);
-        SimTK_SUBTEST(testArticulatedBodyInertia);
-        SimTK_SUBTEST(testArticulatedBodyVelocity);
-        SimTK_SUBTEST(testUnconstrainedSystem);
-        SimTK_SUBTEST(testConstrainedSystem);
-        SimTK_SUBTEST(testTaskJacobians);
+        #ifndef SimTK_REAL_IS_ADOUBLE
+            SimTK_SUBTEST(testRel2Cart);
+            SimTK_SUBTEST(testArticulatedBodyInertia);
+            SimTK_SUBTEST(testArticulatedBodyVelocity);
+            SimTK_SUBTEST(testUnconstrainedSystem);
+            SimTK_SUBTEST(testConstrainedSystem);
+            SimTK_SUBTEST(testTaskJacobians);
+        #else   
+            std::cout << "testRel2Cart is not supported with ADOL-C" << std::endl;
+            std::cout << "testArticulatedBodyInertia is not supported with ADOL-C" << std::endl;
+            std::cout << "testArticulatedBodyVelocity is not supported with ADOL-C" << std::endl;
+            std::cout << "testUnconstrainedSystem is not supported with ADOL-C" << std::endl;
+            std::cout << "testConstrainedSystem is not supported with ADOL-C" << std::endl;
+            std::cout << "testTaskJacobians is not supported with ADOL-C" << std::endl;
+
+        #endif
     SimTK_END_TEST();
 }
 

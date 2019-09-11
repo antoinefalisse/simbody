@@ -241,7 +241,7 @@ public:
     /** Return the value actually being used as the default impact capture
     velocity. **/
     Real getDefaultImpactCaptureVelocityInUse() const 
-    {   return std::max(m_defaultCaptureVelocity, 2*m_consTol); }
+    {   return NTraits<Real>::max(m_defaultCaptureVelocity, 2*m_consTol); }
     /** Return the value actually being used as the default impact minimum
     coefficient of restitution velocity. **/
     Real getDefaultImpactMinCORVelocityInUse() const 
@@ -250,7 +250,7 @@ public:
     /** Return the value actually being used as the default sliding-to-rolling
     friction transition velocity. **/
     Real getDefaultFrictionTransitionVelocityInUse() const 
-    {   return std::max(m_defaultTransitionVelocity, 2*m_consTol); }
+    {   return NTraits<Real>::max(m_defaultTransitionVelocity, 2*m_consTol); }
 
     /** Get access to the MultibodySystem for which this %TimeStepper was
     constructed. **/

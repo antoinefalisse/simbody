@@ -124,27 +124,27 @@ saved in the new ContactSurface object, using its setIndexOnBody() method.
 int addContactSurface(const Transform&          X_BS,
                       const ContactSurface&     shape); 
 
-/** Convenience method for when the contact surface is to be placed at the
-body frame. This is the same as `addContactSurface(Transform(),shape)`. **/
+///** Convenience method for when the contact surface is to be placed at the
+//body frame. This is the same as `addContactSurface(Transform(),shape)`. **/
 int addContactSurface(const ContactSurface& shape)
 {   return addContactSurface(Transform(), shape); }
 
-/** Obtain the number of contact surfaces ns attached to this Body. The valid
-body-local ordinals i will be 0 <= i < ns. **/
+///** Obtain the number of contact surfaces ns attached to this Body. The valid
+//body-local ordinals i will be 0 <= i < ns. **/
 int getNumContactSurfaces() const;
-/** Get a reference to the i'th contact surface on this body; be sure to get
-the Transform also. @see getContactSurfaceTransform() **/
+///** Get a reference to the i'th contact surface on this body; be sure to get
+//the Transform also. @see getContactSurfaceTransform() **/
 const ContactSurface& getContactSurface(int i) const;
-/** Get the Transform specifying the placement of the i'th contact surface
-on this Body. **/
+///** Get the Transform specifying the placement of the i'th contact surface
+//on this Body. **/
 const Transform& getContactSurfaceTransform(int i) const;
-/** Get write access to the i'th unique contact surface owned by this Body. This
-is a Topology-stage change that will require a new `realizeTopology()` call if 
-this Body is part of a System. **/
+///** Get write access to the i'th unique contact surface owned by this Body. This
+//is a Topology-stage change that will require a new `realizeTopology()` call if 
+//this Body is part of a System. **/
 ContactSurface& updContactSurface(int i);
-/** Get a writable reference to the Transform specifying the placement of the 
-i'th contact surface on this Body. This is a Topology-stage change that will 
-require a new realizeTopology() call if this Body is part of a System. **/
+///** Get a writable reference to the Transform specifying the placement of the 
+//i'th contact surface on this Body. This is a Topology-stage change that will 
+//require a new realizeTopology() call if this Body is part of a System. **/
 Transform& updContactSurfaceTransform(int i);
 
 // These are the built-in Body types.

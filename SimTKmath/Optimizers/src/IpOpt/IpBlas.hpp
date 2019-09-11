@@ -11,7 +11,7 @@
 
 #include "IpUtils.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
   // If CBLAS is not available, this is our own interface to the Fortran
   // implementation

@@ -22,6 +22,9 @@
  * -------------------------------------------------------------------------- */
 
 #include "simbody/internal/common.h"
+
+#ifndef SimTK_REAL_IS_ADOUBLE
+
 #include "simbody/internal/ImpulseSolver.h"
 #include "simbody/internal/PGSImpulseSolver.h"
 
@@ -187,7 +190,7 @@ boundVector(Real maxLen, const Array_<MultiplierIndex>& IV, Vector& pi) {
     for (unsigned i=0; i<IV.size(); ++i) piNorm2 += square(pi[IV[i]]);
     if (piNorm2 <= maxLen2) 
         return ImpulseSolver::Rolling;
-    const Real scale = std::sqrt(maxLen2/piNorm2); // 0 <= scale < 1
+    const Real scale = sqrt(maxLen2/piNorm2); // 0 <= scale < 1
     for (unsigned i=0; i<IV.size(); ++i) pi[IV[i]] *= scale;
     return ImpulseSolver::Sliding;
 }
@@ -208,7 +211,7 @@ boundFriction(Real mu,
     const Real mu2N2 = mu*mu*N2;
     if (F2 <= mu2N2) 
         return ImpulseSolver::Rolling;
-    const Real scale = std::sqrt(mu2N2/F2); // 0 <= scale < 1
+    const Real scale = sqrt(mu2N2/F2); // 0 <= scale < 1
     for (unsigned i=0; i<IF.size(); ++i) pi[IF[i]] *= scale;
     return ImpulseSolver::Sliding;
 }
@@ -433,7 +436,7 @@ solve(int                                 phase,
             doRowSums(participating,Fk,A,D,pi,rowSums);
             const Real er2=doUpdates(Fk,A,D,verrStart,sor,rowSums,pi);
             sum2all += er2;
-            Real N = std::abs(pi[Nk] + piExpand[Nk]);
+            Real N = fabs(pi[Nk] + piExpand[Nk]);
             rt.m_frictionCond=boundVector(rt.m_effMu*N, Fk, pi);
             if (rt.m_frictionCond==Rolling)
                 sum2enf += er2;
@@ -479,22 +482,22 @@ solve(int                                 phase,
             if (rt.m_frictionCond==Rolling)
                 sum2enf += localEr2;
         }
-        normRMSall = std::sqrt(sum2all/p);
-        normRMSenf = std::sqrt(sum2enf/p);
+        normRMSall = NTraits<Real>::sqrt(sum2all/p);
+        normRMSenf = NTraits<Real>::sqrt(sum2enf/p);
 
         const Real rate = normRMSenf/prevNormRMSenf;
 
         if (rate > 1) {
-            SimTK_DEBUG3("GOT WORSE@%d: sor=%g rate=%g\n", its, sor, rate);
+            //SimTK_DEBUG3("GOT WORSE@%d: sor=%g rate=%g\n", its, sor.value(), rate.getValue());
             if (sor > .1)
-                sor = std::max(.8*sor, .1);
+                sor = fmax(.8*sor, .1);
         } 
 
-        #ifndef NDEBUG
-        printf("%d/%d: EST rmsAll=%g rmsEnf=%g rate=%g\n", phase, its,
-                     normRMSall, normRMSenf, 
-                     normRMSenf/prevNormRMSenf);
-        #endif
+        //#ifndef NDEBUG
+        //printf("%d/%d: EST rmsAll=%g rmsEnf=%g rate=%g\n", phase, its,
+        //             normRMSall.value(), normRMSenf.value(),
+        //             (normRMSenf/prevNormRMSenf).value());
+        //#endif
         //#ifdef NDEBUG // i.e., NOT debugging (TODO)
         //if (its > 90)
         //    printf("%d/%d: EST rmsAll=%g rmsEnf=%g rate=%g\n", phase, its,
@@ -503,8 +506,8 @@ solve(int                                 phase,
         //#endif
         if (normRMSenf < m_convergenceTol) //TODO: add failure-to-improve check
         {
-            SimTK_DEBUG3("PGS %d converged to %g in %d iters\n", 
-                         phase, normRMSenf, its);
+            //SimTK_DEBUG3("PGS %d converged to %g in %d iters\n", 
+            //             phase, normRMSenf.value(), its);
             converged = true;
             break;
         }
@@ -514,8 +517,8 @@ solve(int                                 phase,
     }
 
     if (!converged) {
-        SimTK_DEBUG3("PGS %d CONVERGENCE FAILURE: %d iters -> norm=%g\n",
-               phase, its, normRMSenf);
+        //SimTK_DEBUG3("PGS %d CONVERGENCE FAILURE: %d iters -> norm=%g\n",
+        //       phase, its, normRMSenf.value());
         ++m_nFail[phase];
     }
 
@@ -584,24 +587,24 @@ solveBilateral
             sum2enf += localEr2;
         }
 
-        normRMSenf = std::sqrt(sum2enf/p);
+        normRMSenf = NTraits<Real>::sqrt(sum2enf/p);
         const Real rate = normRMSenf/prevNormRMSenf;
 
         if (rate > 1) {
-            SimTK_DEBUG3("GOT WORSE@%d: sor=%g rate=%g\n", its, sor, rate);
+            //SimTK_DEBUG3("GOT WORSE@%d: sor=%g rate=%g\n", its, sor.value(), rate.value());
             if (sor > .1)
-                sor = std::max(.8*sor, .1);
+                sor = fmax(.8*sor, .1);
         } 
 
-        #ifndef NDEBUG
-        printf("iter %d: EST rmsEnf=%g rate=%g\n", its,
-                     normRMSenf, normRMSenf/prevNormRMSenf);
-        #endif
+        //#ifndef NDEBUG
+        //printf("iter %d: EST rmsEnf=%g rate=%g\n", its,
+        //             normRMSenf.value(), (normRMSenf/prevNormRMSenf).value());
+        //#endif
 
         if (normRMSenf < m_convergenceTol) //TODO: add failure-to-improve check
         {
-            SimTK_DEBUG2("BILATERAL PGS converged to %g in %d iters\n", 
-                         normRMSenf, its);
+            //SimTK_DEBUG2("BILATERAL PGS converged to %g in %d iters\n", 
+            //             normRMSenf.value(), its);
             converged = true;
             break;
         }
@@ -611,8 +614,8 @@ solveBilateral
     }
 
     if (!converged) {
-        SimTK_DEBUG2("BILATERAL PGS CONVERGENCE FAILURE: %d iters -> norm=%g\n",
-              its, normRMSenf);
+        //SimTK_DEBUG2("BILATERAL PGS CONVERGENCE FAILURE: %d iters -> norm=%g\n",
+        //      its, normRMSenf.value());
         ++m_nBilateralFail;
     }
 
@@ -632,3 +635,5 @@ solveBilateral
 
 
 } // namespace SimTK
+
+#endif

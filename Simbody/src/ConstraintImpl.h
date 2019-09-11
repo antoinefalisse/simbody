@@ -1666,7 +1666,7 @@ Real getAxisThickness() const {return axisThickness;}
 
 // Implementation of ContraintRep virtuals
 void realizeTopologyVirtual(State& s) const override {
-    cosineOfDefaultAngle = std::cos(defaultAngle);
+    cosineOfDefaultAngle = NTraits<Real>::cos(defaultAngle);
 }
 
 
@@ -3034,7 +3034,7 @@ void calcAccelerationErrorsVirtual
     const Array_<SpatialVec,ConstrainedBodyIndex>&  A_AB, 
     const Array_<Real,      ConstrainedUIndex>&     constrainedUDot,
     Array_<Real>&                                   aerr) const override
-{   getImplementation().calcAccelerationErrors
+{   getImplementation().calcVelocityDotErrors
                                         (state,A_AB,constrainedUDot,aerr); }
 
 void addInAccelerationConstraintForcesVirtual

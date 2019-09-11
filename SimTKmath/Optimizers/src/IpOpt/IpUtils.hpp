@@ -13,7 +13,7 @@
 #include "IpTypes.hpp"
 #include "IpDebug.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   inline ipfint Max(ipfint a, ipfint b)

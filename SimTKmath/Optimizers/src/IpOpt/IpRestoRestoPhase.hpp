@@ -13,7 +13,7 @@
 #include "IpIpoptAlg.hpp"
 #include "IpEqMultCalculator.hpp"
 
-namespace SimTKIpopt
+namespace Ipopt
 {
 
   /** Recursive Restoration Phase for the.MinC_1NrmRestorationPhase.

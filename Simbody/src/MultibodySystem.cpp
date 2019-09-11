@@ -122,7 +122,6 @@ MultibodySystem::updDecorationSubsystem() {
 bool MultibodySystem::hasDecorationSubsystem() const {
     return getRep().hasDecorationSubsystem();
 }
-
 const GeneralContactSubsystem&       
 MultibodySystem::getContactSubsystem() const {
     return getRep().getContactSubsystem();
@@ -184,6 +183,7 @@ int MultibodySystemRep::realizeTopologyImpl(State& s) const {
     // we don't know sizes until Model stage.
     getMatterSubsystem().getRep().realizeSubsystemTopology(s);
     getGlobalSubsystem().getRep().realizeSubsystemTopology(s);
+
     for (int i=0; i < (int)forceSubs.size(); ++i)
         getForceSubsystem(forceSubs[i]).getRep().realizeSubsystemTopology(s);
 
