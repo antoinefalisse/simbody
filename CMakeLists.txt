@@ -574,12 +574,12 @@ set(MATH_LIBS_TO_USE    ${LAPACK_BEING_USED} pthread
 set(MATH_LIBS_TO_USE_VN ${MATH_LIBS_TO_USE})
 
 # Recorder
-if(BUILD_RECORDER_LIBRARIES)
-    list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-    find_package(RECORDER REQUIRED)
-    include_directories("${RECORDER_INCLUDES}")
-    simbody_copy_dlls(RECORDER "${RECORDER_DIR}/bin")
-endif()
+# if(BUILD_RECORDER_LIBRARIES)
+    # list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+    # find_package(RECORDER REQUIRED)
+    # include_directories("${RECORDER_INCLUDES}")
+    # simbody_copy_dlls(RECORDER "${RECORDER_DIR}/bin")
+# endif()
 
 #
 # Allow automated build and dashboard.

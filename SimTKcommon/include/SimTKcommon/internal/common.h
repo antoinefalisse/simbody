@@ -27,8 +27,8 @@
 /**@file
 Mandatory first inclusion for any Simbody source or header file.
 
-Every source and most header files using %SimTK must include this 
-header as its \e first inclusion. Declarations and definitions that 
+Every source and most header files using %SimTK must include this
+header as its \e first inclusion. Declarations and definitions that
 must be available and compiler-and machine-specific issues are dealt
 with here.
 
@@ -39,14 +39,14 @@ only under C++. **/
 // Provide doxygen documentation for the SimTK namespace.
 
 /**@namespace SimTK
-This is the top-level %SimTK namespace into which all %SimTK names are 
-placed to avoid collision with other symbols. If you get tired of prefacing 
-every symbol with "SimTK::", include the statement "using namespace SimTK;" 
-at the beginning of your %SimTK-using compilation units. Any names which 
-cannot be put in the namespace (macro names, for example) begin with the 
+This is the top-level %SimTK namespace into which all %SimTK names are
+placed to avoid collision with other symbols. If you get tired of prefacing
+every symbol with "SimTK::", include the statement "using namespace SimTK;"
+at the beginning of your %SimTK-using compilation units. Any names which
+cannot be put in the namespace (macro names, for example) begin with the
 prefix "SimTK_" instead. **/
 
-// Define shared doxygen "modules" and sub-modules here. We'll put things 
+// Define shared doxygen "modules" and sub-modules here. We'll put things
 // in them at various places when appropriate.
 
 /**@defgroup GlobalFunctions Global Functions in the SimTK namespace
@@ -70,22 +70,22 @@ floating point types as well. **/
 These namespace-scope templatized utilities provide uniform serialization
 and deserialization behavior for built-in and SimTK-defined types. See
 SimTK::Xml for support of serialization to/from Xml files. **/
-    
+
 /**@defgroup UniqueIndexTypes    Type-Safe Integer Indices
 
-It is common to store objects or information about them in randomly-indexable 
+It is common to store objects or information about them in randomly-indexable
 arrays, and then to support maximum-performance selection by allowing the
 index to be used. We want these arrays indexable by simple ints for speed, but
 this quickly leads to APIs in which there are multiple int arguments in a
 function call, each intended to select a different kind of object. A common
 error when there is a series of identical argument types is to put them in
-the wrong order. To avoid that, we define unique index types here for 
+the wrong order. To avoid that, we define unique index types here for
 accessing each category to help stay out of trouble.
 
-A unique index type is just a type-safe non-negative int, augmented with a 
-"NaN" value called InvalidBLAH where BLAH is the type name. For most uses it 
+A unique index type is just a type-safe non-negative int, augmented with a
+"NaN" value called InvalidBLAH where BLAH is the type name. For most uses it
 will behave like an int, and it has an implicit conversion *to* int. Importantly
-though, it has no implicit conversion *from* int so you can't pass a plain int 
+though, it has no implicit conversion *from* int so you can't pass a plain int
 or any other Index type to an argument expecting a certain Index type. **/
 
 /*****************************/
@@ -117,10 +117,7 @@ or any other Index type to an argument expecting a certain Index type. **/
     #ifndef SimTK_REAL_IS_ADOUBLE
         typedef double SimTK_Real;
     #else
-        //#include <adolc/adouble.h>
-        //#include <adolc/adolc.h>
-        //#include <adolc/adtl.h>
-        #include <recorder.hpp>
+        #include "SimTKcommon/internal/recorder.h"
         typedef Recorder SimTK_Real;
     #endif
 #elif (SimTK_DEFAULT_PRECISION == 4)
@@ -182,10 +179,10 @@ or any other Index type to an argument expecting a certain Index type. **/
     #pragma warning(disable:4345) /*warning about PODs being default-initialized*/
 
 
-    /* Until VS2015 struct timespec was missing from <ctime> so is faked here 
-    if needed. However, note that it is also defined in the pthread.h header on 
-    Windows, so the guard symbol must match here to avoid a duplicate declaration. 
-    TODO: there is a potential problem here since VS2015's struct timespec 
+    /* Until VS2015 struct timespec was missing from <ctime> so is faked here
+    if needed. However, note that it is also defined in the pthread.h header on
+    Windows, so the guard symbol must match here to avoid a duplicate declaration.
+    TODO: there is a potential problem here since VS2015's struct timespec
     doesn't appear to match pthread's definition. */
     #ifndef HAVE_STRUCT_TIMESPEC
     #define HAVE_STRUCT_TIMESPEC 1
@@ -220,10 +217,10 @@ or any other Index type to an argument expecting a certain Index type. **/
      * CAUTION: every linked-together compilation unit must have this set the same
      * way. Everyone who properly includes this file first is fine; but as of this
      * writing Simmath's IpOpt doesn't do so.
-     * NOTE: Microsoft corrected this problem with VC10 -- the feature is 
+     * NOTE: Microsoft corrected this problem with VC10 -- the feature is
      * disabled by default in that compiler and later.
      */
-    /* (sherm 081204 disabling for now: doesn't work on VC++ 8 and is 
+    /* (sherm 081204 disabling for now: doesn't work on VC++ 8 and is
      * tricky on VC++ 9 because all libraries, including 3rd party, must
      * be built the same way). Better to use the SimTK::Array_<T> class in
      * place of the std::vector<T> class to get better performance.
@@ -244,10 +241,10 @@ extern "C" {
 #endif
     /** Obtain version information for the currently-loaded SimTKcommon library. */
     SimTK_SimTKCOMMON_EXPORT void SimTK_version_SimTKcommon(int* major, int* minor, int* build);
-    /** 
+    /**
      * Obtain "about" information for the currently-loaded SimTKcommon library.
-     * Available keywords are "version" (major.minor.build), "library", 
-     * "type" (shared or static), "copyright", "svn_revision", "authors", 
+     * Available keywords are "version" (major.minor.build), "library",
+     * "type" (shared or static), "copyright", "svn_revision", "authors",
      * "debug" (debug or release).
      */
     SimTK_SimTKCOMMON_EXPORT void SimTK_about_SimTKcommon(const char* key, int maxlen, char* value);
@@ -272,7 +269,7 @@ extern "C" {
 #include <algorithm>
 
 /* Be very careful with this macro -- don't use it unless you have measured
-a performance improvement. You can end up with serious code bloat if you 
+a performance improvement. You can end up with serious code bloat if you
 override the compiler's judgement about when to inline, and that can cause
 cache misses which ultimately reduce performance. */
 #ifdef _MSC_VER
@@ -304,7 +301,7 @@ that we can use non-standard compiler hacks. */
     #define DEPRECATED_14(MSG)
 #endif
 
-/* These macros are deprecated, leftover from before C++11 was available. 
+/* These macros are deprecated, leftover from before C++11 was available.
 Don't use them. Sorry, can't use the DEPRECATED_14 macro here! */
 #define OVERRIDE_11 override
 #define FINAL_11 final
@@ -408,16 +405,16 @@ static const int InvalidIndex = -1111111111;
  * Use this macro to define a unique "Index" type which is just a type-safe
  * non-negative int, augmented with a "NaN" value given by the predefined
  * int constant SimTK::InvalidIndex. We also allow the Index to take on
- * the value -1 if that is produced by a subtraction operation acting on a 
- * previously-valid Index, since that can occur during loops which are 
- * processed from the end towards the beginning. -1 is then allowed in 
- * comparison operators but not in any other operations, including further 
+ * the value -1 if that is produced by a subtraction operation acting on a
+ * previously-valid Index, since that can occur during loops which are
+ * processed from the end towards the beginning. -1 is then allowed in
+ * comparison operators but not in any other operations, including further
  * decrementing.
  *
- * No namespace is assumed for the newly-defined type; if you want the 
- * symbol in a namespace be sure to invoke the macro within that namespace. 
- * Make sure that the statement "#include <cassert>" appears somewhere before 
- * the point of invocation of this macro, because the defined Index type uses 
+ * No namespace is assumed for the newly-defined type; if you want the
+ * symbol in a namespace be sure to invoke the macro within that namespace.
+ * Make sure that the statement "#include <cassert>" appears somewhere before
+ * the point of invocation of this macro, because the defined Index type uses
  * the assert() macro when in Debug mode.
  *
  * For most uses it will behave like an int, and it has an implicit
@@ -433,7 +430,7 @@ static const int InvalidIndex = -1111111111;
  * value as SimTK::InvalidIndex.
  */
 
-/** Define a global (that is, SimTK namespace level) Index class that is not 
+/** Define a global (that is, SimTK namespace level) Index class that is not
 exported in MS VC++ DLLs. **/
 #define SimTK_DEFINE_UNIQUE_INDEX_TYPE(NAME)                   \
     SimTK_DEFINE_AND_EXPORT_UNIQUE_LOCAL_INDEX_TYPE(,,,NAME)   \
@@ -574,7 +571,7 @@ check what type of derived object you're looking at. **/
 #endif
 
 /** Add public static method declaration in class derived from an abstract
-parent to assist in downcasting objects of the parent type to the derived 
+parent to assist in downcasting objects of the parent type to the derived
 type. **/
 #define SimTK_DOWNCAST(Derived,Parent)                          \
     static bool isA(const Parent& p)                            \
@@ -586,7 +583,7 @@ type. **/
     static Derived& downcast(Parent& p)                         \
         { return SimTK_DYNAMIC_CAST_DEBUG<Derived&>(p); }
 
-/** This is like SimTK_DOWNCAST except it allows for an intermediate "helper" 
+/** This is like SimTK_DOWNCAST except it allows for an intermediate "helper"
 class between Derived and Parent. **/
 #define SimTK_DOWNCAST2(Derived,Helper,Parent)                          \
     static bool isA(const Parent& p)                                    \
@@ -600,7 +597,7 @@ class between Derived and Parent. **/
 
 
 /** Similar to the above but for private implementation abstract classes, that
-is, abstract class hierarchies where the virtual function table is hidden on 
+is, abstract class hierarchies where the virtual function table is hidden on
 the library side. **/
 #define SimTK_PIMPL_DOWNCAST(Derived, Parent)           \
     static bool           isInstanceOf(const Parent&);  \
@@ -616,7 +613,7 @@ namespace Exception { }
 /** This is the default compiled-in floating point type for SimTK, either
 float or double. @see SimTK_DEFAULT_PRECISION **/
 typedef SimTK_Real              Real;
-/** This is the default complex type for SimTK, with precision for the real 
+/** This is the default complex type for SimTK, with precision for the real
 and imaginary parts set to the compiled-in Real type. @see Real **/
 typedef std::complex<Real>      Complex;
 /** An abbreviation for std::complex<float> for consistency with others. **/
@@ -628,7 +625,7 @@ typedef std::complex<double>    dComplex;
 // Forward declaration giving template defaults must come before any
 // other declarations.
 template <int M, class ELT=Real, int STRIDE=1>              class Vec;
-template <int N, class ELT=Real, int STRIDE=1>              class Row; 
+template <int N, class ELT=Real, int STRIDE=1>              class Row;
 template <int M, int N, class ELT=Real, int CS=M, int RS=1> class Mat;
 template <int M, class ELT=Real, int RS=1>                  class SymMat;
 
@@ -636,13 +633,13 @@ template <int M, class ELT=Real, int RS=1>                  class SymMat;
 a segment of some larger sequence. **/
 struct Segment {
     Segment() : length(0), offset(0) { }
-    explicit Segment(int l, int ofs=0) : length(l), offset(ofs) { 
+    explicit Segment(int l, int ofs=0) : length(l), offset(ofs) {
         assert(l>=0 && ofs>=0);
     }
     // default copy, assignment, destructor
     int length;
     int offset;
-};  
+};
 
 // These next four methods supply the missing relational operators for any
 // types L and R where L==R and L<R have been defined. This is like the
@@ -728,7 +725,7 @@ specialize the IsIntegralType struct template for those types. **/
     template<> struct IsIntegralType<T>         \
     {typedef TrueType Result; static const bool result = true;}
 
-SimTK_SPECIALIZE_INTEGRAL_TYPE(bool); 
+SimTK_SPECIALIZE_INTEGRAL_TYPE(bool);
 SimTK_SPECIALIZE_INTEGRAL_TYPE(char);
 // This causes problems when used with Qt which for some crazy
 // reason likes to make its own wchar_t rather than using the built in.
@@ -753,15 +750,15 @@ template <class T> struct IsFloatingType {
     floating point type otherwise it is false. **/
     static const bool result = false;
 };
-/** This macro must be invoked once for each of the built-in floating point 
+/** This macro must be invoked once for each of the built-in floating point
 types to specialize the IsFloatingType struct template for those types. **/
 #define SimTK_SPECIALIZE_FLOATING_TYPE(T)       \
     template<> struct IsFloatingType<T>         \
     {typedef TrueType Result; static const bool result = true;}
 
-SimTK_SPECIALIZE_FLOATING_TYPE(float); 
-SimTK_SPECIALIZE_FLOATING_TYPE(double); 
-SimTK_SPECIALIZE_FLOATING_TYPE(long double); 
+SimTK_SPECIALIZE_FLOATING_TYPE(float);
+SimTK_SPECIALIZE_FLOATING_TYPE(double);
+SimTK_SPECIALIZE_FLOATING_TYPE(long double);
 #ifdef SimTK_REAL_IS_ADOUBLE
     SimTK_SPECIALIZE_FLOATING_TYPE(Recorder);
 #endif
@@ -775,7 +772,7 @@ template <class T> struct IsVoidType {
     "void" otherwise it is false. **/
     static const bool result = false;
 };
-template<> struct IsVoidType<void> 
+template<> struct IsVoidType<void>
 {typedef TrueType Result; static const bool result = true;};
 
 /** Compile-time test: is this one of the built-in "arithmetic" types, meaning
@@ -787,20 +784,20 @@ template <class T> struct IsArithmeticType {
                      typename IsFloatingType<T>::Result>    Result;
     /** This compile-time constant bool is true if the template type T is
     one of the integral or floating point types, otherwise it is false. **/
-    static const bool result = IsIntegralType<T>::result 
+    static const bool result = IsIntegralType<T>::result
                             || IsFloatingType<T>::result;
 };
 
-// This struct's sole use is to allow us to define the typedef 
+// This struct's sole use is to allow us to define the typedef
 // Is64BitPlatformType as equivalent to either TrueType or FalseType.
 template <bool is64Bit> struct Is64BitHelper {};
-template<> struct Is64BitHelper<true>  
+template<> struct Is64BitHelper<true>
 {typedef TrueType  Result; static const bool result = true;};
-template<> struct Is64BitHelper<false> 
+template<> struct Is64BitHelper<false>
 {typedef FalseType Result; static const bool result = false;};
 
-/** Compile-time test: this typedef will be TrueType if this is a 64-bit 
-platform, meaning that the size of a pointer is the same as the size of a 
+/** Compile-time test: this typedef will be TrueType if this is a 64-bit
+platform, meaning that the size of a pointer is the same as the size of a
 long long; otherwise it will be FalseType and we have a 32-bit platform meaning
 that the size of a pointer is the same as an int. **/
 // We use a constexpr function to avoid a bug in SWIG.
@@ -810,78 +807,78 @@ typedef Is64BitHelper<Is64BitPlatform>::Result Is64BitPlatformType;
 
 
 /** Attempt to demangle a type name as returned by typeid.name(), with the
-result hopefully suitable for meaningful display to a human. Behavior is 
-compiler-dependent. 
+result hopefully suitable for meaningful display to a human. Behavior is
+compiler-dependent.
 @relates SimTK::NiceTypeName **/
-SimTK_SimTKCOMMON_EXPORT 
+SimTK_SimTKCOMMON_EXPORT
 std::string demangle(const char* name);
 
-/** Given a compiler-dependent demangled type name string as returned by 
+/** Given a compiler-dependent demangled type name string as returned by
 SimTK::demangle(), attempt to form a canonicalized representation that will be
 the same for any compiler. Unnecessary spaces and superfluous keywords like
 "class" and "struct" are removed. The `namestr()` method of NiceTypeName\<T>
 uses this function to produce a human-friendly type name that is the same on any
-platform. The input argument is left empty. 
+platform. The input argument is left empty.
 @relates SimTK::NiceTypeName **/
-SimTK_SimTKCOMMON_EXPORT 
+SimTK_SimTKCOMMON_EXPORT
 std::string canonicalizeTypeName(std::string&& demangledTypeName);
 
-/** Same, but takes an lvalue reference so has to copy the input. 
+/** Same, but takes an lvalue reference so has to copy the input.
 @relates SimTK::NiceTypeName **/
 inline std::string canonicalizeTypeName(const std::string& demangledTypeName)
 {   return canonicalizeTypeName(std::string(demangledTypeName)); }
 
-/** Given a canonicalized type name, produce a modified version that is 
+/** Given a canonicalized type name, produce a modified version that is
 better-suited to use as an XML attribute. This means replacing the angle
 brackets with curly braces to avoid trouble. The input argument is left
-empty. 
+empty.
 @relates SimTK::NiceTypeName **/
 SimTK_SimTKCOMMON_EXPORT
 std::string encodeTypeNameForXML(std::string&& canonicalizedTypeName);
 
-/** Same, but takes an lvalue reference so has to copy the input. 
+/** Same, but takes an lvalue reference so has to copy the input.
 @relates SimTK::NiceTypeName **/
 inline std::string encodeTypeNameForXML(const std::string& niceTypeName)
 {   return encodeTypeNameForXML(std::string(niceTypeName)); }
 
 /** Given a type name that was encoded for XML by SimTK::encodeTypeNameForXML(),
 restore it to its canonicalized form. This means replacing curly braces by
-angle brackets. The input argument is left empty. 
+angle brackets. The input argument is left empty.
 @relates SimTK::NiceTypeName **/
 SimTK_SimTKCOMMON_EXPORT
 std::string decodeXMLTypeName(std::string&& xmlTypeName);
 
-/** Same, but takes an lvalue reference so has to copy the input. 
+/** Same, but takes an lvalue reference so has to copy the input.
 @relates SimTK::NiceTypeName **/
 inline std::string decodeXMLTypeName(const std::string& xmlTypeName)
 {   return decodeXMLTypeName(std::string(xmlTypeName)); }
 
 /** Obtain human-readable and XML-usable names for arbitrarily-complicated
 C++ types. Three methods `name()`, `namestr()`, and `xmlstr()` are provided
-giving respectively the compiler-dependent output from `typeid(T).%name()`, 
+giving respectively the compiler-dependent output from `typeid(T).%name()`,
 a canonicalized human-readable string, and the canonicalized string with
-XML-forbidden angle brackets replaced by curly braces. The default 
-implementation is usable for most types, but if you don't like the result you 
-can specialize to provide nicer names. For example, you may prefer SimTK::Vec3 
+XML-forbidden angle brackets replaced by curly braces. The default
+implementation is usable for most types, but if you don't like the result you
+can specialize to provide nicer names. For example, you may prefer SimTK::Vec3
 to SimTK::Vec\<3,double,1>.
 
-@warning Don't expect usable names for types that are defined in an anonymous 
-namespace or for function-local types. Names will still be produced but they 
+@warning Don't expect usable names for types that are defined in an anonymous
+namespace or for function-local types. Names will still be produced but they
 won't be unique and won't necessarily be compiler-independent.
 
 The output of `namestr()` is typically used for error messages and testing;
 `xmlstr()` is used for type tags in XML for use in deserializing. **/
 template <class T> struct NiceTypeName {
     /** The default implementation of name() here returns the raw result from
-    `typeid(T).%name()` which will be fast but may be a mangled name in some 
+    `typeid(T).%name()` which will be fast but may be a mangled name in some
     compilers (gcc and clang included). **/
     static const char* name() {return typeid(T).name();}
     /** The default implementation of namestr() attempts to return a nicely
-    demangled and canonicalized type name on all platforms, using the 
+    demangled and canonicalized type name on all platforms, using the
     SimTK::demangle() and SimTK::canonicalizeTypeName() methods. This is an
     expensive operation but is only done once. **/
     static const std::string& namestr() {
-        static const std::string canonical = 
+        static const std::string canonical =
             canonicalizeTypeName(demangle(name()));
         return canonical;
     }
@@ -917,29 +914,29 @@ template <> struct NiceTypeName< T > {                                  \
 }
 
 // Some types for which we'd like to see nice type names.
-SimTK_NICETYPENAME_LITERAL(bool);            
-SimTK_NICETYPENAME_LITERAL(char); 
+SimTK_NICETYPENAME_LITERAL(bool);
+SimTK_NICETYPENAME_LITERAL(char);
 // This causes problems when used with Qt which for some crazy
 // reason likes to make its own wchar_t rather than using the built in.
-// SimTK_NICETYPENAME_LITERAL(wchar_t);            
-SimTK_NICETYPENAME_LITERAL(signed char); 
+// SimTK_NICETYPENAME_LITERAL(wchar_t);
+SimTK_NICETYPENAME_LITERAL(signed char);
 SimTK_NICETYPENAME_LITERAL(unsigned char);
-SimTK_NICETYPENAME_LITERAL(short);           
-SimTK_NICETYPENAME_LITERAL(unsigned short);  
-SimTK_NICETYPENAME_LITERAL(int); 
+SimTK_NICETYPENAME_LITERAL(short);
+SimTK_NICETYPENAME_LITERAL(unsigned short);
+SimTK_NICETYPENAME_LITERAL(int);
 SimTK_NICETYPENAME_LITERAL(unsigned); // preferred to "unsigned int"
-SimTK_NICETYPENAME_LITERAL(long);            
-SimTK_NICETYPENAME_LITERAL(unsigned long);   
+SimTK_NICETYPENAME_LITERAL(long);
+SimTK_NICETYPENAME_LITERAL(unsigned long);
 SimTK_NICETYPENAME_LITERAL(long long);
 SimTK_NICETYPENAME_LITERAL(unsigned long long);
-SimTK_NICETYPENAME_LITERAL(float);           
+SimTK_NICETYPENAME_LITERAL(float);
 SimTK_NICETYPENAME_LITERAL(long double);
 SimTK_NICETYPENAME_LITERAL(std::string);
 SimTK_NICETYPENAME_LITERAL(std::complex<float>);
-SimTK_NICETYPENAME_LITERAL(std::complex<double>); 
-SimTK_NICETYPENAME_LITERAL(std::complex<long double>); 
+SimTK_NICETYPENAME_LITERAL(std::complex<double>);
+SimTK_NICETYPENAME_LITERAL(std::complex<long double>);
 SimTK_NICETYPENAME_LITERAL(SimTK::FalseType);
-SimTK_NICETYPENAME_LITERAL(SimTK::TrueType); 
+SimTK_NICETYPENAME_LITERAL(SimTK::TrueType);
 #ifdef SimTK_REAL_IS_ADOUBLE
     SimTK_NICETYPENAME_LITERAL(Recorder);
 #endif
