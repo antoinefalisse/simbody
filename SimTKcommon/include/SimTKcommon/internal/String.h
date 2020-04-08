@@ -26,6 +26,7 @@
 
 #include "SimTKcommon/internal/common.h"
 #include "SimTKcommon/internal/ExceptionMacros.h"
+#include "recorder.h"
 
 #include <cstdio>
 #include <string>
@@ -275,6 +276,11 @@ Returns false if the contents of this %String, ignoring leading and trailing
 whitespace, can't be interpreted as a double. **/
 SimTK_SimTKCOMMON_EXPORT bool tryConvertToDouble(double& out) const;
 
+/** Special-purpose method for interpreting this %String as a Recorder. Returns 
+false if the contents of this %String, ignoring leading and trailing
+whitespace, can't be interpreted as a double. **/
+SimTK_SimTKCOMMON_EXPORT bool tryConvertToRecorder(Recorder& out) const;
+
 /** Special-purpose method for interpreting this %String as a long double. 
 Recognizes NaN, [-]Inf, [-]Infinity (in any case) as well as whatever 
 operator>>() accepts. Returns false if the contents of this %String, ignoring 
@@ -417,6 +423,13 @@ bool tryConvertStringTo(const String& value, float& out)
 template <> inline 
 bool tryConvertStringTo(const String& value, double& out)
 {   return value.tryConvertToDouble(out); }
+
+// Specialization to ensure recognition of non-finite values NaN, Inf, etc.
+template <> inline
+bool tryConvertStringTo(const String& value, Recorder& out)
+{
+	return value.tryConvertToRecorder(out);
+}
 
 // Specialization to ensure recognition of non-finite values NaN, Inf, etc.
 template <> inline 

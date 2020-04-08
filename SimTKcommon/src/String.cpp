@@ -113,6 +113,23 @@ bool String::tryConvertToDouble(double& out) const {
     return !sstream.fail();
 }
 
+bool String::tryConvertToRecorder(Recorder& out) const {
+	const String adjusted = cleanUp(*this);
+	if (adjusted == "nan") { out = 0;  return true; }
+	if (adjusted == "inf" || adjusted == "infinity"
+		|| adjusted == "+inf" || adjusted == "+infinity")
+	{
+		out = 9999; return true;
+	}
+	if (adjusted == "-inf" || adjusted == "-infinity")
+	{
+		out = -9999; return true;
+	}
+	std::istringstream sstream(adjusted);
+	sstream >> out;
+	return !sstream.fail();
+}
+
 bool String::tryConvertToLongDouble(long double& out) const {
     const String adjusted = cleanUp(*this);
     if (adjusted=="nan")  {out=NTraits<long double>::getNaN();  return true;}
