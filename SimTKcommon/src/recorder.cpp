@@ -176,7 +176,7 @@ Recorder erf(const Recorder& arg) {
     return Recorder::from_unary(arg, erf(arg.value_), "erf");
 }
 Recorder fabs(const Recorder& arg) {
-    return Recorder::from_unary(arg, fabs(arg.value_), "fabs");
+    return Recorder::from_unary(arg, fabs(arg.value_), "abs");
 }
 Recorder ceil(const Recorder& arg) {
     return Recorder::from_unary(arg, ceil(arg.value_), "ceil");
