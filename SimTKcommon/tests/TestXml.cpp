@@ -308,7 +308,7 @@ void testStringConvert() {
     SimTK_TEST(convertStringTo< Vec3 >(" ~ [ -3 , 5, 6 ] ")== Vec3(-3,5,6));
     SimTK_TEST(convertStringTo< Vec3 >("~( -3  5 -6 ) ")== Vec3(-3,5,-6));
     SimTK_TEST(convertStringTo<Recorder>(" 239\n ") == 239);
-	SimTK_TEST(convertStringTo<Recorder>("inf") == 9999);
+    SimTK_TEST(convertStringTo<Recorder>("inf") == 9999);
     SimTK_TEST(convertStringTo<Recorder>("1234.5") == 1234.5);
 
     SimTK_TEST_MUST_THROW(convertStringTo< Vec3 >("( -3  5 -6 ] "));
