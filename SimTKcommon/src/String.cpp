@@ -118,13 +118,9 @@ bool String::tryConvertToRecorder(Recorder& out) const {
 	if (adjusted == "nan") { out = 0;  return true; }
 	if (adjusted == "inf" || adjusted == "infinity"
 		|| adjusted == "+inf" || adjusted == "+infinity")
-	{
-		out = 9999; return true;
-	}
+	{   out = 9999; return true; }
 	if (adjusted == "-inf" || adjusted == "-infinity")
-	{
-		out = -9999; return true;
-	}
+	{   out = -9999; return true; }
 	std::istringstream sstream(adjusted);
 	sstream >> out;
 	return !sstream.fail();

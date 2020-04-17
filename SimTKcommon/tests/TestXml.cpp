@@ -307,14 +307,9 @@ void testStringConvert() {
     SimTK_TEST(convertStringTo< Vec3 >("( -3  5 -6 ) ")== Vec3(-3,5,-6));
     SimTK_TEST(convertStringTo< Vec3 >(" ~ [ -3 , 5, 6 ] ")== Vec3(-3,5,6));
     SimTK_TEST(convertStringTo< Vec3 >("~( -3  5 -6 ) ")== Vec3(-3,5,-6));
+    SimTK_TEST(convertStringTo<Recorder>(" 239\n ") == 239);
 	SimTK_TEST(convertStringTo<Recorder>("inf") == 9999);
-	std::filebuf fb;
-	std::istream is(&fb);
-	fb.close();
-	Array_<Recorder, unsigned int> out;
-	bool isFixedSize = true;
-	readArrayFromStreamHelper<Recorder, unsigned int>(is, isFixedSize, out); 
-	// this is just to check that this functionality is working
+    SimTK_TEST(convertStringTo<Recorder>("1234.5") == 1234.5);
 
     SimTK_TEST_MUST_THROW(convertStringTo< Vec3 >("( -3  5 -6 ] "));
     SimTK_TEST_MUST_THROW(convertStringTo< Vec3 >(" -3  5 -6 ] "));

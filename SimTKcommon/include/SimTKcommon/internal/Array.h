@@ -43,7 +43,6 @@
 #include <type_traits>
 #include <initializer_list>
 #include <utility>
-#include <iostream>
 
 namespace SimTK {
 
