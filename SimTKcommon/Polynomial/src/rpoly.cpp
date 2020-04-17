@@ -32,9 +32,6 @@
 #include <limits>
 #include <algorithm>
 #include "rpoly.h"
-//#ifdef SimTK_REAL_IS_ADOUBLE
-//	#include <adolc/adouble.h>
-//#endif
 #include <SimTKcommon/internal/NTraits.h>
 
 #if defined(__GNUC__) && !defined(__clang__)

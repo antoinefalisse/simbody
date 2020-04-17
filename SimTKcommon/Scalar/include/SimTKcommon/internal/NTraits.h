@@ -1347,7 +1347,7 @@ SimTK_DEFINE_REAL_NTRAITS(long double);
 // Definition for Recorder only
 template <> class NTraits<Recorder> {                  
 public:                                         
-    typedef Recorder                T;                 
+    typedef Recorder         T;                 
     typedef negator<T>       TNeg;              
     typedef T                TWithoutNegator;   
     typedef T                TReal;             

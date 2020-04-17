@@ -69,7 +69,7 @@ Recorder& Recorder::operator = ( const Recorder& r) {
 }
 
 void Recorder::operator>>=(double& value) {
-  if (!is_symbol()) throw std::runtime_error("Needs to be symbolic");
+  //if (!is_symbol()) throw std::runtime_error("Needs to be symbolic");
   stream() << "if ~nom" << std::endl;
   stream() << "y{" << counter_output+1 << "} = " << repr() << ";%" << value_  << std::endl;
   stream() << "end" << std::endl;
@@ -200,8 +200,12 @@ std::ostream& operator<<(std::ostream &stream, const Recorder& obj) {
   return stream;
 }
 
-std::istream& operator >> (std::istream& is, const Recorder& a) {
-  throw std::runtime_error("No way!");
+std::istream& operator >> (std::istream& is, Recorder& a) {
+	double aux;
+	is >> aux;
+	a = aux;
+
+	return is;
 }
 
 void Recorder::stop_recording() {
