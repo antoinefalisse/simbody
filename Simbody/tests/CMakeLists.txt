@@ -35,15 +35,15 @@ foreach(TEST_PROG ${REGR_TESTS})
                     ${TEST_SHARED_TARGET})
         add_test(${TEST_ROOT} ${EXECUTABLE_OUTPUT_PATH}/${TEST_ROOT})
 		
-		if(BUILD_ADOLC_LIBRARIES)
-            set(TEST_ADOLC ${TEST_ROOT}ADOLC)
-            add_executable(${TEST_ADOLC} ${TEST_PROG})
-            set_target_properties(${TEST_ADOLC}
+		if(BUILD_RECORDER_LIBRARIES)
+            set(TEST_RECORDER ${TEST_ROOT}RECORDER)
+            add_executable(${TEST_RECORDER} ${TEST_PROG})
+            set_target_properties(${TEST_RECORDER}
                     PROPERTIES
-                    PROJECT_LABEL "Test_Regr - ${TEST_ADOLC}")
-            target_link_libraries(${TEST_ADOLC}
-                    ${TEST_ADOLC_TARGET})
-            add_test(${TEST_ADOLC} ${EXECUTABLE_OUTPUT_PATH}/${TEST_ADOLC})
+                    PROJECT_LABEL "Test_Regr_RECORDER_ - ${TEST_RECORDER}")
+            target_link_libraries(${TEST_RECORDER}
+                    ${TEST_RECORDER_TARGET})
+            add_test(${TEST_RECORDER} ${EXECUTABLE_OUTPUT_PATH}/${TEST_RECORDER})
         endif()
     endif(BUILD_TESTS_AND_EXAMPLES_SHARED)
 
