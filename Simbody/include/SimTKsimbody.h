@@ -31,9 +31,9 @@
  * -------------------------------------------------------------------------- */
 
 /** @file
-This header file includes all the Simbody header files that need to be 
+This header file includes all the Simbody header files that need to be
 visible to a compiler processing a Simbody-using compilation unit.\ However,
-user programs should included only the top-level Simbody.h header (which 
+user programs should included only the top-level Simbody.h header (which
 will include this one). **/
 
 // This should be kept self-contained for backwards compatibility since
@@ -61,33 +61,28 @@ will include this one). **/
 #include "simbody/internal/GeneralForceSubsystem.h"
 #include "simbody/internal/HuntCrossleyContact.h"
 #include "simbody/internal/HuntCrossleyForce.h"
-#include "simbody/internal/HuntCrossleyForce_smooth.h"
+#include "simbody/internal/SmoothSphereHalfSpaceForce.h"
+#include "simbody/internal/DecorationSubsystem.h"
 #include "simbody/internal/TextDataEventReporter.h"
+#include "simbody/internal/ObservedPointFitter.h"
+#include "simbody/internal/Assembler.h"
+#include "simbody/internal/AssemblyCondition.h"
+#include "simbody/internal/AssemblyCondition_QValue.h"
+#include "simbody/internal/AssemblyCondition_Markers.h"
+#include "simbody/internal/AssemblyCondition_OrientationSensors.h"
+#include "simbody/internal/LocalEnergyMinimizer.h"
 #include "simbody/internal/ContactTrackerSubsystem.h"
 #include "simbody/internal/CompliantContactSubsystem.h"
-#include "simbody/internal/SemiExplicitEulerTimeStepper.h"
-#include "simbody/internal/PGSImpulseSolver.h"
-#include "simbody/internal/DecorationSubsystem.h"
+#include "simbody/internal/CableTrackerSubsystem.h"
+#include "simbody/internal/CablePath.h"
+#include "simbody/internal/CableSpring.h"
 #include "simbody/internal/Visualizer.h"
 #include "simbody/internal/Visualizer_InputListener.h"
 #include "simbody/internal/Visualizer_Reporter.h"
-
-// Not supported with ADOL-C yet
-#ifndef SimTK_REAL_IS_ADOUBLE
-    #include "simbody/internal/ObservedPointFitter.h"
-    #include "simbody/internal/Assembler.h"
-    #include "simbody/internal/AssemblyCondition.h"
-    #include "simbody/internal/AssemblyCondition_QValue.h"
-    #include "simbody/internal/AssemblyCondition_Markers.h"
-    #include "simbody/internal/AssemblyCondition_OrientationSensors.h"
-    #include "simbody/internal/LocalEnergyMinimizer.h"
-    #include "simbody/internal/CableTrackerSubsystem.h"
-    #include "simbody/internal/CablePath.h"
-    #include "simbody/internal/CableSpring.h"
-    #include "simbody/internal/ConditionalConstraint.h"
-    #include "simbody/internal/ImpulseSolver.h"
-    #include "simbody/internal/PLUSImpulseSolver.h"    
-#endif
-
+#include "simbody/internal/ConditionalConstraint.h"
+#include "simbody/internal/SemiExplicitEulerTimeStepper.h"
+#include "simbody/internal/ImpulseSolver.h"
+#include "simbody/internal/PGSImpulseSolver.h"
+#include "simbody/internal/PLUSImpulseSolver.h"
 
 #endif // SimTK_SIMBODY_SimTKSIMBODY_H_
