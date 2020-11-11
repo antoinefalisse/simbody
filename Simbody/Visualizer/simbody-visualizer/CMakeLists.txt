@@ -3,7 +3,14 @@
 # other platforms we depend on their already being a glut (or freeglut)
 # available.
 
+set(MISSING_DEPENDENCIES "")
+
+set(OpenGL_GL_PREFERENCE LEGACY)
 find_package(OpenGL)
+if (NOT OPENGL_FOUND)
+    list(APPEND MISSING_DEPENDENCIES OpenGL)
+endif()
+
 if(WIN32)
     set(glut32dir "${CMAKE_CURRENT_SOURCE_DIR}/glut32")
     set(GLUT32_HEADERS "${glut32dir}/glut.h" "${glut32dir}/glext.h")
@@ -26,19 +33,32 @@ else()
             set(SIMBODY_HAS_GLUT TRUE)
         else()
             set(SIMBODY_HAS_GLUT FALSE)
+            list(APPEND MISSING_DEPENDENCIES GLUT)
         endif()
     else()
         if(GLUT_FOUND AND GLUT_Xmu_LIBRARY AND GLUT_Xi_LIBRARY)
             set(SIMBODY_HAS_GLUT TRUE)
         else()
             set(SIMBODY_HAS_GLUT FALSE)
+
+            if (NOT GLUT_FOUND)
+                list(APPEND MISSING_DEPENDENCIES GLUT)
+            endif()
+            if (NOT GLUT_Xmu_LIBRARY)
+                list(APPEND MISSING_DEPENDENCIES libxmu)
+            endif()
+            if (NOT GLUT_Xi_LIBRARY)
+                list(APPEND MISSING_DEPENDENCIES libxi)
+            endif()
         endif()
     endif()
 endif()
 
-if(OPENGL_FOUND AND SIMBODY_HAS_GLUT)
+if(MISSING_DEPENDENCIES)
+    message(WARNING "Visualizer will not be built because some of its dependencies (${MISSING_DEPENDENCIES}) are missing")
+else()
 
-add_executable(${GUI_NAME} 
+add_executable(${GUI_NAME} MACOSX_BUNDLE
     simbody-visualizer.cpp lodepng.cpp lodepng.h
     ${GLUT32_HEADERS}) # only on Windows
 
@@ -49,9 +69,11 @@ endif()
 # If building as debug, append the debug postfix to the name of the executable.
 # CMAKE_DEBUG_POSTFIX only affects non-executable targets, but we use its value
 # to set the postfix for this executable.
+# Setting the target property DEBUG_POSTFIX does not work for MACOSX bundles,
+# so we use DEBUG_OUTPUT_NAME instead.
 set_target_properties(${GUI_NAME} PROPERTIES
         PROJECT_LABEL "Code - ${GUI_NAME}"
-        DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
+        DEBUG_OUTPUT_NAME ${GUI_NAME}${CMAKE_DEBUG_POSTFIX})
 
 # On OSX, bake the relative path to the Simbody libraries into the visualizer
 # executable. Then there's no need to set `DYLD_LIBRARY_PATH` to find the
@@ -61,9 +83,15 @@ if(${SIMBODY_USE_INSTALL_RPATH})
     # Linux we'll have to revisit.
 
     # vis_dir_to_install_dir is most likely "../"
+    if (APPLE)
+        set(vis_install_dir
+                "${SIMBODY_VISUALIZER_INSTALL_DIR}/simbody-visualizer.app/Contents/MacOS")
+    else()
+        set(vis_install_dir "${SIMBODY_VISUALIZER_INSTALL_DIR}")
+    endif()
     file(RELATIVE_PATH vis_dir_to_install_dir
-        "${SIMBODY_VISUALIZER_INSTALL_DIR}"
-        "${CMAKE_INSTALL_PREFIX}")
+            "${vis_install_dir}"
+            "${CMAKE_INSTALL_PREFIX}")
     set(vis_dir_to_lib_dir "${vis_dir_to_install_dir}${CMAKE_INSTALL_LIBDIR}")
     set_target_properties(${GUI_NAME} PROPERTIES
         INSTALL_RPATH "\@executable_path/${vis_dir_to_lib_dir}"
@@ -97,6 +125,4 @@ if(WIN32)
         DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
-else()
-    message(WARNING "Visualizer will not be built because some of its dependencies (OpenGL or GLUT) are missing")
 endif()
