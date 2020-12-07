@@ -191,6 +191,7 @@ Recorder::operator bool() const {
     if (is_symbol()) {
       counter_bool++;
       stream() << "a{" << counter_asserts+1 << "} = " << repr() << "-" << value_ << ";%" << value_  << std::endl;
+      stream() << "b{" << counter_asserts + 1 << "} = " << repr() << ";%" << value_ << std::endl;
     }
     return ret;
 }
@@ -208,6 +209,7 @@ void Recorder::stop_recording() {
   stream() << "if ~nom, y = vertcat(y{:}); end;" << std::endl;
   if (counter_bool > 0) {
     stream() << "a = vertcat(a{:});" << std::endl;
+    stream() << "b = vertcat(b{:});" << std::endl;
   }
 }
 
@@ -280,7 +282,7 @@ public:
     StreamWrapper() {
         stream = new std::ofstream("foo.m");
         (*stream) << std::scientific << std::setprecision(16);
-        (*stream) << "function [y,a]=foo(x)" << std::endl;
+        (*stream) << "function [y,a,b]=foo(x)" << std::endl;
         (*stream) << "nom = nargin==0;" << std::endl;
     }
 
