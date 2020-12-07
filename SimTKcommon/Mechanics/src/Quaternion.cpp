@@ -60,7 +60,7 @@ Quaternion_<P>::convertQuaternionToAngleAxis() const {
 
     // Use atan2.  Do NOT just use acos(q[0]) to calculate the rotation angle!!!
     // Otherwise results are numerical garbage anywhere near zero (or less near).
-	RealP angle = 2 * atan2(sa2, ca2);
+	RealP angle = 2 * NTraits<RealP>::atan2(sa2, ca2);
     
     // Since sa2>=0, atan2 returns a value between 0 and pi, which is then
     // multiplied by 2 which means the angle is between 0 and 2pi.
