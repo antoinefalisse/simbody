@@ -1172,6 +1172,7 @@ public:                                         \
     typedef T                Tasin;             \
     typedef T                Tacos;             \
     typedef T                Tatan;             \
+    typedef T                Tatan2;            \
     typedef T                Tsinh;             \
     typedef T                Tcosh;             \
     typedef T                Ttanh;             \
@@ -1246,6 +1247,7 @@ public:                                         \
     static Tasin   asin(const T& t) { return std::asin(t); } \
     static Tacos   acos(const T& t) { return std::acos(t); } \
     static Tatan   atan(const T& t) { return std::atan(t); } \
+    static Tatan2  atan2(const T& t1, const T& t2) { return std::atan2(t1, t2); } \
     static Tsinh   sinh(const T& t) { return std::sinh(t); } \
     static Tcosh   cosh(const T& t) { return std::cosh(t); } \
     static Ttanh   tanh(const T& t) { return std::tanh(t); } \
@@ -1374,6 +1376,7 @@ public:
     typedef T                Tasin;
     typedef T                Tacos;
     typedef T                Tatan;
+    typedef T                Tatan2;
     typedef T                Tsinh;
     typedef T                Tcosh;
     typedef T                Ttanh;
@@ -1448,6 +1451,7 @@ public:
     static Tasin   asin(const T& t) { return ::asin(t); }
     static Tacos   acos(const T& t) { return ::acos(t); }
     static Tatan   atan(const T& t) { return ::atan(t); }
+    static Tatan2  atan2(const T& t1, const T& t2) { return ::atan2(t1, t2); }
     static Tsinh   sinh(const T& t) { return ::sinh(t); }
     static Tcosh   cosh(const T& t) { return ::cosh(t); }
     static Ttanh   tanh(const T& t) { return ::tanh(t); }
