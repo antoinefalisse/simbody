@@ -109,7 +109,7 @@ public:
   friend Recorder DLL_EXPORT asinh ( const Recorder& );
   friend Recorder DLL_EXPORT acosh ( const Recorder& );
   friend Recorder DLL_EXPORT atanh ( const Recorder& );
-  //friend Recorder DLL_EXPORT erf   ( const Recorder& );
+  friend Recorder DLL_EXPORT erf   ( const Recorder& );
   friend Recorder DLL_EXPORT fabs  ( const Recorder& );
   friend Recorder DLL_EXPORT ceil  ( const Recorder& );
   friend Recorder DLL_EXPORT floor ( const Recorder& );

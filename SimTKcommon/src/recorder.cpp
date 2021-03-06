@@ -78,110 +78,109 @@ void Recorder::operator>>=(double& value) {
 double Recorder::getValue() const {return value_;}
 
 Recorder operator+(const Recorder& lhs, const Recorder& rhs) {
-  return Recorder::from_binary(lhs, rhs, lhs.value_ + rhs.value_, "np.add");
+  return Recorder::from_binary(lhs, rhs, lhs.value_ + rhs.value_, "ca.plus");
 }
 Recorder operator*(const Recorder& lhs, const Recorder& rhs) {
-  return Recorder::from_binary(lhs, rhs, lhs.value_ * rhs.value_, "np.multiply");
+  return Recorder::from_binary(lhs, rhs, lhs.value_ * rhs.value_, "ca.times");
 }
 Recorder operator-(const Recorder& lhs, const Recorder& rhs) {
-  return Recorder::from_binary(lhs, rhs, lhs.value_ - rhs.value_, "np.subtract");
+  return Recorder::from_binary(lhs, rhs, lhs.value_ - rhs.value_, "ca.minus");
 }
 Recorder operator/(const Recorder& lhs, const Recorder& rhs) {
-  return Recorder::from_binary(lhs, rhs, lhs.value_ / rhs.value_, "np.divide");
+  return Recorder::from_binary(lhs, rhs, lhs.value_ / rhs.value_, "ca.rdivide");
 }
 bool operator>=(const Recorder& lhs, const Recorder& rhs) {
-  return static_cast<bool>(Recorder::from_binary(lhs, rhs, lhs.value_ >= rhs.value_, "np.greater_equal"));
+  return static_cast<bool>(Recorder::from_binary(lhs, rhs, lhs.value_ >= rhs.value_, "ca.ge"));
 }
 bool operator<=(const Recorder& lhs, const Recorder& rhs) {
-  return static_cast<bool>(Recorder::from_binary(lhs, rhs, lhs.value_ <= rhs.value_, "np.less_equal"));
+  return static_cast<bool>(Recorder::from_binary(lhs, rhs, lhs.value_ <= rhs.value_, "ca.le"));
 }
 bool operator>(const Recorder& lhs, const Recorder& rhs) {
-  return static_cast<bool>(Recorder::from_binary(lhs, rhs, lhs.value_ > rhs.value_, "np.greater"));
+  return static_cast<bool>(Recorder::from_binary(lhs, rhs, lhs.value_ > rhs.value_, "ca.gt"));
 }
 bool operator<(const Recorder& lhs, const Recorder& rhs) {
-  return static_cast<bool>(Recorder::from_binary(lhs, rhs, lhs.value_ < rhs.value_, "np.less"));
+  return static_cast<bool>(Recorder::from_binary(lhs, rhs, lhs.value_ < rhs.value_, "ca.lt"));
 }
 bool operator!=(const Recorder& lhs, const Recorder& rhs) {
-  return static_cast<bool>(Recorder::from_binary(lhs, rhs, lhs.value_ != rhs.value_, "np.not_equal"));
+  return static_cast<bool>(Recorder::from_binary(lhs, rhs, lhs.value_ != rhs.value_, "ca.ne"));
 }
 bool operator==(const Recorder& lhs, const Recorder& rhs) {
-  return static_cast<bool>(Recorder::from_binary(lhs, rhs, lhs.value_ == rhs.value_, "np.equal"));
+  return static_cast<bool>(Recorder::from_binary(lhs, rhs, lhs.value_ == rhs.value_, "ca.eq"));
 }
 Recorder operator-(const Recorder& arg) {
-    return Recorder::from_unary(arg, -arg.value_, "np.negative");
+    return Recorder::from_unary(arg, -arg.value_, "-");
 }
 Recorder pow( const Recorder&lhs, const Recorder& rhs) {
-    return Recorder::from_binary(lhs, rhs, pow(lhs.value_,rhs.value_), "np.power");
+    return Recorder::from_binary(lhs, rhs, pow(lhs.value_,rhs.value_), "ca.power");
 }
 Recorder fmax ( const Recorder&lhs, const Recorder& rhs) {
-	return Recorder::from_binary(lhs, rhs, fmax(lhs.value_,rhs.value_), "np.max");
+	return Recorder::from_binary(lhs, rhs, fmax(lhs.value_,rhs.value_), "ca.fmax");
 }
 Recorder fmin ( const Recorder&lhs, const Recorder& rhs) {
-	return Recorder::from_binary(lhs, rhs, fmin(lhs.value_,rhs.value_), "np.min");
+	return Recorder::from_binary(lhs, rhs, fmin(lhs.value_,rhs.value_), "ca.fmin");
 }
 Recorder atan2 ( const Recorder&lhs, const Recorder& rhs) {
-	return Recorder::from_binary(lhs, rhs, atan2(lhs.value_,rhs.value_), "np.atan2");
+	return Recorder::from_binary(lhs, rhs, atan2(lhs.value_,rhs.value_), "ca.atan2");
 }
 Recorder exp(const Recorder& arg) {
-    return Recorder::from_unary(arg, exp(arg.value_), "np.exp");
+    return Recorder::from_unary(arg, exp(arg.value_), "ca.exp");
 }
 Recorder log(const Recorder& arg) {
-    return Recorder::from_unary(arg, log(arg.value_), "np.log");
+    return Recorder::from_unary(arg, log(arg.value_), "ca.log");
 }
 Recorder sqrt(const Recorder& arg) {
-    return Recorder::from_unary(arg, sqrt(arg.value_), "np.sqrt");
+    return Recorder::from_unary(arg, sqrt(arg.value_), "ca.sqrt");
 }
 Recorder sin(const Recorder& arg) {
-    return Recorder::from_unary(arg, sin(arg.value_), "np.sin");
+    return Recorder::from_unary(arg, sin(arg.value_), "ca.sin");
 }
 Recorder cos(const Recorder& arg) {
-    return Recorder::from_unary(arg, cos(arg.value_), "np.cos");
+    return Recorder::from_unary(arg, cos(arg.value_), "ca.cos");
 }
 Recorder tan(const Recorder& arg) {
-    return Recorder::from_unary(arg, tan(arg.value_), "np.tan");
+    return Recorder::from_unary(arg, tan(arg.value_), "ca.tan");
 }
 Recorder asin(const Recorder& arg) {
-    return Recorder::from_unary(arg, asin(arg.value_), "np.asin");
+    return Recorder::from_unary(arg, asin(arg.value_), "ca.asin");
 }
 Recorder acos(const Recorder& arg) {
-    return Recorder::from_unary(arg, acos(arg.value_), "np.acos");
+    return Recorder::from_unary(arg, acos(arg.value_), "ca.acos");
 }
 Recorder atan(const Recorder& arg) {
-    return Recorder::from_unary(arg, atan(arg.value_), "np.atan");
+    return Recorder::from_unary(arg, atan(arg.value_), "ca.atan");
 }
 Recorder log10(const Recorder& arg) {
-    return Recorder::from_unary(arg, log10(arg.value_), "np.log10");
+    return Recorder::from_unary(arg, log10(arg.value_), "ca.log10");
 }
 Recorder sinh(const Recorder& arg) {
-    return Recorder::from_unary(arg, sinh(arg.value_), "np.sinh");
+    return Recorder::from_unary(arg, sinh(arg.value_), "ca.sinh");
 }
 Recorder cosh(const Recorder& arg) {
-    return Recorder::from_unary(arg, cosh(arg.value_), "np.cosh");
+    return Recorder::from_unary(arg, cosh(arg.value_), "ca.cosh");
 }
 Recorder tanh(const Recorder& arg) {
-    return Recorder::from_unary(arg, tanh(arg.value_), "np.tanh");
+    return Recorder::from_unary(arg, tanh(arg.value_), "ca.tanh");
 }
 Recorder asinh(const Recorder& arg) {
-    return Recorder::from_unary(arg, asinh(arg.value_), "np.arcsinh");
+    return Recorder::from_unary(arg, asinh(arg.value_), "ca.asinh");
 }
 Recorder acosh(const Recorder& arg) {
-    return Recorder::from_unary(arg, acosh(arg.value_), "np.arccosh");
+    return Recorder::from_unary(arg, acosh(arg.value_), "ca.acosh");
 }
 Recorder atanh(const Recorder& arg) {
-    return Recorder::from_unary(arg, atanh(arg.value_), "np.arctanh");
+    return Recorder::from_unary(arg, atanh(arg.value_), "ca.atanh");
 }
-// TODO: erf not in numpy
-//Recorder erf(const Recorder& arg) {
-//    return Recorder::from_unary(arg, erf(arg.value_), "erf");
-//}
+Recorder erf(const Recorder& arg) {
+    return Recorder::from_unary(arg, erf(arg.value_), "ca.erf");
+}
 Recorder fabs(const Recorder& arg) {
-    return Recorder::from_unary(arg, fabs(arg.value_), "np.abs");
+    return Recorder::from_unary(arg, fabs(arg.value_), "ca.fabs");
 }
 Recorder ceil(const Recorder& arg) {
-    return Recorder::from_unary(arg, ceil(arg.value_), "np.ceil");
+    return Recorder::from_unary(arg, ceil(arg.value_), "ca.ceil");
 }
 Recorder floor(const Recorder& arg) {
-    return Recorder::from_unary(arg, floor(arg.value_), "np.floor");
+    return Recorder::from_unary(arg, floor(arg.value_), "ca.floor");
 }
 
 Recorder::operator bool() const {
@@ -288,7 +287,6 @@ public:
         stream = new std::ofstream("foo.py");
         (*stream) << std::scientific << std::setprecision(16);		
         (*stream) << "def foo(*args):" << std::endl;
-		(*stream) << "    import numpy as np" << std::endl;
 		(*stream) << "    import casadi as ca" << std::endl;
 		(*stream) << "    nom = len(args) == 0" << std::endl;
 		(*stream) << "    if not nom:" << std::endl;
