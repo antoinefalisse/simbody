@@ -32,7 +32,7 @@ Recorder::Recorder(const Recorder& r) {
   value_ = r.value_;
   if (r.is_symbol()) {
     id_ = get_id();
-    stream() << "\ta" + std::to_string(id_) << " = " << r.repr() << "# copy constructor" << value_ << std::endl;
+    stream() << "    a" + std::to_string(id_) << " = " << r.repr() << "# copy constructor" << value_ << std::endl;
   } else {
     id_ = -1;
   }
