@@ -176,6 +176,14 @@ template <class T> inline bool
 readUnformatted(std::istream& in, T& v) {
     String token;
     if (!readOneTokenUnformatted(in, token)) return false;
+	for (int i = 0; i < token.size(); i++) {
+		if (token[i] == '(') {
+			token[i] = ' ';
+		}
+		if (token[i] == ')') {
+			token[i] = ' ';
+		}
+	}
     if (!token.tryConvertTo<T>(v)) 
     {   in.setstate(std::ios::failbit); return false; }
     return true;

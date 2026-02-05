@@ -62,6 +62,7 @@ will include this one). **/
 #include "simbody/internal/HuntCrossleyContact.h"
 #include "simbody/internal/HuntCrossleyForce.h"
 #include "simbody/internal/HuntCrossleyForce_smooth.h"
+#include "simbody/internal/SmoothSphereHalfSpaceForce.h"
 #include "simbody/internal/TextDataEventReporter.h"
 #include "simbody/internal/ContactTrackerSubsystem.h"
 #include "simbody/internal/CompliantContactSubsystem.h"
